@@ -28,8 +28,8 @@
 
 #include <gz/math/Vector3.hh>
 
-#include "lrauv_gazebo_plugins/lrauv_acoustic_message.pb.h"
-#include "lrauv_gazebo_plugins/lrauv_internal_comms.pb.h"
+#include "lrauv_gazebo_plugins/msgs/lrauv_acoustic_message.pb.h"
+#include "lrauv_gazebo_plugins/msgs/lrauv_internal_comms.pb.h"
 
 namespace tethys
 {

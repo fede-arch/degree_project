@@ -35,7 +35,7 @@
 #include <thread>
 
 #include <gz/transport.hh>
-#include "lrauv_gazebo_plugins/lrauv_command.pb.h"
+#include "lrauv_gazebo_plugins/msgs/lrauv_command.pb.h"
 
 char getch()
 {

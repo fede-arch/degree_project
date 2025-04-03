@@ -35,8 +35,8 @@ find_package(gz-sensors7 REQUIRED)
 set(GZ_SENSORS_VER ${gz-sensors7_VERSION_MAJOR})
 set(GZ_SENSORS gz-sensors${GZ_SENSORS_VER}::gz-sensors${GZ_SENSORS_VER})
 
-find_package(gz-msgs9 REQUIRED)
-set(GZ_MSGS_VER ${gz-msgs9_VERSION_MAJOR})
+find_package(gz-msgs10 REQUIRED)
+set(GZ_MSGS_VER ${gz-msgs10_VERSION_MAJOR})
 
 find_package(gz-plugin2 REQUIRED COMPONENTS register)
 set(GZ_PLUGIN_VER ${gz-plugin2_VERSION_MAJOR})
@@ -56,7 +56,36 @@ find_package(
   COMPONENTS Interpreter)
 
 # Build protobuf messages
-add_subdirectory(proto)
+#add_subdirectory(proto)
+set(MSGS_PROTOS
+     ${CMAKE_CURRENT_SOURCE_DIR}/proto/lrauv_gazebo_plugins/msgs/dvl_beam_state.proto
+     ${CMAKE_CURRENT_SOURCE_DIR}/proto/lrauv_gazebo_plugins/msgs/dvl_kinematic_estimate.proto
+     ${CMAKE_CURRENT_SOURCE_DIR}/proto/lrauv_gazebo_plugins/msgs/dvl_range_estimate.proto
+     ${CMAKE_CURRENT_SOURCE_DIR}/proto/lrauv_gazebo_plugins/msgs/dvl_tracking_target.proto
+     ${CMAKE_CURRENT_SOURCE_DIR}/proto/lrauv_gazebo_plugins/msgs/dvl_velocity_tracking.proto
+     ${CMAKE_CURRENT_SOURCE_DIR}/proto/lrauv_gazebo_plugins/msgs/lrauv_acoustic_message.proto
+     ${CMAKE_CURRENT_SOURCE_DIR}/proto/lrauv_gazebo_plugins/msgs/lrauv_command.proto
+     ${CMAKE_CURRENT_SOURCE_DIR}/proto/lrauv_gazebo_plugins/msgs/lrauv_init.proto
+     ${CMAKE_CURRENT_SOURCE_DIR}/proto/lrauv_gazebo_plugins/msgs/lrauv_internal_comms.proto
+     ${CMAKE_CURRENT_SOURCE_DIR}/proto/lrauv_gazebo_plugins/msgs/lrauv_range_bearing_request.proto
+     ${CMAKE_CURRENT_SOURCE_DIR}/proto/lrauv_gazebo_plugins/msgs/lrauv_range_bearing_response.proto
+     ${CMAKE_CURRENT_SOURCE_DIR}/proto/lrauv_gazebo_plugins/msgs/lrauv_state.proto
+)
+
+# Call 'gz_msgs_generate_messages()' to process the .proto files
+gz_msgs_generate_messages(
+  # The cmake target to be generated for libraries/executables to link
+  TARGET lrauv_gazebo_messages
+  # The protobuf package to generate (Typically based on the path)
+  PROTO_PACKAGE "lrauv_gazebo_plugins.msgs"
+  # The path to the base directory of the proto files
+  # All import paths should be relative to this (eg gz/custom_msgs/vector3d.proto)
+  MSGS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/proto
+  # List of proto files to process
+  MSGS_PROTOS ${MSGS_PROTOS}
+  # Dependency on gz-msgs
+  DEPENDENCIES gz-msgs${GZ_MSGS_VER}::gz-msgs${GZ_MSGS_VER}
+)
 
 #============================================================================
 # Plugins
@@ -119,6 +148,9 @@ function(add_lrauv_plugin PLUGIN)
   if (add_lrauv_plugin_PROTO)
     target_link_libraries(${PLUGIN}
       PUBLIC ${add_lrauv_plugin_PROTO})
+
+    target_include_directories(${PLUGIN}
+      PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${add_lrauv_plugin_PROTO}_genmsg)
   endif()
 
   # Include PCL
@@ -156,10 +188,10 @@ endfunction()
 add_subdirectory(src/comms/)
 
 add_lrauv_plugin(ControlPanelPlugin GUI
-  PROTO lrauv_gazebo_messages)
+  PROTO ${PROJECT_NAME}-lrauv_gazebo_messages)
 add_lrauv_plugin(DopplerVelocityLog
   RENDERING
-  PROTO lrauv_gazebo_messages)
+  PROTO ${PROJECT_NAME}-lrauv_gazebo_messages)
 target_link_libraries(DopplerVelocityLog PUBLIC ${GZ_SENSORS}-rendering)
 add_lrauv_plugin(DopplerVelocityLogSystem RENDERING)
 target_link_libraries(DopplerVelocityLogSystem PUBLIC
@@ -167,7 +199,7 @@ target_link_libraries(DopplerVelocityLogSystem PUBLIC
 add_lrauv_plugin(HydrodynamicsPlugin)
 add_lrauv_plugin(RangeBearingPlugin
   PROTO
-    lrauv_gazebo_messages
+    ${PROJECT_NAME}-lrauv_gazebo_messages
   PRIVATE_LINK_LIBS
     acoustic_comms_support)
 add_lrauv_plugin(ReferenceAxis GUI RENDERING)
@@ -177,12 +209,12 @@ add_lrauv_plugin(ScienceSensorsSystem
     ${GZ_SENSORS}
     ${PCL_LIBRARIES})
 add_lrauv_plugin(SpawnPanelPlugin GUI
-  PROTO lrauv_gazebo_messages)
+  PROTO ${PROJECT_NAME}-lrauv_gazebo_messages)
 add_lrauv_plugin(TethysCommPlugin
-  PROTO lrauv_gazebo_messages)
+  PROTO ${PROJECT_NAME}-lrauv_gazebo_messages)
 add_lrauv_plugin(TimeAnalysisPlugin)
 add_lrauv_plugin(WorldCommPlugin
-  PROTO lrauv_gazebo_messages)
+  PROTO ${PROJECT_NAME}-lrauv_gazebo_messages)
 add_lrauv_plugin(WorldConfigPlugin GUI)
 
 #============================================================================
@@ -192,6 +224,25 @@ install(
     DESTINATION include
     FILES_MATCHING
     PATTERN "*.hh")
+
+install(
+  DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-lrauv_gazebo_messages_genmsg/lrauv_gazebo_plugins
+    DESTINATION include
+    FILES_MATCHING
+    PATTERN "*.pb.h")
+
+install(
+  TARGETS ${PROJECT_NAME}-lrauv_gazebo_messages
+  EXPORT ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+install(
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-lrauv_gazebo_messages.gz_desc
+    DESTINATION proto)
 
 #============================================================================
 # Examples
@@ -213,11 +264,14 @@ foreach(EXAMPLE
 
   add_executable(${EXAMPLE_EXEC} example/${EXAMPLE}.cc)
   set_property(TARGET ${EXAMPLE_EXEC} PROPERTY CXX_STANDARD 17)
-  target_include_directories(${EXAMPLE_EXEC} PUBLIC include)
+  target_include_directories(${EXAMPLE_EXEC}
+    PUBLIC
+      include
+      ${CMAKE_CURRENT_BINARY_DIR}/${add_lrauv_plugin_PROTO}_genmsg)
   target_link_libraries(${EXAMPLE_EXEC} PRIVATE
     gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
     acoustic_comms_support
-    lrauv_gazebo_messages)
+    ${PROJECT_NAME}-lrauv_gazebo_messages)
 
   install(
     TARGETS ${EXAMPLE_EXEC}

@@ -3,6 +3,8 @@ prepend-non-duplicate;GZ_SIM_RESOURCE_PATH;@CMAKE_INSTALL_PREFIX@/share/@PROJECT
 prepend-non-duplicate;GZ_SIM_RESOURCE_PATH;@CMAKE_INSTALL_PREFIX@/share/@PROJECT_NAME@/data
 prepend-non-duplicate;GZ_SIM_SYSTEM_PLUGIN_PATH;@CMAKE_INSTALL_PREFIX@/lib
 
+prepend-non-duplicate;GZ_DESCRIPTOR_PATH;@CMAKE_INSTALL_PREFIX@/proto
+
 prepend-non-duplicate;GZ_GUI_PLUGIN_PATH;@CMAKE_INSTALL_PREFIX@/lib/gui
 
 prepend-non-duplicate;TETHYS_COMMS_MODEL;@CMAKE_INSTALL_PREFIX@/lib

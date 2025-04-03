@@ -24,7 +24,7 @@
 
 #include <chrono>
 
-#include <lrauv_gazebo_plugins/lrauv_command.pb.h>
+#include <lrauv_gazebo_plugins/msgs/lrauv_command.pb.h>
 
 #include "lrauv_system_tests/TestFixture.hh"
 

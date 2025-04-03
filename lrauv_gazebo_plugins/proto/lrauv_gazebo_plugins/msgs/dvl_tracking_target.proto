@@ -20,8 +20,8 @@ package lrauv_gazebo_plugins.msgs;
 option java_package = "lrauv_gazebo_plugins.msgs";
 option java_outer_classname = "DVLProtos";
 
-import "lrauv_gazebo_plugins/dvl_kinematic_estimate.proto";
-import "lrauv_gazebo_plugins/dvl_range_estimate.proto";
+import "lrauv_gazebo_plugins/msgs/dvl_kinematic_estimate.proto";
+import "lrauv_gazebo_plugins/msgs/dvl_range_estimate.proto";
 
 message DVLTrackingTarget
 {

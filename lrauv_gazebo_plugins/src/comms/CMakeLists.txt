@@ -8,10 +8,11 @@ add_library(acoustic_comms_support SHARED CommsPacket.cc)
 target_link_libraries(acoustic_comms_support PUBLIC
   gz-plugin${GZ_PLUGIN_VER}::gz-plugin${GZ_PLUGIN_VER}
   gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
-  lrauv_gazebo_messages
+  ${PROJECT_NAME}-lrauv_gazebo_messages
 )
 target_include_directories(acoustic_comms_support PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/${add_lrauv_plugin_PROTO}_genmsg>
   $<INSTALL_INTERFACE:include>
 )
 

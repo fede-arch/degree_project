@@ -4,7 +4,7 @@ target_include_directories(test_spawn
 target_link_libraries(test_spawn
   PUBLIC gtest_main
   PRIVATE
-    lrauv_gazebo_plugins::lrauv_gazebo_messages
+    lrauv_gazebo_plugins::lrauv_gazebo_plugins-lrauv_gazebo_messages
     ${PROJECT_NAME}_support
 )
 gtest_discover_tests(test_spawn)
@@ -15,7 +15,7 @@ target_include_directories(test_state
 target_link_libraries(test_state
   PUBLIC gtest_main
   PRIVATE
-    lrauv_gazebo_plugins::lrauv_gazebo_messages
+    lrauv_gazebo_plugins::lrauv_gazebo_plugins-lrauv_gazebo_messages
     ${PROJECT_NAME}_support
 )
 gtest_discover_tests(test_state)

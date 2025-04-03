@@ -26,8 +26,8 @@
 
 #include <gz/math/Angle.hh>
 
-#include <lrauv_gazebo_plugins/lrauv_command.pb.h>
-#include <lrauv_gazebo_plugins/lrauv_state.pb.h>
+#include <lrauv_gazebo_plugins/msgs/lrauv_command.pb.h>
+#include <lrauv_gazebo_plugins/msgs/lrauv_state.pb.h>
 
 #include "lrauv_system_tests/TestFixture.hh"
 

@@ -37,8 +37,8 @@
 #include <gz/plugin/Register.hh>
 #include <gz/transport/TopicUtils.hh>
 
-#include "lrauv_gazebo_plugins/lrauv_command.pb.h"
-#include "lrauv_gazebo_plugins/lrauv_state.pb.h"
+#include "lrauv_gazebo_plugins/msgs/lrauv_command.pb.h"
+#include "lrauv_gazebo_plugins/msgs/lrauv_state.pb.h"
 
 #include "TethysCommPlugin.hh"
 

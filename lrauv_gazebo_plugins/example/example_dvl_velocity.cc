@@ -36,7 +36,7 @@
 #include <gz/msgs.hh>
 #include <gz/transport.hh>
 
-#include "lrauv_gazebo_plugins/dvl_velocity_tracking.pb.h"
+#include "lrauv_gazebo_plugins/msgs/dvl_velocity_tracking.pb.h"
 
 void callback(const lrauv_gazebo_plugins::msgs::DVLVelocityTracking &_msg)
 {

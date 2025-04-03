@@ -26,7 +26,7 @@
 #include <condition_variable>
 #include <mutex>
 
-#include <lrauv_gazebo_plugins/lrauv_acoustic_message.pb.h>
+#include <lrauv_gazebo_plugins/msgs/lrauv_acoustic_message.pb.h>
 
 #include <lrauv_gazebo_plugins/comms/CommsClient.hh>
 #include <lrauv_gazebo_plugins/comms/CommsPacket.hh>
