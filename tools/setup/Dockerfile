@@ -93,7 +93,7 @@ FROM base AS harmonic
 ENV GZ_WS=/home/$USERNAME/gz_ws
 RUN mkdir -p $GZ_WS/src
 RUN cd $GZ_WS && wget https://raw.githubusercontent.com/gazebo-tooling/gazebodistro/master/collection-harmonic.yaml
-RUN cd $GZ_WS && vcs import src < collection-garden.yaml && vcs pull src
+RUN cd $GZ_WS && vcs import src < collection-harmonic.yaml && vcs pull src
 
 USER root
 
