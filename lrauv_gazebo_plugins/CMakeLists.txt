@@ -22,17 +22,17 @@ endif()
 # Find dependencies
 find_package(gz-cmake3 REQUIRED)
 
-find_package(gz-sim7 REQUIRED COMPONENTS gui)
-set(GZ_SIM_VER ${gz-sim7_VERSION_MAJOR})
+find_package(gz-sim8 REQUIRED COMPONENTS gui)
+set(GZ_SIM_VER ${gz-sim8_VERSION_MAJOR})
 
-find_package(gz-gui7 REQUIRED)
-set(GZ_GUI_VER ${gz-gui7_VERSION_MAJOR})
+find_package(gz-gui8 REQUIRED)
+set(GZ_GUI_VER ${gz-gui8_VERSION_MAJOR})
 
-find_package(gz-rendering7 REQUIRED)
-set(GZ_RENDERING_VER ${gz-rendering7_VERSION_MAJOR})
+find_package(gz-rendering8 REQUIRED)
+set(GZ_RENDERING_VER ${gz-rendering8_VERSION_MAJOR})
 
-find_package(gz-sensors7 REQUIRED)
-set(GZ_SENSORS_VER ${gz-sensors7_VERSION_MAJOR})
+find_package(gz-sensors8 REQUIRED)
+set(GZ_SENSORS_VER ${gz-sensors8_VERSION_MAJOR})
 set(GZ_SENSORS gz-sensors${GZ_SENSORS_VER}::gz-sensors${GZ_SENSORS_VER})
 
 find_package(gz-msgs10 REQUIRED)
