@@ -18,12 +18,12 @@
 # Development of this module has been funded by the Monterey Bay Aquarium
 # Research Institute (MBARI) and the David and Lucile Packard Foundation
 #
-ARG BASE_IMAGE=garden
+ARG BASE_IMAGE=harmonic
 
 ############################################################
 ###                        Base stage                    ###
 ############################################################
-FROM nvidia/opengl:1.0-glvnd-devel-ubuntu20.04 AS base
+FROM nvidia/opengl:1.0-glvnd-devel-ubuntu22.04 AS base
 
 # This avoids keyboard interaction when asked for geographic area
 ARG DEBIAN_FRONTEND=noninteractive
@@ -86,13 +86,13 @@ USER $USERNAME
 WORKDIR /home/$USERNAME
 
 ############################################################
-###                  Gazebo Garden stage                 ###
+###                  Gazebo Harmonic stage               ###
 ############################################################
-FROM base AS garden
+FROM base AS harmonic
 
 ENV GZ_WS=/home/$USERNAME/gz_ws
 RUN mkdir -p $GZ_WS/src
-RUN cd $GZ_WS && wget https://raw.githubusercontent.com/gazebo-tooling/gazebodistro/master/collection-garden.yaml
+RUN cd $GZ_WS && wget https://raw.githubusercontent.com/gazebo-tooling/gazebodistro/master/collection-harmonic.yaml
 RUN cd $GZ_WS && vcs import src < collection-garden.yaml && vcs pull src
 
 USER root
