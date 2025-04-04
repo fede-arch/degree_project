@@ -30,6 +30,7 @@
 #include <gz/math/Temperature.hh>
 #include <gz/transport/Node.hh>
 
+#include <gz/msgs/battery_state.pb.h>
 #include "lrauv_gazebo_plugins/msgs/lrauv_command.pb.h"
 
 namespace tethys
