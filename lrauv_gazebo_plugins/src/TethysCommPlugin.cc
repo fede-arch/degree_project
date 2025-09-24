@@ -438,6 +438,10 @@ void TethysCommPlugin::SetupEntities(
 void TethysCommPlugin::CommandCallback(
   const lrauv_gazebo_plugins::msgs::LRAUVCommand &_msg)
 {
+  // ask PostUpdate thread to stamp this in nearest sim time
+  // and start state feedback publish timer
+  this->startPubClock.store(true, std::memory_order_release);
+
   if (this->debugPrintout)
   {
     gzdbg << "[" << this->ns << "] Received command: " << std::endl
@@ -526,16 +530,17 @@ void TethysCommPlugin::PostUpdate(
   if (_info.paused)
     return;
 
+  auto now_sec = std::chrono::duration_cast<std::chrono::seconds>(_info.simTime);
+  auto now_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(_info.simTime);
+
   // Publish state
   lrauv_gazebo_plugins::msgs::LRAUVState stateMsg;
 
   ///////////////////////////////////
   // Header
-  stateMsg.mutable_header()->mutable_stamp()->set_sec(
-    std::chrono::duration_cast<std::chrono::seconds>(_info.simTime).count());
+  stateMsg.mutable_header()->mutable_stamp()->set_sec(now_sec.count());
   stateMsg.mutable_header()->mutable_stamp()->set_nsec(
-    int(std::chrono::duration_cast<std::chrono::nanoseconds>(
-    _info.simTime).count()) - stateMsg.header().stamp().sec() * 1000000000);
+    int(now_nsec.count()) - stateMsg.header().stamp().sec() * 1e9);
 
   ///////////////////////////////////
   // Actuators
@@ -665,7 +670,9 @@ void TethysCommPlugin::PostUpdate(
     auto calcPressure = pressureFromDepthLatitude(-modelPoseENU.Pos().Z(),
       latlon.value().X());
     if (calcPressure >= 0)
+    {
       pressure = calcPressure;
+    }
   }
 
   stateMsg.add_values_(pressure);
@@ -675,38 +682,53 @@ void TethysCommPlugin::PostUpdate(
   // Not populating vertCurrent because we're not getting it from the science
   // data
 
-  this->statePub.Publish(stateMsg);
-
-  if (this->debugPrintout &&
-    _info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
+  // If we got a command, start/reset timer to publish state feedback
+  if (this->startPubClock.load(std::memory_order_acquire))
   {
-    gzdbg << "[" << this->ns << "] Published state to " << this->stateTopic
-      << " at time: " << stateMsg.header().stamp().sec()
-      << "." << stateMsg.header().stamp().nsec() << std::endl
-      << "\tLat / lon (deg): " << stateMsg.latitudedeg_() << " / "
-                               << stateMsg.longitudedeg_() << std::endl
-      << "\tpropOmega: " << stateMsg.propomega_() << std::endl
-      << "\tSpeed: " << stateMsg.speed_() << std::endl
-      << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl
-      << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl
-      << "\tMass shifter (m): " << stateMsg.massposition_() << std::endl
-      << "\tVBS volume (m^3): " << stateMsg.buoyancyposition_() << std::endl
-      << "\tPitch angle (deg): "
-        << stateMsg.rph_().y() * 180 / M_PI << std::endl
-      << "\tCurrent (ENU, m/s): "
-        << stateMsg.eastcurrent_() << ", "
-        << stateMsg.northcurrent_() << ", "
-        << stateMsg.vertcurrent_() << std::endl
-      << "\tTemperature (C): " << stateMsg.temperature_() << std::endl
-      << "\tSalinity (PSU): " << stateMsg.salinity_() << std::endl
-      << "\tChlorophyll (ug/L): " << stateMsg.values_(0) << std::endl
-      << "\tPressure (Pa): " << stateMsg.values_(1) << std::endl
-      << "\tBattery Voltage (V): " << stateMsg.batteryvoltage_() << std::endl
-      << "\tBattery Current (A): " << stateMsg.batterycurrent_() << std::endl
-      << "\tBattery Charge (Ah): " << stateMsg.batterycharge_() << std::endl
-      << "\tBattery Percentage (unitless): " << stateMsg.batterypercentage_() << std::endl;
+    this->lastCmdTimeNs = now_nsec;
+    this->needPublish = true;
+    this->startPubClock.store(false, std::memory_order_release);
+  }
 
-    this->prevPubPrintTime = _info.simTime;
+  // we got a command, so check timer to publish state feedback
+  if (this->needPublish &&
+    (now_nsec - this->lastCmdTimeNs) >= this->pubDelayNs)  // 210ms delay is half LRAUV cycle
+  {
+    this->statePub.Publish(stateMsg);
+    this->needPublish = false;
+
+    // try to print debug no faster than 1Hz
+    if (this->debugPrintout &&
+      _info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
+    {
+      gzdbg << "[" << this->ns << "] Published state to " << this->stateTopic
+        << " at time: " << stateMsg.header().stamp().sec()
+        << "." << stateMsg.header().stamp().nsec() << std::endl
+        << "\tLat / lon (deg): " << stateMsg.latitudedeg_() << " / "
+                                 << stateMsg.longitudedeg_() << std::endl
+        << "\tpropOmega: " << stateMsg.propomega_() << std::endl
+        << "\tSpeed: " << stateMsg.speed_() << std::endl
+        << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl
+        << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl
+        << "\tMass shifter (m): " << stateMsg.massposition_() << std::endl
+        << "\tVBS volume (m^3): " << stateMsg.buoyancyposition_() << std::endl
+        << "\tPitch angle (deg): "
+          << stateMsg.rph_().y() * 180 / M_PI << std::endl
+        << "\tCurrent (ENU, m/s): "
+          << stateMsg.eastcurrent_() << ", "
+          << stateMsg.northcurrent_() << ", "
+          << stateMsg.vertcurrent_() << std::endl
+        << "\tTemperature (C): " << stateMsg.temperature_() << std::endl
+        << "\tSalinity (PSU): " << stateMsg.salinity_() << std::endl
+        << "\tChlorophyll (ug/L): " << stateMsg.values_(0) << std::endl
+        << "\tPressure (Pa): " << stateMsg.values_(1) << std::endl
+        << "\tBattery Voltage (V): " << stateMsg.batteryvoltage_() << std::endl
+        << "\tBattery Current (A): " << stateMsg.batterycurrent_() << std::endl
+        << "\tBattery Charge (Ah): " << stateMsg.batterycharge_() << std::endl
+        << "\tBattery Percentage (unitless): " << stateMsg.batterypercentage_() << std::endl;
+
+      this->prevPubPrintTime = _info.simTime;
+    }
   }
 }
 

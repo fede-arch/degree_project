@@ -35,6 +35,8 @@
 
 namespace tethys
 {
+  using namespace std::chrono_literals;
+
   class TethysCommPlugin:
     public gz::sim::System,
     public gz::sim::ISystemConfigure,
@@ -100,6 +102,18 @@ namespace tethys
 
     /// Enable debug printout
     private: bool debugPrintout = false;
+
+    /// Flag for starting timer to publish state feedback after receiving command
+    private: std::atomic<bool> startPubClock{false};
+
+    /// Flag for checking timer to publish state feedback
+    private: bool needPublish{false};
+
+    /// Start of timer to publish state feedback
+    private: std::chrono::nanoseconds lastCmdTimeNs{0s};
+
+    /// Duration to wait after receiving command to publish state feedback
+    private: std::chrono::nanoseconds pubDelayNs{210ms};  // half of LRAUV cycle
 
     /// Namespace for topics.
     private: std::string ns{""};

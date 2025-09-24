@@ -23,7 +23,7 @@ ARG BASE_IMAGE=harmonic
 ############################################################
 ###                        Base stage                    ###
 ############################################################
-FROM nvidia/opengl:1.0-glvnd-devel-ubuntu22.04 AS base
+FROM nvidia/opengl:1.2-glvnd-devel-ubuntu22.04 AS base
 
 # This avoids keyboard interaction when asked for geographic area
 ARG DEBIAN_FRONTEND=noninteractive
@@ -39,6 +39,7 @@ RUN apt-get -qq update && apt-get -q install -y \
     tmux \
     tzdata \
     wget \
+    jq \
   && rm -rf /var/lib/apt/lists/* \
   && apt-get -qq clean
 
@@ -46,10 +47,13 @@ RUN apt-get -qq update && apt-get -q install -y \
 RUN echo 'Etc/UTC' > /etc/timezone && \
   ln -fs /usr/share/zoneinfo/Etc/UTC /etc/localtime
 
-# Install Ignition build tools
+# Install ROS 2 build tools
 # https://colcon.readthedocs.io/en/released/user/installation.html
-RUN echo "deb [arch=amd64,arm64] http://repo.ros2.org/ubuntu/main $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2-latest.list && \
-  wget https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc -O - | apt-key add -
+RUN ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | jq -r .tag_name) \
+ && CODENAME=$(lsb_release -sc) \
+ && curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.${CODENAME}_all.deb" \
+ && dpkg -i /tmp/ros2-apt-source.deb \
+ && rm /tmp/ros2-apt-source.deb
 
 RUN apt-get -qq update && apt-get -q -y install \
     build-essential \
