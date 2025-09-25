@@ -113,7 +113,7 @@ namespace tethys
     private: std::chrono::nanoseconds lastCmdTimeNs{0s};
 
     /// Duration to wait after receiving command to publish state feedback
-    private: std::chrono::nanoseconds pubDelayNs{210ms};  // half of LRAUV cycle
+    private: std::chrono::nanoseconds pubDelayNs{180ms};  // half of LRAUV cycle
 
     /// Namespace for topics.
     private: std::string ns{""};
@@ -192,10 +192,10 @@ namespace tethys
 
     /// TODO(mabelzhang) Remove when stable. Temporary counter for state
     /// message sanity check
-    private: int counter = 0;
+    private: int counter{0};
 
     /// Buoyancy bladder size in cc
-    private: double buoyancyBladderVolume = 300;
+    private: double buoyancyBladderVolume{300.0};
 
     /// Latest salinity data received from sensor. NaN if not received.
     private: float latestSalinity{std::nanf("")};
@@ -219,7 +219,7 @@ namespace tethys
     private: float latestChlorophyll{std::nanf("")};
 
     /// Ocean Density in kg / m ^ 3
-    private: double oceanDensity{1000};
+    private: double oceanDensity{1025};
 
     /// Latest current data received from sensor. NaN if not received.
     private: gz::math::Vector3d latestCurrent

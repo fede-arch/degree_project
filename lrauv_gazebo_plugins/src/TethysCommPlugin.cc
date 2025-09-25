@@ -531,6 +531,7 @@ void TethysCommPlugin::PostUpdate(
     return;
 
   auto now_sec = std::chrono::duration_cast<std::chrono::seconds>(_info.simTime);
+  auto frac_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(_info.simTime - now_sec);
   auto now_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(_info.simTime);
 
   // Publish state
@@ -539,8 +540,7 @@ void TethysCommPlugin::PostUpdate(
   ///////////////////////////////////
   // Header
   stateMsg.mutable_header()->mutable_stamp()->set_sec(now_sec.count());
-  stateMsg.mutable_header()->mutable_stamp()->set_nsec(
-    int(now_nsec.count()) - stateMsg.header().stamp().sec() * 1e9);
+  stateMsg.mutable_header()->mutable_stamp()->set_nsec(static_cast<int32_t>(frac_nsec.count()));
 
   ///////////////////////////////////
   // Actuators
@@ -682,20 +682,27 @@ void TethysCommPlugin::PostUpdate(
   // Not populating vertCurrent because we're not getting it from the science
   // data
 
+
   // If we got a command, start/reset timer to publish state feedback
   if (this->startPubClock.load(std::memory_order_acquire))
   {
+    // gzdbg << "[" << this->ns << "][" << now_sec.count() << "," << frac_nsec.count() << "] got command so publish half period after" << std::endl;
     this->lastCmdTimeNs = now_nsec;
     this->needPublish = true;
     this->startPubClock.store(false, std::memory_order_release);
   }
 
+  std::chrono::nanoseconds delay = this->needPublish ? this->pubDelayNs : 400ms;  // half LRAUV cycle after command, or full cycle otherwise
+
   // we got a command, so check timer to publish state feedback
-  if (this->needPublish &&
-    (now_nsec - this->lastCmdTimeNs) >= this->pubDelayNs)  // 210ms delay is half LRAUV cycle
+  // try to publish every cycle (offset by half a cycle)
+  //if (this->needPublish &&
+  if ((now_nsec - this->lastCmdTimeNs) >= delay)
   {
+    // gzdbg << "[" << this->ns << "][" << now_sec.count() << "," << frac_nsec.count() << "] do publish [delay was " << delay.count() << "]" << std::endl;
     this->statePub.Publish(stateMsg);
     this->needPublish = false;
+    this->lastCmdTimeNs = now_nsec;
 
     // try to print debug no faster than 1Hz
     if (this->debugPrintout &&
