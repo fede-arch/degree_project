@@ -347,6 +347,7 @@
         <state_topic>tethys/state_topic</state_topic>
         <debug_printout>0</debug_printout>
         <ocean_density>1025</ocean_density>
+        <override_mass_jpc>false</override_mass_jpc>
       </plugin>
       <plugin
         filename="HydrodynamicsPlugin"

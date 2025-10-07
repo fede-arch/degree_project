@@ -23,6 +23,7 @@
 #include <chrono>
 
 #include <gz/sim/Util.hh>
+#include <gz/sim/Joint.hh>
 #include <gz/sim/components/AngularVelocity.hh>
 #include <gz/sim/components/JointPosition.hh>
 #include <gz/sim/components/JointVelocity.hh>
@@ -409,6 +410,11 @@ void TethysCommPlugin::SetupEntities(
     this->massShifterJointName = _sdf->Get<std::string>("mass_shifter_joint");
   }
 
+  if (_sdf->HasElement("override_mass_jpc"))
+  {
+    this->override_mass_jpc = _sdf->Get<bool>("override_mass_jpc");
+  }
+
   this->modelEntity = _entity;
 
   auto model = gz::sim::Model(_entity);
@@ -427,6 +433,10 @@ void TethysCommPlugin::SetupEntities(
   AddJointPosition(this->rudderJoint, _ecm);
   AddJointPosition(this->elevatorJoint, _ecm);
   AddJointPosition(this->massShifterJoint, _ecm);
+  if (!this->override_mass_jpc)
+  {
+    AddJointVelocity(this->massShifterJoint, _ecm);
+  }
   AddJointVelocity(this->thrusterJoint, _ecm);
   AddWorldLinearVelocity(this->baseLink, _ecm);
 
@@ -465,9 +475,23 @@ void TethysCommPlugin::CommandCallback(
   this->thrusterPub.Publish(thrusterMsg);
 
   // Mass shifter
-  gz::msgs::Double massShifterMsg;
-  massShifterMsg.set_data(_msg.masspositionaction_());
-  this->massShifterPub.Publish(massShifterMsg);
+  if (!this->override_mass_jpc)
+  {
+    gz::msgs::Double massShifterMsg;
+    if (std::isnan(_msg.masspositionaction_()))
+    {
+      massShifterMsg.set_data(0.0);
+    }
+    else
+    {
+      massShifterMsg.set_data(_msg.masspositionaction_());
+    }
+    this->massShifterPub.Publish(massShifterMsg);
+  }
+  else
+  {
+    this->latestMassPositionAction = _msg.masspositionaction_();
+  }
 
   // Buoyancy Engine
   gz::msgs::Double buoyancyEngineMsg;
@@ -523,6 +547,23 @@ void TethysCommPlugin::CurrentCallback(
   this->latestCurrent = gz::msgs::Convert(_msg);
 }
 
+void TethysCommPlugin::PreUpdate(
+  const gz::sim::UpdateInfo &_info,
+  gz::sim::EntityComponentManager &_ecm)
+{
+  if (_info.paused)
+    return;
+
+  // Mass shifter
+  if (this->override_mass_jpc)
+  {
+    auto joint = gz::sim::Joint(this->massShifterJoint);
+    joint.EnablePositionCheck(_ecm, true);
+    joint.EnableVelocityCheck(_ecm, true);
+    joint.ResetPosition(_ecm, {this->latestMassPositionAction});
+  }
+}
+
 void TethysCommPlugin::PostUpdate(
   const gz::sim::UpdateInfo &_info,
   const gz::sim::EntityComponentManager &_ecm)
@@ -568,7 +609,7 @@ void TethysCommPlugin::PostUpdate(
     _ecm.Component<gz::sim::components::JointPosition>(elevatorJoint);
   if (elevatorPosComp->Data().size() != 1)
   {
-    gzerr << "Elavator joint has wrong size\n";
+    gzerr << "Elevator joint has wrong size\n";
     return;
   }
   stateMsg.set_elevatorangle_(elevatorPosComp->Data()[0]);
@@ -743,4 +784,5 @@ GZ_ADD_PLUGIN(
   tethys::TethysCommPlugin,
   gz::sim::System,
   tethys::TethysCommPlugin::ISystemConfigure,
+  tethys::TethysCommPlugin::ISystemPreUpdate,
   tethys::TethysCommPlugin::ISystemPostUpdate)

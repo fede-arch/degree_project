@@ -40,6 +40,7 @@ namespace tethys
   class TethysCommPlugin:
     public gz::sim::System,
     public gz::sim::ISystemConfigure,
+    public gz::sim::ISystemPreUpdate,
     public gz::sim::ISystemPostUpdate
   {
     // Documentation inherited
@@ -48,6 +49,11 @@ namespace tethys
                 const std::shared_ptr<const sdf::Element> &_sdf,
                 gz::sim::EntityComponentManager &_ecm,
                 gz::sim::EventManager &_eventMgr) override;
+
+    // Documentation inherited
+    public: void PreUpdate(
+                const gz::sim::UpdateInfo &_info,
+                gz::sim::EntityComponentManager &_ecm) override;
 
     // Documentation inherited
     public: void PostUpdate(
@@ -190,6 +196,9 @@ namespace tethys
     /// Mass shifter joint name
     private: std::string massShifterJointName{"battery_joint"};
 
+    /// override mass shifter joint position controller (bug workaround)
+    private: bool override_mass_jpc{false};
+
     /// TODO(mabelzhang) Remove when stable. Temporary counter for state
     /// message sanity check
     private: int counter{0};
@@ -217,6 +226,9 @@ namespace tethys
 
     /// Latest chlorophyll data received from sensor. NaN if not received.
     private: float latestChlorophyll{std::nanf("")};
+
+    /// Latest Mass Position Command (default to 0.0 meters if not received).
+    private: double latestMassPositionAction{0.0};
 
     /// Ocean Density in kg / m ^ 3
     private: double oceanDensity{1025};
