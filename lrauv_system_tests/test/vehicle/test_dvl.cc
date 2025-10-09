@@ -31,8 +31,8 @@
 #include <string>
 #include <utility>
 
-#include <lrauv_gazebo_plugins/dvl_velocity_tracking.pb.h>
-#include <lrauv_gazebo_plugins/dvl_tracking_target.pb.h>
+#include <lrauv_gazebo_plugins/msgs/dvl_velocity_tracking.pb.h>
+#include <lrauv_gazebo_plugins/msgs/dvl_tracking_target.pb.h>
 
 #include "lrauv_system_tests/TestFixture.hh"
 #include "lrauv_system_tests/Util.hh"

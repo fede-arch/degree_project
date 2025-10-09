@@ -28,9 +28,9 @@ option java_outer_classname = "DVLProtos";
 /// of the craft.
 
 import "gz/msgs/header.proto";
-import "lrauv_gazebo_plugins/dvl_beam_state.proto";
-import "lrauv_gazebo_plugins/dvl_tracking_target.proto";
-import "lrauv_gazebo_plugins/dvl_kinematic_estimate.proto";
+import "lrauv_gazebo_plugins/msgs/dvl_beam_state.proto";
+import "lrauv_gazebo_plugins/msgs/dvl_tracking_target.proto";
+import "lrauv_gazebo_plugins/msgs/dvl_kinematic_estimate.proto";
 
 message DVLVelocityTracking
 {

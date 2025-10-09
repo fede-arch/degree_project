@@ -119,7 +119,7 @@
             </arrangement>
             <tracking>
               <bottom_mode>
-                <when>best</when>
+                <when>always</when>
                 <noise type="gaussian">
                   <!-- +/- 0.4 cm/s precision at 10 m/s within 2 stddevs -->
                   <stddev>0.002</stddev>
@@ -127,7 +127,7 @@
                 <visualize>false</visualize>
               </bottom_mode>
               <water_mass_mode>
-                <when>best</when>
+                <when>never</when>
                 <water_velocity>
                   <x>eastward_sea_water_velocity_meter_per_sec</x>
                   <y>northward_sea_water_velocity_meter_per_sec</y>
@@ -147,7 +147,7 @@
             <!-- Roughly 1 m resolution at a 100m -->
             <resolution>0.01</resolution>
             <!-- Approximate maximum range @ ~14.4v -->
-            <maximum_range>80.</maximum_range>
+            <maximum_range>120.</maximum_range>
             <minimum_range>0.1</minimum_range>
             <!-- ENU to SFM -->
             <reference_frame>0 0 0 0 0 -1.570796</reference_frame>
@@ -296,7 +296,8 @@
         name="gz::sim::systems::JointPositionController">
         <joint_name>battery_joint</joint_name>
         <use_velocity_commands>true</use_velocity_commands>
-        <cmd_max>0.0007</cmd_max>
+        <!-- TODO(andermi) WORKAROUND FOR KNOWN BUG IN GZ SIM -->
+        <!--cmd_max>0.0007</cmd_max-->
       </plugin>
       <!-- Lift and drag -->
       <!-- Vertical fin -->
@@ -346,6 +347,7 @@
         <state_topic>tethys/state_topic</state_topic>
         <debug_printout>0</debug_printout>
         <ocean_density>1025</ocean_density>
+        <override_mass_jpc>false</override_mass_jpc>
       </plugin>
       <plugin
         filename="HydrodynamicsPlugin"

@@ -23,7 +23,7 @@
 #include <mutex>
 
 #include <gz/msgs/pointcloud_packed.pb.h>
-
+#include <gz/msgs/float_v.pb.h>
 
 #include <gz/common/Profiler.hh>
 #include <gz/common/SystemPaths.hh>

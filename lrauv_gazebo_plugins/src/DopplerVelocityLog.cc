@@ -52,11 +52,11 @@
 
 #include <gz/transport/Node.hh>
 
-#include "lrauv_gazebo_plugins/dvl_beam_state.pb.h"
-#include "lrauv_gazebo_plugins/dvl_kinematic_estimate.pb.h"
-#include "lrauv_gazebo_plugins/dvl_range_estimate.pb.h"
-#include "lrauv_gazebo_plugins/dvl_tracking_target.pb.h"
-#include "lrauv_gazebo_plugins/dvl_velocity_tracking.pb.h"
+#include "lrauv_gazebo_plugins/msgs/dvl_beam_state.pb.h"
+#include "lrauv_gazebo_plugins/msgs/dvl_kinematic_estimate.pb.h"
+#include "lrauv_gazebo_plugins/msgs/dvl_range_estimate.pb.h"
+#include "lrauv_gazebo_plugins/msgs/dvl_tracking_target.pb.h"
+#include "lrauv_gazebo_plugins/msgs/dvl_velocity_tracking.pb.h"
 
 #include "DopplerVelocityLog.hh"
 

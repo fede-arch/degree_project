@@ -30,7 +30,7 @@
 #include <gz/transport/Node.hh>
 
 
-#include "lrauv_gazebo_plugins/lrauv_acoustic_message.pb.h"
+#include "lrauv_gazebo_plugins/msgs/lrauv_acoustic_message.pb.h"
 
 using LRAUVAcousticMessage =
     lrauv_gazebo_plugins::msgs::LRAUVAcousticMessage;

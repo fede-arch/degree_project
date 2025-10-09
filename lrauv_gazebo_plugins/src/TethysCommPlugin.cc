@@ -23,6 +23,7 @@
 #include <chrono>
 
 #include <gz/sim/Util.hh>
+#include <gz/sim/Joint.hh>
 #include <gz/sim/components/AngularVelocity.hh>
 #include <gz/sim/components/JointPosition.hh>
 #include <gz/sim/components/JointVelocity.hh>
@@ -37,8 +38,8 @@
 #include <gz/plugin/Register.hh>
 #include <gz/transport/TopicUtils.hh>
 
-#include "lrauv_gazebo_plugins/lrauv_command.pb.h"
-#include "lrauv_gazebo_plugins/lrauv_state.pb.h"
+#include "lrauv_gazebo_plugins/msgs/lrauv_command.pb.h"
+#include "lrauv_gazebo_plugins/msgs/lrauv_state.pb.h"
 
 #include "TethysCommPlugin.hh"
 
@@ -409,6 +410,11 @@ void TethysCommPlugin::SetupEntities(
     this->massShifterJointName = _sdf->Get<std::string>("mass_shifter_joint");
   }
 
+  if (_sdf->HasElement("override_mass_jpc"))
+  {
+    this->override_mass_jpc = _sdf->Get<bool>("override_mass_jpc");
+  }
+
   this->modelEntity = _entity;
 
   auto model = gz::sim::Model(_entity);
@@ -427,6 +433,10 @@ void TethysCommPlugin::SetupEntities(
   AddJointPosition(this->rudderJoint, _ecm);
   AddJointPosition(this->elevatorJoint, _ecm);
   AddJointPosition(this->massShifterJoint, _ecm);
+  if (!this->override_mass_jpc)
+  {
+    AddJointVelocity(this->massShifterJoint, _ecm);
+  }
   AddJointVelocity(this->thrusterJoint, _ecm);
   AddWorldLinearVelocity(this->baseLink, _ecm);
 
@@ -438,6 +448,10 @@ void TethysCommPlugin::SetupEntities(
 void TethysCommPlugin::CommandCallback(
   const lrauv_gazebo_plugins::msgs::LRAUVCommand &_msg)
 {
+  // ask PostUpdate thread to stamp this in nearest sim time
+  // and start state feedback publish timer
+  this->startPubClock.store(true, std::memory_order_release);
+
   if (this->debugPrintout)
   {
     gzdbg << "[" << this->ns << "] Received command: " << std::endl
@@ -461,9 +475,23 @@ void TethysCommPlugin::CommandCallback(
   this->thrusterPub.Publish(thrusterMsg);
 
   // Mass shifter
-  gz::msgs::Double massShifterMsg;
-  massShifterMsg.set_data(_msg.masspositionaction_());
-  this->massShifterPub.Publish(massShifterMsg);
+  if (!this->override_mass_jpc)
+  {
+    gz::msgs::Double massShifterMsg;
+    if (std::isnan(_msg.masspositionaction_()))
+    {
+      massShifterMsg.set_data(0.0);
+    }
+    else
+    {
+      massShifterMsg.set_data(_msg.masspositionaction_());
+    }
+    this->massShifterPub.Publish(massShifterMsg);
+  }
+  else
+  {
+    this->latestMassPositionAction = _msg.masspositionaction_();
+  }
 
   // Buoyancy Engine
   gz::msgs::Double buoyancyEngineMsg;
@@ -519,6 +547,23 @@ void TethysCommPlugin::CurrentCallback(
   this->latestCurrent = gz::msgs::Convert(_msg);
 }
 
+void TethysCommPlugin::PreUpdate(
+  const gz::sim::UpdateInfo &_info,
+  gz::sim::EntityComponentManager &_ecm)
+{
+  if (_info.paused)
+    return;
+
+  // Mass shifter
+  if (this->override_mass_jpc)
+  {
+    auto joint = gz::sim::Joint(this->massShifterJoint);
+    joint.EnablePositionCheck(_ecm, true);
+    joint.EnableVelocityCheck(_ecm, true);
+    joint.ResetPosition(_ecm, {this->latestMassPositionAction});
+  }
+}
+
 void TethysCommPlugin::PostUpdate(
   const gz::sim::UpdateInfo &_info,
   const gz::sim::EntityComponentManager &_ecm)
@@ -526,16 +571,17 @@ void TethysCommPlugin::PostUpdate(
   if (_info.paused)
     return;
 
+  auto now_sec = std::chrono::duration_cast<std::chrono::seconds>(_info.simTime);
+  auto frac_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(_info.simTime - now_sec);
+  auto now_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(_info.simTime);
+
   // Publish state
   lrauv_gazebo_plugins::msgs::LRAUVState stateMsg;
 
   ///////////////////////////////////
   // Header
-  stateMsg.mutable_header()->mutable_stamp()->set_sec(
-    std::chrono::duration_cast<std::chrono::seconds>(_info.simTime).count());
-  stateMsg.mutable_header()->mutable_stamp()->set_nsec(
-    int(std::chrono::duration_cast<std::chrono::nanoseconds>(
-    _info.simTime).count()) - stateMsg.header().stamp().sec() * 1000000000);
+  stateMsg.mutable_header()->mutable_stamp()->set_sec(now_sec.count());
+  stateMsg.mutable_header()->mutable_stamp()->set_nsec(static_cast<int32_t>(frac_nsec.count()));
 
   ///////////////////////////////////
   // Actuators
@@ -563,7 +609,7 @@ void TethysCommPlugin::PostUpdate(
     _ecm.Component<gz::sim::components::JointPosition>(elevatorJoint);
   if (elevatorPosComp->Data().size() != 1)
   {
-    gzerr << "Elavator joint has wrong size\n";
+    gzerr << "Elevator joint has wrong size\n";
     return;
   }
   stateMsg.set_elevatorangle_(elevatorPosComp->Data()[0]);
@@ -665,7 +711,9 @@ void TethysCommPlugin::PostUpdate(
     auto calcPressure = pressureFromDepthLatitude(-modelPoseENU.Pos().Z(),
       latlon.value().X());
     if (calcPressure >= 0)
+    {
       pressure = calcPressure;
+    }
   }
 
   stateMsg.add_values_(pressure);
@@ -675,38 +723,60 @@ void TethysCommPlugin::PostUpdate(
   // Not populating vertCurrent because we're not getting it from the science
   // data
 
-  this->statePub.Publish(stateMsg);
 
-  if (this->debugPrintout &&
-    _info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
+  // If we got a command, start/reset timer to publish state feedback
+  if (this->startPubClock.load(std::memory_order_acquire))
   {
-    gzdbg << "[" << this->ns << "] Published state to " << this->stateTopic
-      << " at time: " << stateMsg.header().stamp().sec()
-      << "." << stateMsg.header().stamp().nsec() << std::endl
-      << "\tLat / lon (deg): " << stateMsg.latitudedeg_() << " / "
-                               << stateMsg.longitudedeg_() << std::endl
-      << "\tpropOmega: " << stateMsg.propomega_() << std::endl
-      << "\tSpeed: " << stateMsg.speed_() << std::endl
-      << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl
-      << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl
-      << "\tMass shifter (m): " << stateMsg.massposition_() << std::endl
-      << "\tVBS volume (m^3): " << stateMsg.buoyancyposition_() << std::endl
-      << "\tPitch angle (deg): "
-        << stateMsg.rph_().y() * 180 / M_PI << std::endl
-      << "\tCurrent (ENU, m/s): "
-        << stateMsg.eastcurrent_() << ", "
-        << stateMsg.northcurrent_() << ", "
-        << stateMsg.vertcurrent_() << std::endl
-      << "\tTemperature (C): " << stateMsg.temperature_() << std::endl
-      << "\tSalinity (PSU): " << stateMsg.salinity_() << std::endl
-      << "\tChlorophyll (ug/L): " << stateMsg.values_(0) << std::endl
-      << "\tPressure (Pa): " << stateMsg.values_(1) << std::endl
-      << "\tBattery Voltage (V): " << stateMsg.batteryvoltage_() << std::endl
-      << "\tBattery Current (A): " << stateMsg.batterycurrent_() << std::endl
-      << "\tBattery Charge (Ah): " << stateMsg.batterycharge_() << std::endl
-      << "\tBattery Percentage (unitless): " << stateMsg.batterypercentage_() << std::endl;
+    // gzdbg << "[" << this->ns << "][" << now_sec.count() << "," << frac_nsec.count() << "] got command so publish half period after" << std::endl;
+    this->lastCmdTimeNs = now_nsec;
+    this->needPublish = true;
+    this->startPubClock.store(false, std::memory_order_release);
+  }
 
-    this->prevPubPrintTime = _info.simTime;
+  std::chrono::nanoseconds delay = this->needPublish ? this->pubDelayNs : 400ms;  // half LRAUV cycle after command, or full cycle otherwise
+
+  // we got a command, so check timer to publish state feedback
+  // try to publish every cycle (offset by half a cycle)
+  //if (this->needPublish &&
+  if ((now_nsec - this->lastCmdTimeNs) >= delay)
+  {
+    // gzdbg << "[" << this->ns << "][" << now_sec.count() << "," << frac_nsec.count() << "] do publish [delay was " << delay.count() << "]" << std::endl;
+    this->statePub.Publish(stateMsg);
+    this->needPublish = false;
+    this->lastCmdTimeNs = now_nsec;
+
+    // try to print debug no faster than 1Hz
+    if (this->debugPrintout &&
+      _info.simTime - this->prevPubPrintTime > std::chrono::milliseconds(1000))
+    {
+      gzdbg << "[" << this->ns << "] Published state to " << this->stateTopic
+        << " at time: " << stateMsg.header().stamp().sec()
+        << "." << stateMsg.header().stamp().nsec() << std::endl
+        << "\tLat / lon (deg): " << stateMsg.latitudedeg_() << " / "
+                                 << stateMsg.longitudedeg_() << std::endl
+        << "\tpropOmega: " << stateMsg.propomega_() << std::endl
+        << "\tSpeed: " << stateMsg.speed_() << std::endl
+        << "\tElevator angle: " << stateMsg.elevatorangle_() << std::endl
+        << "\tRudder angle: " << stateMsg.rudderangle_() << std::endl
+        << "\tMass shifter (m): " << stateMsg.massposition_() << std::endl
+        << "\tVBS volume (m^3): " << stateMsg.buoyancyposition_() << std::endl
+        << "\tPitch angle (deg): "
+          << stateMsg.rph_().y() * 180 / M_PI << std::endl
+        << "\tCurrent (ENU, m/s): "
+          << stateMsg.eastcurrent_() << ", "
+          << stateMsg.northcurrent_() << ", "
+          << stateMsg.vertcurrent_() << std::endl
+        << "\tTemperature (C): " << stateMsg.temperature_() << std::endl
+        << "\tSalinity (PSU): " << stateMsg.salinity_() << std::endl
+        << "\tChlorophyll (ug/L): " << stateMsg.values_(0) << std::endl
+        << "\tPressure (Pa): " << stateMsg.values_(1) << std::endl
+        << "\tBattery Voltage (V): " << stateMsg.batteryvoltage_() << std::endl
+        << "\tBattery Current (A): " << stateMsg.batterycurrent_() << std::endl
+        << "\tBattery Charge (Ah): " << stateMsg.batterycharge_() << std::endl
+        << "\tBattery Percentage (unitless): " << stateMsg.batterypercentage_() << std::endl;
+
+      this->prevPubPrintTime = _info.simTime;
+    }
   }
 }
 
@@ -714,4 +784,5 @@ GZ_ADD_PLUGIN(
   tethys::TethysCommPlugin,
   gz::sim::System,
   tethys::TethysCommPlugin::ISystemConfigure,
+  tethys::TethysCommPlugin::ISystemPreUpdate,
   tethys::TethysCommPlugin::ISystemPostUpdate)

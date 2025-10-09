@@ -30,13 +30,17 @@
 #include <gz/math/Temperature.hh>
 #include <gz/transport/Node.hh>
 
-#include "lrauv_gazebo_plugins/lrauv_command.pb.h"
+#include <gz/msgs/battery_state.pb.h>
+#include "lrauv_gazebo_plugins/msgs/lrauv_command.pb.h"
 
 namespace tethys
 {
+  using namespace std::chrono_literals;
+
   class TethysCommPlugin:
     public gz::sim::System,
     public gz::sim::ISystemConfigure,
+    public gz::sim::ISystemPreUpdate,
     public gz::sim::ISystemPostUpdate
   {
     // Documentation inherited
@@ -45,6 +49,11 @@ namespace tethys
                 const std::shared_ptr<const sdf::Element> &_sdf,
                 gz::sim::EntityComponentManager &_ecm,
                 gz::sim::EventManager &_eventMgr) override;
+
+    // Documentation inherited
+    public: void PreUpdate(
+                const gz::sim::UpdateInfo &_info,
+                gz::sim::EntityComponentManager &_ecm) override;
 
     // Documentation inherited
     public: void PostUpdate(
@@ -99,6 +108,18 @@ namespace tethys
 
     /// Enable debug printout
     private: bool debugPrintout = false;
+
+    /// Flag for starting timer to publish state feedback after receiving command
+    private: std::atomic<bool> startPubClock{false};
+
+    /// Flag for checking timer to publish state feedback
+    private: bool needPublish{false};
+
+    /// Start of timer to publish state feedback
+    private: std::chrono::nanoseconds lastCmdTimeNs{0s};
+
+    /// Duration to wait after receiving command to publish state feedback
+    private: std::chrono::nanoseconds pubDelayNs{180ms};  // half of LRAUV cycle
 
     /// Namespace for topics.
     private: std::string ns{""};
@@ -175,12 +196,15 @@ namespace tethys
     /// Mass shifter joint name
     private: std::string massShifterJointName{"battery_joint"};
 
+    /// override mass shifter joint position controller (bug workaround)
+    private: bool override_mass_jpc{false};
+
     /// TODO(mabelzhang) Remove when stable. Temporary counter for state
     /// message sanity check
-    private: int counter = 0;
+    private: int counter{0};
 
     /// Buoyancy bladder size in cc
-    private: double buoyancyBladderVolume = 300;
+    private: double buoyancyBladderVolume{300.0};
 
     /// Latest salinity data received from sensor. NaN if not received.
     private: float latestSalinity{std::nanf("")};
@@ -203,8 +227,11 @@ namespace tethys
     /// Latest chlorophyll data received from sensor. NaN if not received.
     private: float latestChlorophyll{std::nanf("")};
 
+    /// Latest Mass Position Command (default to 0.0 meters if not received).
+    private: double latestMassPositionAction{0.0};
+
     /// Ocean Density in kg / m ^ 3
-    private: double oceanDensity{1000};
+    private: double oceanDensity{1025};
 
     /// Latest current data received from sensor. NaN if not received.
     private: gz::math::Vector3d latestCurrent

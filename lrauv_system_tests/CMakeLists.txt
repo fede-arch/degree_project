@@ -7,11 +7,12 @@ cmake_minimum_required(VERSION 3.5)
 
 project(lrauv_system_tests)
 
-find_package(gz-sim7 REQUIRED)
+find_package(gz-sim8 REQUIRED)
 find_package(gz-math7 REQUIRED)
-find_package(gz-transport12 REQUIRED)
+find_package(gz-transport13 REQUIRED)
 find_package(gz-common5 REQUIRED)
 find_package(lrauv_gazebo_plugins REQUIRED)
+find_package(gz-msgs10 REQUIRED)
 
 # Build-time constants
 set(PROJECT_BINARY_PATH ${CMAKE_CURRENT_BINARY_DIR})
@@ -40,11 +41,12 @@ target_include_directories(${PROJECT_NAME}_support PUBLIC
   $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(${PROJECT_NAME}_support PUBLIC
-  gz-sim7::gz-sim7
+  gz-sim8::gz-sim8
   gz-math7::gz-math7
-  gz-transport12::gz-transport12
+  gz-transport13::gz-transport13
   gz-common5::gz-common5
-  lrauv_gazebo_plugins::lrauv_gazebo_messages
+  lrauv_gazebo_plugins::lrauv_gazebo_plugins-lrauv_gazebo_messages
+  gz-msgs10::gz-msgs10
   gtest)
 target_compile_features(${PROJECT_NAME}_support PUBLIC cxx_std_17)
 #============================================================================

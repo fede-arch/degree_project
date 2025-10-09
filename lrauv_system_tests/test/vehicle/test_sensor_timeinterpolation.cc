@@ -31,7 +31,7 @@
 #include <gz/math/SphericalCoordinates.hh>
 #include <gz/transport/Node.hh>
 
-#include <lrauv_gazebo_plugins/lrauv_init.pb.h>
+#include <lrauv_gazebo_plugins/msgs/lrauv_init.pb.h>
 
 #include "TestConstants.hh"
 
