@@ -368,8 +368,8 @@
         <xyz>1 0 0</xyz>
         <limit>
           <!-- TODO(andermi) WORKAROUND FOR KNOWN BUG IN GZ SIM -->
-          <!--lower>-0.03</lower-->
-          <!--upper>0.03</upper-->
+          <lower>-0.03</lower>
+          <upper>0.03</upper>
           <!--effort>1e6</effort-->
           <effort>inf</effort>
           <!--velocity>0.0007</velocity-->
