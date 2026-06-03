@@ -1,9 +1,6 @@
 #!/bin/bash
 xhost +local:docker
 
-python3 lrauv_description/scripts/description_generator.py \
-  lrauv_description/models/tethys/model.sdf.in \
-  lrauv_description/models/tethys/model.sdf
 
 docker run -it --rm \
   --env DISPLAY=$DISPLAY \
