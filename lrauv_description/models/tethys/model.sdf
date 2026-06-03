@@ -6,9 +6,9 @@
     <link name="base_link">
       <inertial>
         
-        <pose>@calculated</pose>
+        <pose>0.0 0 0 0 0 0 </pose>
         
-        <mass>@calculated</mass>
+        <mass>114.8364</mass>
         
         
         <inertia>
@@ -22,9 +22,7 @@
         </inertia>
       </inertial>
 
-      <collision name="main_body_buoyancy">
-        @base_link_collision
-      </collision>
+      <collision name="main_body_buoyancy"><pose>0 0 0.007 0 0 0 </pose><geometry><box><size>2.0 0.4 0.14004439024390244 </size></box></geometry></collision>
 
       <visual name="visual">
         <geometry>
@@ -71,9 +69,7 @@
         </inertia>
       </inertial>
 
-      <collision name="horizontal_fins_buoyancy">
-        @neutral_buoyancy
-      </collision>
+      <collision name="horizontal_fins_buoyancy"><geometry><box><size>0.1 0.1 0.019512195121951216 </size></box></geometry></collision>
 
       <visual name="visual">
         <pose>-1.05 0 0 0 0 0</pose>
@@ -121,9 +117,7 @@
         </inertia>
       </inertial>
 
-      <collision name="vertical_fin_buoyancy">
-        @neutral_buoyancy
-      </collision>
+      <collision name="vertical_fin_buoyancy"><geometry><box><size>0.1 0.1 0.019512195121951216 </size></box></geometry></collision>
 
       <visual name="visual">
         <pose>-1.05 0 0 0 0 0</pose>
@@ -172,9 +166,7 @@
         </inertia>
       </inertial>
 
-      <collision name="propeller_buoyancy">
-        @neutral_buoyancy
-      </collision>
+      <collision name="propeller_buoyancy"><geometry><box><size>0.1 0.1 0.008780487804878046 </size></box></geometry></collision>
 
       <visual name="visual">
         <pose>-1.43162 0 0 0 0 0</pose>
