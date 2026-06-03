@@ -1,3 +1,0 @@
-{
-    "dependencies": ["lrauv_description", "lrauv_gazebo_plugins"]
-}
