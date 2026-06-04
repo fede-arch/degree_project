@@ -23,3 +23,9 @@ Sessionx.vim
 tags
 # Persistent undo
 [._]*.un~
+build/
+*.deb
+lrauv_description/models/tethys/model.sdf
+build/
+*.deb
+lrauv_description/models/tethys/model.sdf
