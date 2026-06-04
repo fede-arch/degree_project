@@ -23,3 +23,13 @@ target_link_libraries(HydrodynamicsPlugin
     gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
 )
 install(TARGETS HydrodynamicsPlugin DESTINATION lib)
+
+add_library(NavigationPlugin SHARED src/NavigationPlugin.cc)
+set_property(TARGET NavigationPlugin PROPERTY CXX_STANDARD 17)
+target_link_libraries(NavigationPlugin
+  PUBLIC
+    gz-common${GZ_COMMON_VER}::profiler
+    gz-plugin${GZ_PLUGIN_VER}::gz-plugin${GZ_PLUGIN_VER}
+    gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
+)
+install(TARGETS NavigationPlugin DESTINATION lib)

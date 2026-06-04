@@ -113,7 +113,7 @@ for tile in tiles:
       <graded_buoyancy>
         <default_density>1025</default_density>
         <density_change>
-          <above_depth>0.5</above_depth>
+          <above_depth>0</above_depth>
           <density>1.125</density>
         </density_change>
       </graded_buoyancy>

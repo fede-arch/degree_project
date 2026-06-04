@@ -8,7 +8,7 @@
       <grid>true</grid>
     </scene>
     
-    <physics name="1ms" type="dart">
+    <physics name="1ms" type="ode">
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1.0</real_time_factor>
     </physics>
@@ -158,7 +158,28 @@
     
     <include>
       <pose>0 0 -20 0 0 0</pose>
-      <uri>tethys_equipped</uri>
+      <uri>tethys_equipped_nav</uri>
     </include>
+
+    <!-- Target marker - visible red sphere, no collision -->
+    <model name="target_marker">
+      <static>true</static>
+      <pose>-6.69 -34.97 18.24 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <sphere>
+              <radius>0.3</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 0.7</ambient>
+            <diffuse>1.0 0.0 0.0 0.7</diffuse>
+            <specular>1.0 0.0 0.0 0.7</specular>
+          </material>
+          <transparency>0.3</transparency>
+        </visual>
+      </link>
+    </model>
   </world>
 </sdf>
