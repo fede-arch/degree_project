@@ -82,6 +82,10 @@
         <nRR>-632.698957</nRR>
         <nR>0</nR>
       </plugin>
+
+      <plugin filename="NavigationPlugin"
+        name="tethys::NavigationPlugin">
+      </plugin>
       
     </include>
   </model>

@@ -27,7 +27,7 @@ def update_sdf_sphere(sdf_path, x, y, z):
         f.write(content)
 
 def update_nav_model(x, y, z):
-    model_path = "lrauv_description/models/tethys_equipped_nav/model.sdf"
+    model_path = "lrauv_description/models/tethys_equipped/model.sdf"
     with open(model_path, "r") as f:
         content = f.read()
     content = re.sub(r'<initial_target_x>[^<]*</initial_target_x>',
