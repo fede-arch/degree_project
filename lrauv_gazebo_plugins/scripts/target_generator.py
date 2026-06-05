@@ -2,6 +2,7 @@
 import random
 import math
 import re
+import os
 
 def generate_target(distance=80.0):
     yaw   = random.uniform(-math.pi, math.pi)
@@ -12,6 +13,8 @@ def generate_target(distance=80.0):
     return x, y, z
 
 def update_sdf_sphere(sdf_path, x, y, z):
+    if not os.path.exists(sdf_path):
+        return
     with open(sdf_path, "r") as f:
         content = f.read()
     content = re.sub(
@@ -39,7 +42,9 @@ def update_nav_model(x, y, z):
 if __name__ == "__main__":
     x, y, z = generate_target(80.0)
     print(f"Random target: ({x:.2f}, {y:.2f}, {z:.2f})")
+
     update_sdf_sphere("lrauv_gazebo_plugins/worlds/navigation_world.sdf", x, y, z)
-    update_sdf_sphere("lrauv_gazebo_plugins/worlds/portuguese_ledge/portuguese_ledge.sdf.em", x, y, z)
+    update_sdf_sphere("lrauv_gazebo_plugins/worlds/portuguese_ledge.sdf", x, y, z)
     update_nav_model(x, y, z)
+
     print(f"SDF updated!")

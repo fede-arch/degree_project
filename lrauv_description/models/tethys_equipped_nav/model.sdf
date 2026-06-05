@@ -97,9 +97,9 @@
         <kp_pitch>1.5</kp_pitch>
         <ki_pitch>0.01</ki_pitch>
         <kd_pitch>0.3</kd_pitch>
-        <initial_target_x>-70.23</initial_target_x>
-        <initial_target_y>-36.13</initial_target_y>
-        <initial_target_z>-14.75</initial_target_z>
+        <initial_target_x>33.91</initial_target_x>
+        <initial_target_y>-69.46</initial_target_y>
+        <initial_target_z>-22.62</initial_target_z>
       </plugin>
 
     </include>

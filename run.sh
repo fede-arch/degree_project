@@ -11,7 +11,7 @@ python3 lrauv_description/scripts/description_generator.py \
 if [ "$WORLD" == "ledge" ]; then
   echo "Generating random target..."
   python3 lrauv_gazebo_plugins/scripts/target_generator.py
-  WORLD_FILE="portuguese_ledge/portuguese_ledge.sdf"
+  WORLD_FILE="portuguese_ledge.sdf"
   BUILD_NAV=true
 elif [ "$WORLD" == "nav" ]; then
   echo "Generating random target..."

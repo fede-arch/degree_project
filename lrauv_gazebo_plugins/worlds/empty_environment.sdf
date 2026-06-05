@@ -60,7 +60,12 @@
         <scene>scene</scene>
         <ambient_light>0.8 0.8 0.8</ambient_light>
         <background_color>0.0 0.7 0.8</background_color>
-        <camera_pose>0 6 6 0 0.5 -1.57</camera_pose>
+        <camera_pose>10 10 -15 0 0.3 -2.4</camera_pose>
+        <track_visual>
+          <name>tethys</name>
+          <use_model_frame>true</use_model_frame>
+          <xyz_offset>10 10 5</xyz_offset>
+        </track_visual>
         <camera_clip>
           <near>0.1</near>
           <far>3000000</far>
@@ -88,6 +93,19 @@
         </gz-gui>
       </plugin>
       <plugin filename="InteractiveViewControl" name="Interactive view control">
+        <gz-gui>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="CameraTracking" name="Camera Tracking">
         <gz-gui>
           <anchors target="3D View">
             <line own="right" target="right"/>
