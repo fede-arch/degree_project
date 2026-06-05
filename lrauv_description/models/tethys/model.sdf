@@ -8,7 +8,7 @@
         
         <pose>0.0 0 0 0 0 0 </pose>
         
-        <mass>114.8364</mass>
+        <mass>147.8671</mass>
         
         
         <inertia>
@@ -22,7 +22,7 @@
         </inertia>
       </inertial>
 
-      <collision name="main_body_buoyancy"><pose>0 0 0.007 0 0 0 </pose><geometry><box><size>2.0 0.4 0.14004439024390244 </size></box></geometry></collision>
+      <collision name="main_body_buoyancy"><pose>0 0 0.007 0 0 0 </pose><geometry><box><size>2.0 0.4 0.18032573170731706 </size></box></geometry></collision>
 
       <visual name="visual">
         <geometry>
@@ -154,7 +154,7 @@
     <link name="propeller">
       <pose>1.43162 0 0 0 0 0</pose>
       <inertial>
-        <pose>0 0 0 1.570796 0 0</pose>
+        <pose>0 0 0 0 0 0</pose>
         <mass>0.09</mass>
         <inertia>
           <ixx>0.000143971303</ixx>
@@ -232,7 +232,7 @@
     </joint>
 
     <joint name="propeller_joint" type="revolute">
-      <pose degrees="true">0 0 0   0 180 0</pose>
+      <pose degrees="true">0 0 0   0 0 0</pose>
       <parent>base_link</parent>
       <child>propeller</child>
       <axis>

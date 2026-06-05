@@ -6,7 +6,7 @@
 
 <!--
 
-  This world contains a single LRAUV vehicle, tethys.
+  This world contains a single LRAUV vehicle, tethys, and the portuguese ledge.
 
 -->
 
@@ -17,12 +17,11 @@
     <scene>
       <ambient>0.0 1.0 1.0</ambient>
       <background>0.0 0.7 0.8</background>
-      <grid>false</grid>
     </scene>
     
     <physics name="1ms" type="ode">
       <max_step_size>0.001</max_step_size>
-      <real_time_factor>0</real_time_factor>
+      <real_time_factor>1.0</real_time_factor>
     </physics>
 
     <light type="directional" name="sun">
@@ -175,44 +174,11 @@
         <real_time_factor>true</real_time_factor>
         <iterations>true</iterations>
       </plugin>
-      <plugin filename="Plot3D" name="Plot 3D">
-        <gz-gui>
-          <title>Plot Tethys 3D path</title>
-          <property type="string" key="state">docked_collapsed</property>
-        </gz-gui>
-        <entity_name>tethys</entity_name>
-        <color>0 0 1</color>
-        <maximum_points>10000</maximum_points>
-        <minimum_distance>0.5</minimum_distance>
-      </plugin>
-      <plugin filename="GridConfig" name="Grid config">
-        <gz-gui>
-          <property type="string" key="state">docked_collapsed</property>
-        </gz-gui>
-        <insert>
-          <!-- 300 km x 300 km -->
-          <cell_count>6</cell_count>
-          <vertical_cell_count>0</vertical_cell_count>
-          <!-- 50 km -->
-          <cell_length>50000</cell_length>
-          <pose>0 100000 0  0 0 0.32</pose>
-          <color>0 1 0 1</color>
-        </insert>
-        <insert>
-          <!-- 0.1 km x 0.1 km -->
-          <cell_count>100</cell_count>
-          <vertical_cell_count>0</vertical_cell_count>
-          <!-- 1 m -->
-          <cell_length>1</cell_length>
-          <pose>0 0 0  0 0 0</pose>
-          <color>0.5 0.5 0.5 1</color>
-        </insert>
-      </plugin>
     </gui>
 
     <include>
-      <pose>0 0 0 0 0 0</pose>
-      <uri>tethys_equipped</uri>
+      <pose>0 0 -20 0 0 0</pose>
+      <uri>tethys_equipped_nav</uri>
     </include>
 
     <plugin name="gz::sim" filename="dummy">
@@ -921,13 +887,24 @@
       </link>
     </model>
 
-    <!-- Uncomment for particle effect
-      Requires ParticleEmitter2 in gz-sim 4.8.0, which will be copied
-      to ParticleEmitter in Gazebo G.
-      See https://github.com/gazebosim/gz-sim/pull/730 -->
-    <!--include>
-      <pose>-5 0 0 0 0 0</pose>
-      <uri>turbidity_generator</uri>
-    </include-->
+
+  <model name="target_marker">
+    <static>true</static>
+    <pose>-70.23 -36.13 -14.75 0 0 0</pose>
+    <link name="link">
+      <visual name="visual">
+        <geometry>
+          <sphere>
+            <radius>0.3</radius>
+          </sphere>
+        </geometry>
+        <material>
+          <ambient>0.6 0.0 0.0 1.0</ambient>
+          <diffuse>0.6 0.0 0.0 1.0</diffuse>
+          <emissive>0.6 0.0 0.0 1.0</emissive>
+        </material>
+      </visual>
+    </link>
+  </model>
   </world>
 </sdf>

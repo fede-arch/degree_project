@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+import random
+import math
+import re
+
+def generate_target(distance=80.0):
+    yaw   = random.uniform(-math.pi, math.pi)
+    pitch = random.uniform(-math.pi/4, math.pi/4)
+    x = distance * math.cos(pitch) * math.cos(yaw)
+    y = distance * math.cos(pitch) * math.sin(yaw)
+    z = -abs(distance * math.sin(pitch)) - 2.0
+    return x, y, z
+
+def update_sdf_sphere(sdf_path, x, y, z):
+    with open(sdf_path, "r") as f:
+        content = f.read()
+    content = re.sub(
+        r'(<model name="target_marker">.*?<pose>)[^<]*(</pose>)',
+        rf'\g<1>{x:.2f} {y:.2f} {z:.2f} 0 0 0\g<2>',
+        content,
+        flags=re.DOTALL
+    )
+    with open(sdf_path, "w") as f:
+        f.write(content)
+
+def update_nav_model(x, y, z):
+    model_path = "lrauv_description/models/tethys_equipped_nav/model.sdf"
+    with open(model_path, "r") as f:
+        content = f.read()
+    content = re.sub(r'<initial_target_x>[^<]*</initial_target_x>',
+                     f'<initial_target_x>{x:.2f}</initial_target_x>', content)
+    content = re.sub(r'<initial_target_y>[^<]*</initial_target_y>',
+                     f'<initial_target_y>{y:.2f}</initial_target_y>', content)
+    content = re.sub(r'<initial_target_z>[^<]*</initial_target_z>',
+                     f'<initial_target_z>{z:.2f}</initial_target_z>', content)
+    with open(model_path, "w") as f:
+        f.write(content)
+
+if __name__ == "__main__":
+    x, y, z = generate_target(80.0)
+    print(f"Random target: ({x:.2f}, {y:.2f}, {z:.2f})")
+    update_sdf_sphere("lrauv_gazebo_plugins/worlds/navigation_world.sdf", x, y, z)
+    update_sdf_sphere("lrauv_gazebo_plugins/worlds/portuguese_ledge/portuguese_ledge.sdf.em", x, y, z)
+    update_nav_model(x, y, z)
+    print(f"SDF updated!")

@@ -160,7 +160,7 @@
     <link name="propeller">
       <pose>1.43162 0 0 0 0 0</pose>
       <inertial>
-        <pose>0 0 0 1.570796 0 0</pose>
+        <pose>0 0 0 0 0 0</pose>
         <mass>0.09</mass>
         <inertia>
           <ixx>0.000143971303</ixx>
@@ -240,7 +240,7 @@
     </joint>
 
     <joint name="propeller_joint" type="revolute">
-      <pose degrees="true">0 0 0   0 180 0</pose>
+      <pose degrees="true">0 0 0   0 0 0</pose>
       <parent>base_link</parent>
       <child>propeller</child>
       <axis>

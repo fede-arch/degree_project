@@ -5,7 +5,7 @@
     <include merge="true">
       <pose degrees="true">0 0 0 0 0 -90</pose>
       <uri>tethys</uri>
-
+      
       <plugin filename="gz-sim-joint-position-controller-system"
         name="gz::sim::systems::JointPositionController">
         <joint_name>horizontal_fins_joint</joint_name>
@@ -22,9 +22,10 @@
         name="gz::sim::systems::Thruster">
         <namespace>tethys</namespace>
         <joint_name>propeller_joint</joint_name>
-        <thrust_coefficient>0.004422</thrust_coefficient>
+        <thrust_coefficient>0.004312328425753156</thrust_coefficient>
         <fluid_density>1025</fluid_density>
         <propeller_diameter>0.2</propeller_diameter>
+        <velocity_control>false</velocity_control>
       </plugin>
 
       <plugin filename="gz-sim-lift-drag-system"
@@ -65,7 +66,7 @@
         <enable_coriolis>false</enable_coriolis>
         <xDotU>-4.876161</xDotU>
         <yDotV>-126.324739</yDotV>
-        <zDotW>-126.324739</zDotW>
+        <zDotW>-20.0</zDotW>
         <kDotP>0</kDotP>
         <mDotQ>-33.46</mDotQ>
         <nDotR>-33.46</nDotR>
@@ -73,7 +74,7 @@
         <xU>0</xU>
         <yVV>-601.27</yVV>
         <yV>0</yV>
-        <zWW>-601.27</zWW>
+        <zWW>-50.0</zWW>
         <zW>0</zW>
         <kPP>-0.1916</kPP>
         <kP>0</kP>
@@ -82,7 +83,25 @@
         <nRR>-632.698957</nRR>
         <nR>0</nR>
       </plugin>
-      
+
+      <plugin filename="NavigationPlugin"
+        name="tethys::NavigationPlugin">
+        <link_name>base_link</link_name>
+        <namespace>tethys</namespace>
+        <arrival_threshold>3.0</arrival_threshold>
+        <cruise_thrust>50.0</cruise_thrust>
+        <max_thrust>60.0</max_thrust>
+        <kp_yaw>1.5</kp_yaw>
+        <ki_yaw>0.01</ki_yaw>
+        <kd_yaw>0.3</kd_yaw>
+        <kp_pitch>1.5</kp_pitch>
+        <ki_pitch>0.01</ki_pitch>
+        <kd_pitch>0.3</kd_pitch>
+        <initial_target_x>-70.23</initial_target_x>
+        <initial_target_y>-36.13</initial_target_y>
+        <initial_target_z>-14.75</initial_target_z>
+      </plugin>
+
     </include>
   </model>
 </sdf>

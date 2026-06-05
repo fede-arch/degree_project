@@ -5,7 +5,6 @@
     <scene>
       <ambient>1.0 1.0 1.0 1.0</ambient>
       <background>0.0 0.7 0.8</background>
-      <grid>true</grid>
     </scene>
     
     <physics name="1ms" type="ode">
@@ -138,22 +137,6 @@
         <real_time_factor>true</real_time_factor>
         <iterations>true</iterations>
       </plugin>
-      <plugin filename="Plot3D" name="Plot 3D">
-        <gz-gui>
-          <title>Plot Tethys 3D path</title>
-          <property type="string" key="state">docked_collapsed</property>
-        </gz-gui>
-        <entity_name>tethys</entity_name>
-        <color>0 0 1</color>
-        <maximum_points>10000</maximum_points>  
-        <minimum_distance>0.5</minimum_distance>
-      </plugin>
-      <plugin filename="ComponentInspector" name="Component Inspector">
-        <gz-gui>
-          <title>Inspector</title>
-          <property type="string" key="state">docked_collapsed</property>
-        </gz-gui>
-      </plugin>
     </gui>
     
     <include>
@@ -164,7 +147,7 @@
     <!-- Target marker - visible red sphere, no collision -->
     <model name="target_marker">
       <static>true</static>
-      <pose>-6.69 -34.97 18.24 0 0 0</pose>
+      <pose>-70.23 -36.13 -14.75 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry>
@@ -173,9 +156,10 @@
             </sphere>
           </geometry>
           <material>
-            <ambient>1.0 0.0 0.0 0.7</ambient>
-            <diffuse>1.0 0.0 0.0 0.7</diffuse>
-            <specular>1.0 0.0 0.0 0.7</specular>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <specular>1.0 1.0 1.0 1.0</specular>
+            <emissive>0.6 0.0 0.0 1.0</emissive>
           </material>
           <transparency>0.3</transparency>
         </visual>
