@@ -13,17 +13,14 @@ if [ "$WORLD" == "ledge" ]; then
   python3 lrauv_gazebo_plugins/scripts/target_generator.py
   WORLD_FILE="portuguese_ledge/portuguese_ledge.sdf"
   BUILD_NAV=true
-  REGEN_LEDGE=true
 elif [ "$WORLD" == "nav" ]; then
   echo "Generating random target..."
   python3 lrauv_gazebo_plugins/scripts/target_generator.py
   WORLD_FILE="navigation_world.sdf"
   BUILD_NAV=true
-  REGEN_LEDGE=false
 else
   WORLD_FILE="empty_environment.sdf"
   BUILD_NAV=false
-  REGEN_LEDGE=false
 fi
 
 docker run -it --rm \
@@ -33,12 +30,6 @@ docker run -it --rm \
   --volume $PWD:/lrauv_ws/src/degree_project \
   lrauv:harmonic \
   bash -c "source /setup.sh 2>/dev/null && \
-    if [ '$REGEN_LEDGE' == 'true' ]; then \
-      echo 'Regenerating portuguese_ledge.sdf...' && \
-      python3 /lrauv_ws/src/degree_project/lrauv_gazebo_plugins/scripts/empy_expander.py \
-        /lrauv_ws/src/degree_project/lrauv_gazebo_plugins/worlds/portuguese_ledge/portuguese_ledge.sdf.em \
-        /lrauv_ws/src/degree_project/lrauv_gazebo_plugins/worlds/portuguese_ledge/portuguese_ledge.sdf; \
-    fi && \
     NEEDS_CMAKE=false && \
     HYDRO_SO=/lrauv_ws/src/degree_project/docker_build/libHydrodynamicsPlugin.so && \
     NAV_SO=/lrauv_ws/src/degree_project/docker_build/libNavigationPlugin.so && \
