@@ -12,6 +12,7 @@ namespace tethys {
     public: gz::transport::Node node;
     public: gz::transport::Node::Publisher thrustPub;
     public: gz::transport::Node::Publisher vertFinPub;
+    public: gz::transport::Node::Publisher horizFinPub;
     public: std::mutex mtx;
 
     // --- Dati lidar ---
@@ -178,6 +179,7 @@ namespace tethys {
           bestSector = theta;
         }
       }
+
       // isteresi
       if (lastBestDir >= 0) {
         auto angDist2 = [&](int a, int b) {
@@ -190,7 +192,7 @@ namespace tethys {
       }
       lastBestDir = bestSector;
       return bestSector;
-          }
+    }
   };
 
   NavigationPlugin::NavigationPlugin()
@@ -217,6 +219,9 @@ namespace tethys {
     this->dataPtr->vertFinPub = this->dataPtr->node.Advertise<gz::msgs::Double>(
       "/model/tethys/joint/vertical_fins_joint/0/cmd_pos");
 
+    this->dataPtr->horizFinPub = this->dataPtr->node.Advertise<gz::msgs::Double>(
+      "/model/tethys/joint/horizontal_fins_joint/0/cmd_pos");
+
     this->dataPtr->goalX = _sdf->Get<double>("goal_x", 0.0).first;
     this->dataPtr->goalY = _sdf->Get<double>("goal_y", 0.0).first;
     this->dataPtr->goalZ = _sdf->Get<double>("goal_z", 0.0).first;
@@ -240,15 +245,17 @@ namespace tethys {
 
       double dx = this->dataPtr->goalX - this->dataPtr->posX;
       double dy = this->dataPtr->goalY - this->dataPtr->posY;
-      double distGoal = std::sqrt(dx*dx + dy*dy);
+      double dz = this->dataPtr->goalZ - this->dataPtr->posZ;
+      double distGoal = std::sqrt(dx*dx + dy*dy + dz*dz);
 
       if (distGoal < 5.0) {
-        // frena attivamente
-        gz::msgs::Double stop, fin;
-        stop.set_data(15.0); // thrust positivo = frena
+        gz::msgs::Double stop, fin, horiz;
+        stop.set_data(15.0);
         fin.set_data(0.0);
+        horiz.set_data(0.0);
         this->dataPtr->thrustPub.Publish(stop);
         this->dataPtr->vertFinPub.Publish(fin);
+        this->dataPtr->horizFinPub.Publish(horiz);
         return;
       }
 
@@ -263,17 +270,24 @@ namespace tethys {
         if (steerError > M_PI) steerError -= 2*M_PI;
         double finCmd = std::clamp(steerError * 0.5, -0.261799, 0.261799);
 
+        double distXY = std::sqrt(dx*dx + dy*dy);
+        double pitchError = std::atan2(dz, distXY);
+        double horizFinCmd = std::clamp(-pitchError * 0.5, -0.261799, 0.261799);
+
         double thrust = -31.0;
         if (distGoal < 15.0)
           thrust = -31.0 * (distGoal / 15.0);
 
-        gz::msgs::Double thrustMsg, finMsg;
+        gz::msgs::Double thrustMsg, finMsg, horizMsg;
         thrustMsg.set_data(thrust);
         finMsg.set_data(finCmd);
+        horizMsg.set_data(horizFinCmd);
         this->dataPtr->thrustPub.Publish(thrustMsg);
         this->dataPtr->vertFinPub.Publish(finMsg);
+        this->dataPtr->horizFinPub.Publish(horizMsg);
       }
     }
+
     // STAMPA - ogni 1s
     if (_info.iterations % 1000 == 0) {
       std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
@@ -284,6 +298,19 @@ namespace tethys {
       if (steerError > M_PI) steerError -= 2*M_PI;
       double finCmd = std::clamp(steerError * 0.5, -0.261799, 0.261799);
 
+      double dx = this->dataPtr->goalX - this->dataPtr->posX;
+      double dy = this->dataPtr->goalY - this->dataPtr->posY;
+      double dz = this->dataPtr->goalZ - this->dataPtr->posZ;
+      double distXY = std::sqrt(dx*dx + dy*dy);
+      double distGoal = std::sqrt(dx*dx + dy*dy + dz*dz);
+      double pitchError = std::atan2(dz, distXY) * 180.0/M_PI;
+      double horizFinCmd = std::clamp(-pitchError * 0.5, -0.261799, 0.261799);
+
+      double vertDisplay = this->dataPtr->vertFinAngle * 180.0/M_PI;
+      double horizDisplay = this->dataPtr->horizFinAngle * 180.0/M_PI;
+      if (std::abs(vertDisplay) < 0.001) vertDisplay = 0.0;
+      if (std::abs(horizDisplay) < 0.001) horizDisplay = 0.0;
+
       std::cout << std::fixed << std::setprecision(2);
       std::cout << "\n=== t=" << _info.iterations/1000 << "s ===" << std::endl;
       std::cout << "[POSE]  pos=(" << this->dataPtr->posX << ", "
@@ -293,12 +320,11 @@ namespace tethys {
       std::cout << "[VFH]   best_angle=" << bestDir << "°" << std::endl;
       std::cout << "[CTRL]  steerError=" << steerError * 180.0/M_PI
                 << "° finCmd=" << finCmd << " rad" << std::endl;
-      std::cout << "[FIN]   vert=" << this->dataPtr->vertFinAngle * 180.0/M_PI
-                << "° horiz=" << this->dataPtr->horizFinAngle * 180.0/M_PI
-                << "°" << std::endl;
-      double dx = this->dataPtr->goalX - this->dataPtr->posX;
-      double dy = this->dataPtr->goalY - this->dataPtr->posY;
-      std::cout << "[DIST]  " << std::sqrt(dx*dx + dy*dy) << "m" << std::endl;          
+      std::cout << "[PITCH] error=" << pitchError
+                << "° horizFinCmd=" << horizFinCmd << " rad" << std::endl;
+      std::cout << "[FIN]   vert=" << vertDisplay
+                << "° horiz=" << horizDisplay << "°" << std::endl;
+      std::cout << "[DIST]  " << distGoal << "m" << std::endl;
     }
   }
 }
