@@ -85,7 +85,7 @@
 
       <plugin filename="NavigationPlugin"
         name="tethys::NavigationPlugin">
-        <goal_x>-20.0</goal_x>
+        <goal_x>-100.0</goal_x>
         <goal_y>0.0</goal_y>
         <goal_z>-20.0</goal_z>
       </plugin>

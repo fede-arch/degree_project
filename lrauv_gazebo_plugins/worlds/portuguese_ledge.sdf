@@ -83,7 +83,7 @@
 
     <model name="target_marker">
       <static>true</static>
-      <pose>-34.48 69.22 -22.49 0 0 0</pose>
+      <pose>-36.66 -52.30 -50.17 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry>
