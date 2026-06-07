@@ -9,29 +9,26 @@
 #include <mutex>
 #include <vector>
 
-namespace tethys
-{
-  class NavigationPrivateData;
+namespace tethys {
 
-  class NavigationPlugin:
-    public gz::sim::System,
-    public gz::sim::ISystemConfigure,
-    public gz::sim::ISystemPreUpdate
-  {
-    public: NavigationPlugin();
-    public: ~NavigationPlugin();
+  class NavigationPrivateData;  // classe dati privati
 
-    public: void Configure(
-        const gz::sim::Entity &_entity,
-        const std::shared_ptr<const sdf::Element> &_sdf,
-        gz::sim::EntityComponentManager &_ecm,
-        gz::sim::EventManager &_eventMgr) override;
+  class NavigationPlugin: public gz::sim::System,
+                          public gz::sim::ISystemConfigure,
+                          public gz::sim::ISystemPreUpdate {
 
-    public: void PreUpdate(
-        const gz::sim::UpdateInfo &_info,
-        gz::sim::EntityComponentManager &_ecm) override;
+        public: NavigationPlugin();  // costruttore
+        public: ~NavigationPlugin(); // distruttore
 
-    private: std::unique_ptr<NavigationPrivateData> dataPtr;
+        public: void Configure( const gz::sim::Entity &_entity,
+                                const std::shared_ptr<const sdf::Element> &_sdf,
+                                gz::sim::EntityComponentManager &_ecm,
+                                gz::sim::EventManager &_eventMgr) override;
+
+        public: void PreUpdate( const gz::sim::UpdateInfo &_info,
+                                gz::sim::EntityComponentManager &_ecm) override;
+
+        private: std::unique_ptr<NavigationPrivateData> dataPtr; // puntatore a classe dati privati
   };
 }
 

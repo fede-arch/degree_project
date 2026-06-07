@@ -3,7 +3,7 @@
   <model name="tethys">
     <enable_wind>true</enable_wind>
     <include merge="true">
-      <pose degrees="true">0 0 0 0 0 -90</pose>
+      <pose degrees="true">0 0 0 0 0 0</pose>
       <uri>tethys</uri>
 
       <plugin filename="gz-sim-joint-position-controller-system"
@@ -85,6 +85,9 @@
 
       <plugin filename="NavigationPlugin"
         name="tethys::NavigationPlugin">
+        <goal_x>-20.0</goal_x>
+        <goal_y>0.0</goal_y>
+        <goal_z>-20.0</goal_z>
       </plugin>
       
     </include>

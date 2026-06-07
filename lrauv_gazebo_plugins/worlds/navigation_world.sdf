@@ -63,7 +63,7 @@
     <!-- Target marker - visible red sphere, no collision -->
     <model name="target_marker">
       <static>true</static>
-      <pose>-46.32 62.20 -21.62 0 0 0</pose>
+      <pose>-34.48 69.22 -22.49 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry>
@@ -154,5 +154,6 @@
         </visual>
       </link>
     </model>
+    
   </world>
 </sdf>
