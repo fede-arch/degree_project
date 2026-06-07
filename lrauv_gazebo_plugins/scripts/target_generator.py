@@ -26,16 +26,15 @@ def update_sdf_sphere(sdf_path, x, y, z):
     with open(sdf_path, "w") as f:
         f.write(content)
 
-def update_nav_model(x, y, z):
+def update_navigation_plugin(x, y, z):
     model_path = "lrauv_description/models/tethys_equipped/model.sdf"
     with open(model_path, "r") as f:
         content = f.read()
-    content = re.sub(r'<initial_target_x>[^<]*</initial_target_x>',
-                     f'<initial_target_x>{x:.2f}</initial_target_x>', content)
-    content = re.sub(r'<initial_target_y>[^<]*</initial_target_y>',
-                     f'<initial_target_y>{y:.2f}</initial_target_y>', content)
-    content = re.sub(r'<initial_target_z>[^<]*</initial_target_z>',
-                     f'<initial_target_z>{z:.2f}</initial_target_z>', content)
+    
+    content = re.sub(r'<goal_x>[^<]*</goal_x>', f'<goal_x>{x:.2f}</goal_x>', content)
+    content = re.sub(r'<goal_y>[^<]*</goal_y>', f'<goal_y>{y:.2f}</goal_y>', content)
+    content = re.sub(r'<goal_z>[^<]*</goal_z>', f'<goal_z>{z:.2f}</goal_z>', content)
+    
     with open(model_path, "w") as f:
         f.write(content)
 
@@ -45,6 +44,6 @@ if __name__ == "__main__":
 
     update_sdf_sphere("lrauv_gazebo_plugins/worlds/navigation_world.sdf", x, y, z)
     update_sdf_sphere("lrauv_gazebo_plugins/worlds/portuguese_ledge.sdf", x, y, z)
-    update_nav_model(x, y, z)
+    update_navigation_plugin(x, y, z)
 
     print(f"SDF updated!")

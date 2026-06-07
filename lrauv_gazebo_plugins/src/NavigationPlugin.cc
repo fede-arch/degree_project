@@ -200,17 +200,14 @@ namespace tethys {
 
   NavigationPlugin::~NavigationPlugin() = default;
 
-  void NavigationPlugin::Configure(
-    const gz::sim::Entity &,
-    const std::shared_ptr<const sdf::Element> &_sdf,
-    gz::sim::EntityComponentManager &,
-    gz::sim::EventManager &)
-  {
+  void NavigationPlugin::Configure(const gz::sim::Entity &,
+                                    const std::shared_ptr<const sdf::Element> &_sdf,
+                                    gz::sim::EntityComponentManager &,
+                                    gz::sim::EventManager &) {
     this->dataPtr->node.Subscribe("/tethys/lidar",
       &NavigationPrivateData::OnLidar, this->dataPtr.get());
 
-    this->dataPtr->node.Subscribe(
-      "/world/empty_environment/dynamic_pose/info",
+    this->dataPtr->node.Subscribe("/world/empty_environment/dynamic_pose/info",
       &NavigationPrivateData::OnPose, this->dataPtr.get());
 
     this->dataPtr->thrustPub = this->dataPtr->node.Advertise<gz::msgs::Double>(
@@ -232,15 +229,12 @@ namespace tethys {
               << this->dataPtr->goalZ << ")" << std::endl;
   }
 
-  void NavigationPlugin::PreUpdate(
-    const gz::sim::UpdateInfo &_info,
-    gz::sim::EntityComponentManager &)
-  {
+  void NavigationPlugin::PreUpdate(const gz::sim::UpdateInfo &_info,
+                                   gz::sim::EntityComponentManager &) {
     if (_info.paused) return;
 
     // CONTROLLO - ogni 100ms
-    if (_info.iterations % 100 == 0)
-    {
+    if (_info.iterations % 100 == 0){
       std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
 
       double dx = this->dataPtr->goalX - this->dataPtr->posX;
