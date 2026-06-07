@@ -30,6 +30,7 @@ namespace tethys {
     static constexpr int    NUM_AZ    = 360;
     static constexpr int    NUM_EL    = 4;
     static constexpr double THRESHOLD = 0.001;
+    public: int lastBestDir = -1;
 
     // --- VFH dati ---
     public: std::vector<double> histogram = std::vector<double>(NUM_AZ * NUM_EL, 0.0);
@@ -177,8 +178,19 @@ namespace tethys {
           bestSector = theta;
         }
       }
+      // isteresi
+      if (lastBestDir >= 0) {
+        auto angDist2 = [&](int a, int b) {
+          int d = std::abs(a - b);
+          if (d > NUM_AZ/2) d = NUM_AZ - d;
+          return d;
+        };
+        if (angDist2(bestSector, lastBestDir) > 30)
+          bestSector = lastBestDir;
+      }
+      lastBestDir = bestSector;
       return bestSector;
-    }
+          }
   };
 
   NavigationPlugin::NavigationPlugin()
@@ -222,16 +234,21 @@ namespace tethys {
     if (_info.paused) return;
 
     // CONTROLLO - ogni 100ms
-    if (_info.iterations % 100 == 0) {
+    if (_info.iterations % 100 == 0)
+    {
       std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
 
       double dx = this->dataPtr->goalX - this->dataPtr->posX;
       double dy = this->dataPtr->goalY - this->dataPtr->posY;
-      if (std::sqrt(dx*dx + dy*dy) < 2.0) {
-        gz::msgs::Double stop;
-        stop.set_data(0.0);
+      double distGoal = std::sqrt(dx*dx + dy*dy);
+
+      if (distGoal < 5.0) {
+        // frena attivamente
+        gz::msgs::Double stop, fin;
+        stop.set_data(15.0); // thrust positivo = frena
+        fin.set_data(0.0);
         this->dataPtr->thrustPub.Publish(stop);
-        this->dataPtr->vertFinPub.Publish(stop);
+        this->dataPtr->vertFinPub.Publish(fin);
         return;
       }
 
@@ -246,14 +263,17 @@ namespace tethys {
         if (steerError > M_PI) steerError -= 2*M_PI;
         double finCmd = std::clamp(steerError * 0.5, -0.261799, 0.261799);
 
+        double thrust = -31.0;
+        if (distGoal < 15.0)
+          thrust = -31.0 * (distGoal / 15.0);
+
         gz::msgs::Double thrustMsg, finMsg;
-        thrustMsg.set_data(-31.0);
+        thrustMsg.set_data(thrust);
         finMsg.set_data(finCmd);
         this->dataPtr->thrustPub.Publish(thrustMsg);
         this->dataPtr->vertFinPub.Publish(finMsg);
       }
     }
-
     // STAMPA - ogni 1s
     if (_info.iterations % 1000 == 0) {
       std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
@@ -276,6 +296,9 @@ namespace tethys {
       std::cout << "[FIN]   vert=" << this->dataPtr->vertFinAngle * 180.0/M_PI
                 << "° horiz=" << this->dataPtr->horizFinAngle * 180.0/M_PI
                 << "°" << std::endl;
+      double dx = this->dataPtr->goalX - this->dataPtr->posX;
+      double dy = this->dataPtr->goalY - this->dataPtr->posY;
+      std::cout << "[DIST]  " << std::sqrt(dx*dx + dy*dy) << "m" << std::endl;          
     }
   }
 }

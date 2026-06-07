@@ -63,7 +63,7 @@
     <!-- Target marker - visible red sphere, no collision -->
     <model name="target_marker">
       <static>true</static>
-      <pose>-36.66 -52.30 -50.17 0 0 0</pose>
+      <pose>34.51 48.38 -55.55 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry>
@@ -85,7 +85,25 @@
     <!-- Ostacoli intorno al Tethys -->
     <model name="ostacolo_davanti">
       <static>true</static>
-      <pose>-20 0 -20 0 0 0</pose>
+      <pose>-15 0 -20 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder><radius>1.0</radius><length>40</length></cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder><radius>1.0</radius><length>40</length></cylinder>
+          </geometry>
+          <material><ambient>1 0 0 1</ambient><diffuse>1 0 0 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="ostacolo">
+      <static>true</static>
+      <pose>-20 -3 -20 0 0 0</pose>
       <link name="link">
         <collision name="collision">
           <geometry>
