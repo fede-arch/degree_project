@@ -6,6 +6,7 @@
 
 namespace tethys {
 
+  // --- NavigationPrivateData ---
   class NavigationPrivateData {
 
     // --- Gazebo transport ---
@@ -52,6 +53,7 @@ namespace tethys {
     public: enum class EpisodeState { RUNNING, ARRIVED, COLLISION, TIMEOUT };
     public: EpisodeState episodeState = EpisodeState::RUNNING;
     public: bool resultPublished = false;
+    public: int poseCount = 0;  
     public: int64_t maxIterations = 300000;
     public: gz::transport::Node::Publisher resultPub;
 
@@ -73,6 +75,7 @@ namespace tethys {
     // CALLBACK POSE
     public: void OnPose(const gz::msgs::Pose_V &_msg) {
       std::lock_guard<std::mutex> lock(this->mtx);
+      this->poseCount++;
       for (int i = 0; i < _msg.pose_size(); i++) {
         const auto &name = _msg.pose(i).name();
 
@@ -147,6 +150,7 @@ namespace tethys {
       this->lastPosX = 0;
       this->lastPosY = 0;
       this->lastPosZ = 0;
+      this->poseCount = 0;  // resetta, aspetta 3 pose fresche
 
       gz::msgs::Double stop, fin, horiz;
       stop.set_data(0.0);
@@ -160,6 +164,9 @@ namespace tethys {
                 << " gainSteer=" << this->gainSteer
                 << " gainPitch=" << this->gainPitch
                 << " sMax=" << this->sMax << std::endl;
+      std::cout << "[NAV] OnParams - pos=(" << this->posX << "," << this->posY << "," << this->posZ 
+          << ") yaw=" << this->yaw * 180.0/M_PI << "°" << std::endl;
+      std::cout << "[NAV] OnParams - goalAngle=" << GoalAngle() * 180.0/M_PI << "°" << std::endl;
       std::cout << "[NAV] Episode reset" << std::endl;
     }
 
@@ -284,15 +291,15 @@ namespace tethys {
     }
   };
 
-  NavigationPlugin::NavigationPlugin()
-    : dataPtr(std::make_unique<NavigationPrivateData>()) {}
+  // --- NavigationPlugin ---
+  NavigationPlugin::NavigationPlugin() : dataPtr(std::make_unique<NavigationPrivateData>()) {}
 
   NavigationPlugin::~NavigationPlugin() = default;
 
   void NavigationPlugin::Configure(const gz::sim::Entity &,
-                                    const std::shared_ptr<const sdf::Element> &_sdf,
-                                    gz::sim::EntityComponentManager &,
-                                    gz::sim::EventManager &) {
+                                   const std::shared_ptr<const sdf::Element> &_sdf,
+                                   gz::sim::EntityComponentManager &,
+                                   gz::sim::EventManager &) {
     this->dataPtr->node.Subscribe("/tethys/lidar",
       &NavigationPrivateData::OnLidar, this->dataPtr.get());
 
@@ -321,6 +328,8 @@ namespace tethys {
     this->dataPtr->goalY = _sdf->Get<double>("goal_y", 0.0).first;
     this->dataPtr->goalZ = _sdf->Get<double>("goal_z", 0.0).first;
 
+    this->dataPtr->poseCount = 0;
+
     this->dataPtr->threshold      = _sdf->Get<double>("threshold",       0.001).first;
     this->dataPtr->sMax           = _sdf->Get<int>   ("s_max",           20).first;
     this->dataPtr->smoothL        = _sdf->Get<int>   ("smooth_l",        5).first;
@@ -343,10 +352,11 @@ namespace tethys {
               << " radiusSlowdown=" << this->dataPtr->radiusSlowdown
               << " maxIterations=" << this->dataPtr->maxIterations << std::endl;
   }
-
+ 
   void NavigationPlugin::PreUpdate(const gz::sim::UpdateInfo &_info,
                                    gz::sim::EntityComponentManager &) {
     if (_info.paused) return;
+    if (this->dataPtr->poseCount < 3) return;
 
     // CONTROLLO - ogni 100ms
     if (_info.iterations % 100 == 0) {
@@ -435,6 +445,9 @@ namespace tethys {
         thrustMsg.set_data(thrust);
         finMsg.set_data(finCmd);
         horizMsg.set_data(horizFinCmd);
+        std::cout << "[THRUST] thrust=" << thrust 
+          << " finCmd=" << finCmd 
+          << " horizFinCmd=" << horizFinCmd << std::endl;
         this->dataPtr->thrustPub.Publish(thrustMsg);
         this->dataPtr->vertFinPub.Publish(finMsg);
         this->dataPtr->horizFinPub.Publish(horizMsg);

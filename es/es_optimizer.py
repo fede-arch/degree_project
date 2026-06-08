@@ -83,7 +83,7 @@ def start_docker():
             "source /setup.sh && "
             "export GZ_SIM_RESOURCE_PATH=/lrauv_ws/src/degree_project/lrauv_description/models && "
             "export GZ_SIM_SYSTEM_PLUGIN_PATH=/lrauv_ws/src/degree_project/docker_build && "
-            "gz sim -r "
+            "gz sim "  # ← tolto -r, parte in pausa
             "/lrauv_ws/src/degree_project/lrauv_gazebo_plugins/worlds/navigation_world.sdf"
         )
     ]
@@ -91,7 +91,19 @@ def start_docker():
     docker_proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT, text=True)
     print("[ES] Docker avviato, attendo Gazebo...")
-    time.sleep(10)
+    time.sleep(35)  # aspetta che tutto sia caricato
+
+    # Play dopo sincronizzazione — replica stop→reset→play manuale
+    cmd_play = [
+        "docker", "exec", container_name, "bash", "-c",
+        "source /setup.sh && gz service -s /world/empty_environment/control "
+        "--reqtype gz.msgs.WorldControl "
+        "--reptype gz.msgs.Boolean "
+        "--req 'pause: false' "
+        "--timeout 2000"
+    ]
+    subprocess.run(cmd_play, capture_output=True)
+    time.sleep(1)
     print("[ES] Gazebo pronto!")
 
 def stop_docker():
@@ -109,36 +121,26 @@ def publish_params(theta):
     cmd = [
         "docker", "exec", container_name,
         "bash", "-c",
-        f"source /setup.sh && gz topic -t /es/vfh_params -m gz.msgs.StringMsg -p 'data: \"{params_json.replace(chr(34), chr(92)+chr(34))}\"'"
+        f"source /setup.sh && z topic -t /es/vfh_params -m gz.msgs.StringMsg -p 'data: \"{params_json.replace(chr(34), chr(92)+chr(34))}\"'"
     ]
     subprocess.run(cmd, capture_output=True)
 
 def reset_world():
-    # Prima ferma il drone
-    cmd_stop = [
-        "docker", "exec", container_name,
-        "bash", "-c",
-        "source /setup.sh && gz topic -t /model/tethys/joint/propeller_joint/cmd_thrust "
-        "-m gz.msgs.Double -p 'data: 0.0'"
+    # 1. PAUSE
+    cmd_pause = [
+        "docker", "exec", container_name, "bash", "-c",
+        "source /setup.sh && gz service -s /world/empty_environment/control "
+        "--reqtype gz.msgs.WorldControl "
+        "--reptype gz.msgs.Boolean "
+        "--req 'pause: true' "
+        "--timeout 2000"
     ]
-    subprocess.run(cmd_stop, capture_output=True)
-    time.sleep(0.3)
-
-    # Azzera thrust prima del reset
-    for topic in [
-        "/model/tethys/joint/propeller_joint/cmd_thrust",
-        "/model/tethys/joint/vertical_fins_joint/0/cmd_pos",
-        "/model/tethys/joint/horizontal_fins_joint/0/cmd_pos"
-    ]:
-        cmd = ["docker", "exec", container_name, "bash", "-c",
-            f"source /setup.sh && gz topic -t {topic} -m gz.msgs.Double -p 'data: 0.0'"]
-        subprocess.run(cmd, capture_output=True)
+    subprocess.run(cmd_pause, capture_output=True)
     time.sleep(0.5)
 
-    # Poi resetta
+    # 2. RESET
     cmd_reset = [
-        "docker", "exec", container_name,
-        "bash", "-c",
+        "docker", "exec", container_name, "bash", "-c",
         "source /setup.sh && gz service -s /world/empty_environment/control "
         "--reqtype gz.msgs.WorldControl "
         "--reptype gz.msgs.Boolean "
@@ -146,7 +148,19 @@ def reset_world():
         "--timeout 2000"
     ]
     subprocess.run(cmd_reset, capture_output=True)
-    time.sleep(1)
+    time.sleep(1.0)
+
+    # 3. PLAY
+    cmd_play = [
+        "docker", "exec", container_name, "bash", "-c",
+        "source /setup.sh && gz service -s /world/empty_environment/control "
+        "--reqtype gz.msgs.WorldControl "
+        "--reptype gz.msgs.Boolean "
+        "--req 'pause: false' "
+        "--timeout 2000"
+    ]
+    subprocess.run(cmd_play, capture_output=True)
+    time.sleep(1.0)
 
 def wait_for_result(episode_timeout=200):
     """Aspetta il risultato dell'episodio sul topic /es/episode_result."""
@@ -171,10 +185,9 @@ def wait_for_result(episode_timeout=200):
         return REWARD["TIMEOUT"]
 
 def run_episode(theta, episode_timeout=200):
-    """Esegue un episodio: pubblica params, resetta world, aspetta risultato."""
-    publish_params(theta)
-    time.sleep(0.5)  # attendi che i parametri vengano ricevuti
     reset_world()
+    time.sleep(2.0)  
+    publish_params(theta)
     return wait_for_result(episode_timeout)
 
 def save_results(gen, theta, mean_reward):

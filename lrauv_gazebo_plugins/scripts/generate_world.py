@@ -19,13 +19,13 @@ def generate_world(project_dir, seed=None):
         random.seed(seed)
         np.random.seed(seed)
 
-    # 1. Spawn tethys casuale
+    # Spawn tethys casuale
     spawn_x = random.uniform(-10, 10)
     spawn_y = random.uniform(-10, 10)
-    spawn_yaw = random.uniform(0, 6.28)
+    spawn_yaw = 0.0
     drone_z   = -75.0 + random.uniform(-10, 10)
 
-    # 2. Goal completamente casuale, lontano dallo spawn
+    # Goal casuale, lontano dallo spawn
     for _ in range(100):
         goal_x = random.uniform(40, 120)
         goal_y = random.uniform(-60, 70)
@@ -47,7 +47,7 @@ def generate_world(project_dir, seed=None):
                 return True
         return False
 
-    # 3. Rocce lontane da spawn, goal e altre rocce
+    # Rocce lontane da spawn e goal 
     N_ROCKS = 20
     rocks_sdf = ""
     placed = 0

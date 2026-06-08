@@ -1,6 +1,0 @@
-{
-    "hooks": [
-        "share/lrauv_gazebo_plugins/hooks/hook.dsv",
-        "share/lrauv_gazebo_plugins/hooks/hook.sh"
-    ]
-}

@@ -8,17 +8,6 @@ cmake_minimum_required(VERSION 3.5)
 project(lrauv_description)
 
 include(CTest)
-#============================================================================
-# Hooks
-configure_file(
-  "hooks/hook.dsv.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/hooks/hook.dsv" @ONLY
-)
-
-configure_file(
-  "hooks/hook.sh.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/hooks/hook.sh" @ONLY
-)
 
 #============================================================================
 # Model Generation
@@ -32,11 +21,6 @@ add_custom_command(
 add_custom_target(generate_model ALL
   DEPENDS modelsdf
 )
-
-install(DIRECTORY
-  models
-  ${CMAKE_CURRENT_BINARY_DIR}/hooks
-  DESTINATION share/${PROJECT_NAME})
 
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/models/tethys/model.sdf
