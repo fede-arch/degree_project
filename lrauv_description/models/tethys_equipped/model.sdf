@@ -3,6 +3,7 @@
   <model name="tethys">
     <enable_wind>true</enable_wind>
     <include merge="true">
+      
       <pose degrees="true">0 0 0 0 0 0</pose>
       <uri>tethys</uri>
 
@@ -85,9 +86,17 @@
 
       <plugin filename="NavigationPlugin"
         name="tethys::NavigationPlugin">
-        <goal_x>-21.01</goal_x>
-        <goal_y>-76.30</goal_y>
-        <goal_z>-13.67</goal_z>
+        <goal_x>83.25</goal_x>
+        <goal_y>48.91</goal_y>
+        <goal_z>-69.63</goal_z>
+        <threshold>0.001</threshold>
+        <s_max>20</s_max>
+        <smooth_l>5</smooth_l>
+        <gain_steer>0.5</gain_steer>
+        <gain_pitch>0.5</gain_pitch>
+        <radius_arrived>5.0</radius_arrived>
+        <radius_slowdown>15.0</radius_slowdown>
+        <max_iterations>300000</max_iterations>
       </plugin>
       
     </include>

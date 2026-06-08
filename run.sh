@@ -1,25 +1,32 @@
 #!/bin/bash
-xhost +local:docker 
-
-WORLD=${1:-empty}
+xhost +local:docker
 
 echo "Generating model.sdf..."
 python3 lrauv_description/scripts/description_generator.py \
   lrauv_description/models/tethys/model.sdf.in \
   lrauv_description/models/tethys/model.sdf
 
-if [ "$WORLD" == "ledge" ]; then
-  echo "Generating random target..."
-  python3 lrauv_gazebo_plugins/scripts/target_generator.py
-  WORLD_FILE="portuguese_ledge.sdf"
-elif [ "$WORLD" == "nav" ]; then
-  echo "Generating random target..."
-  python3 lrauv_gazebo_plugins/scripts/target_generator.py
-  WORLD_FILE="navigation_world.sdf"
-else
-  WORLD_FILE="empty_environment.sdf"
-fi
+echo "Generating world..."
+python3 -c "
+import sys
+sys.path.append('lrauv_gazebo_plugins/scripts')
+from generate_world import generate_world
+import random
+generate_world('.', seed=random.randint(0,9999))
+"
 
+# sostituisci placeholder nel model.sdf template
+sed \
+  -e 's/__THRESHOLD__/0.001/' \
+  -e 's/__S_MAX__/20/' \
+  -e 's/__SMOOTH_L__/5/' \
+  -e 's/__GAIN_STEER__/0.5/' \
+  -e 's/__GAIN_PITCH__/0.5/' \
+  -e 's/__RADIUS_ARRIVED__/5.0/' \
+  -e 's/__RADIUS_SLOWDOWN__/15.0/' \
+  lrauv_description/models/tethys_equipped/model.sdf.template \
+  > lrauv_description/models/tethys_equipped/model.sdf
+  
 docker run -it --rm \
   --env DISPLAY=$DISPLAY \
   --env XDG_RUNTIME_DIR=/tmp/runtime-developer \
@@ -51,4 +58,4 @@ docker run -it --rm \
     echo 'Launching Gazebo...' && \
     export GZ_SIM_RESOURCE_PATH=/lrauv_ws/src/degree_project/lrauv_description/models && \
     export GZ_SIM_SYSTEM_PLUGIN_PATH=/lrauv_ws/src/degree_project/docker_build && \
-    gz sim /lrauv_ws/src/degree_project/lrauv_gazebo_plugins/worlds/$WORLD_FILE"
+    gz sim /lrauv_ws/src/degree_project/lrauv_gazebo_plugins/worlds/navigation_world.sdf"

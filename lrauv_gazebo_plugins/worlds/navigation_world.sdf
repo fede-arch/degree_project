@@ -3,17 +3,17 @@
   <world name="empty_environment">
 
     <scene>
-      <ambient>1.0 1.0 1.0 1.0</ambient>
-      <background>0.0 0.7 0.8</background>
+      <ambient>0.1 0.2 0.3 1.0</ambient>
+      <background>0.0 0.1 0.3</background>
     </scene>
-    
+
     <physics name="1ms" type="ode">
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1.0</real_time_factor>
     </physics>
 
     <light type="directional" name="sun">
-      <cast_shadows>false</cast_shadows>
+      <cast_shadows>true</cast_shadows>
       <pose>0 0 10 0 0 0</pose>
       <diffuse>1 1 1 1</diffuse>
       <specular>0.5 0.5 0.5 1</specular>
@@ -27,15 +27,11 @@
     </light>
 
     <plugin filename="gz-sim-physics-system"
-      name="gz::sim::systems::Physics">
-    </plugin>
-
-    <plugin
-      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-sensors-system"
       name="gz::sim::systems::Sensors">
       <render_engine>ogre2</render_engine>
     </plugin>
-
     <plugin filename="gz-sim-buoyancy-system"
       name="gz::sim::systems::Buoyancy">
       <graded_buoyancy>
@@ -46,79 +42,164 @@
         </density_change>
       </graded_buoyancy>
     </plugin>
-
     <plugin filename="gz-sim-user-commands-system"
-      name="gz::sim::systems::UserCommands">
-    </plugin>
-
+      name="gz::sim::systems::UserCommands"/>
     <plugin filename="gz-sim-scene-broadcaster-system"
-      name="gz::sim::systems::SceneBroadcaster">
-    </plugin>
-    
+      name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-contact-system"
+      name="gz::sim::systems::Contact"/>
+
+    <!-- Tethys -->
     <include>
-      <pose>0 0 -20 0 0 0</pose>
+      <pose>6.89 5.16 -79.82 0 0 2.64</pose>
       <uri>tethys_equipped</uri>
     </include>
 
-    <!-- Target marker - visible red sphere, no collision -->
+    <!-- Target -->
     <model name="target_marker">
       <static>true</static>
-      <pose>-21.01 -76.30 -13.67 0 0 0</pose>
+      <pose>102.70 -20.57 -75.47 0 0 0</pose>
       <link name="link">
         <visual name="visual">
-          <geometry>
-            <sphere>
-              <radius>0.3</radius>
-            </sphere>
-          </geometry>
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
           <material>
             <ambient>1.0 0.0 0.0 1.0</ambient>
             <diffuse>1.0 0.0 0.0 1.0</diffuse>
-            <specular>1.0 1.0 1.0 1.0</specular>
-            <emissive>0.6 0.0 0.0 1.0</emissive>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
           </material>
-          <transparency>0.3</transparency>
         </visual>
       </link>
     </model>
 
-    <!-- Ostacoli intorno al Tethys -->
-    <model name="ostacolo_davanti">
-      <static>true</static>
-      <pose>-15 0 -20 0 0 0</pose>
-      <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder><radius>1.0</radius><length>40</length></cylinder>
-          </geometry>
-        </collision>
-        <visual name="visual">
-          <geometry>
-            <cylinder><radius>1.0</radius><length>40</length></cylinder>
-          </geometry>
-          <material><ambient>1 0 0 1</ambient><diffuse>1 0 0 1</diffuse></material>
-        </visual>
-      </link>
-    </model>
-
-    <model name="ostacolo">
-      <static>true</static>
-      <pose>-20 -3 -20 0 0 0</pose>
-      <link name="link">
-        <collision name="collision">
-          <geometry>
-            <cylinder><radius>1.0</radius><length>40</length></cylinder>
-          </geometry>
-        </collision>
-        <visual name="visual">
-          <geometry>
-            <cylinder><radius>1.0</radius><length>40</length></cylinder>
-          </geometry>
-          <material><ambient>1 0 0 1</ambient><diffuse>1 0 0 1</diffuse></material>
-        </visual>
-      </link>
-    </model>
-
+    <!-- Scogli sul fondale -->
     
+  <include>
+    <name>rock_0</name>
+    <uri>falling rock 2</uri>
+    <pose>50.01 40.81 -92.73 0 0 0.88</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_1</name>
+    <uri>falling rock 2</uri>
+    <pose>54.20 -24.95 -92.81 0 0 0.97</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_2</name>
+    <uri>falling rock 4</uri>
+    <pose>87.86 18.40 -93.94 0 0 1.76</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_3</name>
+    <uri>falling rock 1</uri>
+    <pose>-12.53 41.85 -92.48 0 0 0.29</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_4</name>
+    <uri>falling rock 3</uri>
+    <pose>55.03 11.19 -94.02 0 0 0.77</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_5</name>
+    <uri>falling rock 3</uri>
+    <pose>33.76 -41.96 -92.01 0 0 2.75</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_6</name>
+    <uri>falling rock 2</uri>
+    <pose>19.93 42.22 -93.19 0 0 3.03</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_7</name>
+    <uri>falling rock 3</uri>
+    <pose>2.73 -31.33 -94.73 0 0 1.50</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_8</name>
+    <uri>falling rock 1</uri>
+    <pose>70.91 37.68 -92.31 0 0 2.65</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_9</name>
+    <uri>falling rock 1</uri>
+    <pose>63.72 -45.48 -93.10 0 0 0.08</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_10</name>
+    <uri>falling rock 1</uri>
+    <pose>92.61 40.99 -92.12 0 0 2.66</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_11</name>
+    <uri>falling rock 2</uri>
+    <pose>-15.46 -16.49 -93.12 0 0 2.89</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_12</name>
+    <uri>falling rock 4</uri>
+    <pose>-12.66 -49.21 -94.13 0 0 1.75</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_13</name>
+    <uri>falling rock 2</uri>
+    <pose>35.01 -13.84 -93.21 0 0 0.33</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_14</name>
+    <uri>falling rock 3</uri>
+    <pose>91.76 -49.03 -94.89 0 0 2.57</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_15</name>
+    <uri>falling rock 1</uri>
+    <pose>73.17 -0.97 -93.60 0 0 1.92</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_16</name>
+    <uri>falling rock 3</uri>
+    <pose>33.68 20.88 -92.27 0 0 0.41</pose>
+    <static>true</static>
+  </include>
+
+
+    <!-- Fondale - Portuguese Ledge -->
+    <include>
+      <name>portuguese_ledge</name>
+      <uri>portuguese ledge</uri>
+      <pose>500 0 -70 0 0 0</pose>
+      <static>true</static>
+    </include>
+
   </world>
 </sdf>

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+    <model name="OceanFloorTexture">
+        <link name="base_link">
+            <visual name="OceanFloorTexture">
+                <material>
+                    <diffuse>1.0 1.0 1.0</diffuse>
+                    <specular>1.0 1.0 1.0</specular>
+                    <pbr>
+                        <metal>
+                            <albedo_map>https://fuel.gazebosim.org/1.0/openrobotics/models/ocean floor texture/2/files/materials/textures/Boat_Albedo.png</albedo_map>
+                            <normal_map>https://fuel.gazebosim.org/1.0/openrobotics/models/ocean floor texture/2/files/materials/textures/Boat_Normal.png</normal_map>
+                            <metalness_map>https://fuel.gazebosim.org/1.0/openrobotics/models/ocean floor texture/2/files/materials/textures/Boat_Metalness.png</metalness_map>
+                            <roughness_map>https://fuel.gazebosim.org/1.0/openrobotics/models/ocean floor texture/2/files/materials/textures/Boat_Roughness.png</roughness_map>
+                        </metal>
+                    </pbr>
+                </material>
+            </visual>
+        </link>
+    </model>
+</sdf>

@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+    <model name="falling_rock5">
+        <link name="base_link">
+            <inertial>
+                <pose>-0.007531 -0.004988 -0.003053 0 0 0</pose>
+                <mass>8.754</mass>
+                <inertia>
+                    <ixx>0.03759048</ixx>
+                    <ixy>0.0016556</ixy>
+                    <ixz>-0.00166835</ixz>
+                    <iyy>0.03739189</iyy>
+                    <iyz>0.0015484</iyz>
+                    <izz>0.03603241</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <mesh>
+                        <scale>40 40 40</scale>
+            <uri>meshes/FallingRock05_Collider.dae</uri>
+                    </mesh>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <mesh>
+                        <scale>40 40 40</scale>
+            <uri>meshes/FallingRock05.dae</uri>
+                    </mesh>
+                </geometry>
+                <material>
+                    <diffuse>1.0 1.0 1.0</diffuse>
+                    <specular>1.0 1.0 1.0</specular>
+                    <pbr>
+                        <metal>
+                            <albedo_map>https://fuel.gazebosim.org/1.0/openrobotics/models/falling rock 5/6/files/materials/textures/FallingRocks_Albedo.jpg</albedo_map>
+                            <normal_map>https://fuel.gazebosim.org/1.0/openrobotics/models/falling rock 5/6/files/materials/textures/FallingRocks_Normal.jpg</normal_map>
+                            <roughness_map>https://fuel.gazebosim.org/1.0/openrobotics/models/falling rock 5/6/files/materials/textures/FallingRocks_Roughness.jpg</roughness_map>
+                        </metal>
+                    </pbr>
+                    <!-- fallback to script if no PBR support-->
+                    <script>
+                        <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/falling rock 5/6/files/materials/scripts</uri>
+                        <uri>https://fuel.gazebosim.org/1.0/openrobotics/models/falling rock 5/6/files/materials/textures</uri>
+                        <name>FallingRocks/FallingRocks_Diffuse</name>
+                    </script>
+                </material>
+            </visual>
+        </link>
+    </model>
+</sdf>
