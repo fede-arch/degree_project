@@ -3,15 +3,13 @@ import numpy as np
 import os
 import re
 
-ROCK_Z_BASE   = -95.0
-EXCLUSION_RADIUS = 30.0
+ROCK_Z_BASE = -100.0
+EXCLUSION_RADIUS = 27.0
 MIN_ROCK_DIST    = 20.0
 
 ROCK_MODELS = [
     "falling rock 1",
     "falling rock 2",
-    "falling rock 3",
-    "falling rock 4",
 ]
 
 def generate_world(project_dir, seed=None):
@@ -20,15 +18,15 @@ def generate_world(project_dir, seed=None):
         np.random.seed(seed)
 
     # Spawn tethys casuale
-    spawn_x = random.uniform(-10, 10)
-    spawn_y = random.uniform(-10, 10)
-    spawn_yaw = 0.0
+    spawn_x = random.uniform(-20, 20)
+    spawn_y = random.uniform(-20, 20)
+    spawn_yaw = random.uniform(0, 6.28)
     drone_z   = -75.0 + random.uniform(-10, 10)
 
     # Goal casuale, lontano dallo spawn
     for _ in range(100):
-        goal_x = random.uniform(40, 120)
-        goal_y = random.uniform(-60, 70)
+        goal_x = random.uniform(60, 200)
+        goal_y = random.uniform(-80, 80)
         if np.sqrt((goal_x-spawn_x)**2 + (goal_y-spawn_y)**2) > 80.0:
             break
     goal_z = -75.0 + random.uniform(-10, 10)
@@ -56,9 +54,8 @@ def generate_world(project_dir, seed=None):
 
     while placed < N_ROCKS and attempts < 1000:
         attempts += 1
-        x = random.uniform(-20, 100)
-        y = random.uniform(-50, 50)
-
+        x = random.uniform(-30, 180)
+        y = random.uniform(-70, 70)
         if too_close_to_keypoints(x, y):
             continue
         if too_close_to_rocks(x, y, placed_positions):
