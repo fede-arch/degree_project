@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<sdf version="1.9">
-  <model name="tethys">
+<sdf version="1.9" xmlns:experimental="http://sdformat.org/schemas/experimental">
+  <model name="tethys___DRONE_ID__">
     <enable_wind>true</enable_wind>
     <include merge="true">
       
@@ -21,7 +21,7 @@
 
       <plugin filename="gz-sim-thruster-system"
         name="gz::sim::systems::Thruster">
-        <namespace>tethys</namespace>
+        <namespace>tethys___DRONE_ID__</namespace>
         <joint_name>propeller_joint</joint_name>
         <thrust_coefficient>0.004422</thrust_coefficient>
         <fluid_density>1025</fluid_density>
@@ -86,6 +86,9 @@
 
       <plugin filename="NavigationPlugin"
         name="tethys::NavigationPlugin">
+        <world_name>empty_environment</world_name>
+        <namespace>tethys___DRONE_ID__</namespace>
+        <remove_on_collision>__REMOVE_ON_COLLISION__</remove_on_collision>
         <goal_x>__GOAL_X__</goal_x>
         <goal_y>__GOAL_Y__</goal_y>
         <goal_z>__GOAL_Z__</goal_z>
@@ -101,6 +104,16 @@
         <safety_margin>0.3</safety_margin>
         <max_fin_angle>0.13</max_fin_angle>
       </plugin>
+
+      <experimental:params>
+        <sensor element_id="base_link::contact_sensor" action="modify">
+          <topic>/tethys___DRONE_ID__/contact</topic>
+        </sensor>
+        <sensor element_id="lidar_link::gpu_lidar" action="modify">
+          <topic>/tethys___DRONE_ID__/lidar</topic>
+        </sensor>
+      </experimental:params>
+
       
     </include>
   </model>

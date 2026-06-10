@@ -1,0 +1,104 @@
+fixuid: fixuid should only ever be used on development systems. DO NOT USE IN PRODUCTION
+fixuid: runtime UID '1000' already matches container user 'developer' UID
+fixuid: runtime GID '1000' already matches container group 'developer' GID
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/time.proto
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/header.proto
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/vector3d.proto
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/stringmsg.proto
+[NAV] goal=(-22.13, -72.95, -73.77)
+[NAV] threshold=0.001 sMax=20 smoothL=5 gainSteer=0.5 gainPitch=0.5 radiusArrived=5 radiusSlowdown=15 robotRadius=0.2 safetyMargin=0.3 maxFinAngle=0.13 maxIterations=150000
+[NAV] goal=(143.96, 56.65, -61.32)
+[NAV] threshold=0.001 sMax=20 smoothL=5 gainSteer=0.5 gainPitch=0.5 radiusArrived=5 radiusSlowdown=15 robotRadius=0.2 safetyMargin=0.3 maxFinAngle=0.13 maxIterations=150000
+[NAV] goal=(-11.08, -2.79, -66.78)
+[NAV] threshold=0.001 sMax=20 smoothL=5 gainSteer=0.5 gainPitch=0.5 radiusArrived=5 radiusSlowdown=15 robotRadius=0.2 safetyMargin=0.3 maxFinAngle=0.13 maxIterations=150000
+[NAV] goal=(38.92, -87.25, -73.18)
+[NAV] threshold=0.001 sMax=20 smoothL=5 gainSteer=0.5 gainPitch=0.5 radiusArrived=5 radiusSlowdown=15 robotRadius=0.2 safetyMargin=0.3 maxFinAngle=0.13 maxIterations=150000
+[NAV] goal=(14.14, 78.93, -69.2)
+[NAV] threshold=0.001 sMax=20 smoothL=5 gainSteer=0.5 gainPitch=0.5 radiusArrived=5 radiusSlowdown=15 robotRadius=0.2 safetyMargin=0.3 maxFinAngle=0.13 maxIterations=150000
+[1;31m[Err] [Buoyancy.cc:370] [0m[1;31mUnsupported collision geometry[[0m[1;31m6[0m[1;31m][0m
+[1;31m[Err] [Buoyancy.cc:370] [0m[1;31mUnsupported collision geometry[[0m[1;31m6[0m[1;31m][0m
+amdgpu: os_same_file_description couldn't determine if two DRM fds reference the same file description.
+If they do, bad things may happen!
+amdgpu: os_same_file_description couldn't determine if two DRM fds reference the same file description.
+If they do, bad things may happen!
+[1;36mDbg[0m ODE Heightfield AABB: min = {-499.512, -499.512, -98.6872} max = {499.512, 499.512, 1.10914e-13}
+
+t=1s dist=106.08m head=73.00° elev=-44.06° path=0.00m clr=27.86m
+
+t=1s dist=166.41m head=-159.00° elev=-21.62° path=0.00m clr=27.86m
+
+t=1s dist=67.75m head=14.00° elev=-80.29° path=0.00m clr=27.86m
+
+t=1s dist=120.34m head=114.00° elev=-37.45° path=0.00m clr=27.86m
+
+t=1s dist=105.92m head=-100.00° elev=-40.79° path=0.00m clr=27.86m
+
+t=2s dist=106.08m head=73.00° elev=-44.06° path=0.00m clr=27.86m
+
+t=2s dist=166.41m head=-159.00° elev=-21.62° path=0.00m clr=27.86m
+
+t=2s dist=67.75m head=14.00° elev=-80.29° path=0.00m clr=27.86m
+
+t=2s dist=120.34m head=114.00° elev=-37.45° path=0.00m clr=27.86m
+
+t=2s dist=105.92m head=-100.00° elev=-40.79° path=0.00m clr=27.86m
+
+t=3s dist=106.08m head=73.00° elev=-44.06° path=0.00m clr=27.86m
+
+t=3s dist=166.41m head=-159.00° elev=-21.62° path=0.00m clr=27.86m
+
+t=3s dist=67.75m head=14.00° elev=-80.29° path=0.00m clr=27.86m
+
+t=3s dist=120.34m head=114.00° elev=-37.45° path=0.00m clr=27.86m
+
+t=3s dist=105.92m head=-100.00° elev=-40.79° path=0.00m clr=27.86m
+
+t=4s dist=106.08m head=73.00° elev=-44.06° path=0.00m clr=27.85m
+
+t=4s dist=166.41m head=-159.00° elev=-21.62° path=0.00m clr=27.85m
+
+t=4s dist=67.75m head=14.00° elev=-80.29° path=0.00m clr=27.85m
+
+t=4s dist=120.34m head=114.00° elev=-37.45° path=0.00m clr=27.85m
+
+t=4s dist=105.92m head=-100.00° elev=-40.79° path=0.00m clr=27.85m
+
+t=5s dist=106.08m head=73.00° elev=-44.06° path=0.00m clr=27.85m
+
+t=5s dist=166.41m head=-159.00° elev=-21.62° path=0.00m clr=27.85m
+
+t=5s dist=67.75m head=14.00° elev=-80.29° path=0.00m clr=27.85m
+
+t=5s dist=120.34m head=114.00° elev=-37.45° path=0.00m clr=27.85m
+
+t=5s dist=105.92m head=-100.00° elev=-40.79° path=0.00m clr=27.85m
+
+t=6s dist=106.08m head=73.00° elev=-44.06° path=0.00m clr=27.85m
+
+t=6s dist=166.41m head=-159.00° elev=-21.62° path=0.00m clr=27.85m
+
+t=6s dist=67.75m head=14.00° elev=-80.29° path=0.00m clr=27.85m
+
+t=6s dist=120.34m head=114.00° elev=-37.45° path=0.00m clr=27.85m
+
+t=6s dist=105.92m head=-100.00° elev=-40.79° path=0.00m clr=27.85m
+
+t=7s dist=106.08m head=73.00° elev=-44.06° path=0.00m clr=27.85m
+
+t=7s dist=166.41m head=-159.00° elev=-21.62° path=0.00m clr=27.85m
+
+t=7s dist=67.75m head=14.00° elev=-80.29° path=0.00m clr=27.85m
+
+t=7s dist=120.34m head=114.00° elev=-37.45° path=0.00m clr=27.85m
+
+t=7s dist=105.92m head=-100.00° elev=-40.79° path=0.00m clr=27.85m
+
+t=8s dist=106.08m head=73.00° elev=-44.06° path=0.00m clr=27.85m
+
+t=8s dist=166.41m head=-159.00° elev=-21.62° path=0.00m clr=27.85m
+
+t=8s dist=67.75m head=14.00° elev=-80.29° path=0.00m clr=27.85m
+
+t=8s dist=120.34m head=114.00° elev=-37.45° path=0.00m clr=27.85m
+
+t=8s dist=105.92m head=-100.00° elev=-40.79° path=0.00m clr=27.85m

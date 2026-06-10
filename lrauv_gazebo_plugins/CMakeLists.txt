@@ -33,3 +33,13 @@ target_link_libraries(NavigationPlugin
     gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
 )
 install(TARGETS NavigationPlugin DESTINATION lib)
+
+find_package(gz-transport13 REQUIRED)
+set(GZ_TRANSPORT_VER ${gz-transport13_VERSION_MAJOR})
+
+add_executable(MultiLrauv tools/MultiLrauv.cc)
+set_property(TARGET MultiLrauv PROPERTY CXX_STANDARD 17)
+target_link_libraries(MultiLrauv
+  PUBLIC
+    gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
+)

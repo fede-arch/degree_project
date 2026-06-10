@@ -10,35 +10,32 @@
 
 namespace tethys {
 
-  // --- NavigationPrivateData ---
+  // NavigationPrivateData 
   class NavigationPrivateData {
 
-    // --- Gazebo transport ---
+    // Gazebo transport 
     public: gz::transport::Node node;
     public: gz::transport::Node::Publisher thrustPub;
     public: gz::transport::Node::Publisher vertFinPub;
     public: gz::transport::Node::Publisher horizFinPub;
     public: gz::transport::Node::Publisher resultPub;
     public: std::mutex mtx;
+    public: std::string worldName = "empty_environment";
 
     // --- Dati lidar ---
     public: std::vector<float> ranges;
     public: int horizCount = 0;
     public: int vertCount = 0;
 
-    // --- Dati pose ---
+    // Dati pose 
     public: double posX = 0, posY = 0, posZ = 0;
     public: double oriX = 0, oriY = 0, oriZ = 0, oriW = 1;
     public: double yaw = 0, pitch = 0, roll = 0;
-    public: double vertFinAngle = 0;
-    public: double horizFinAngle = 0;
 
-    // --- VFH parametri ---
+    // VFH parametri 
     static constexpr int NUM_AZ = 360;
     static constexpr int NUM_EL = 4;
 
-    // I 4 layer verticali del lidar: DEVONO coincidere con vertical_min/max_angle
-    // e con vertical_samples del sensore nell'SDF (-15, -5, +5, +15 gradi).
     const double EL_ANGLES[NUM_EL] = {-0.2618, -0.0873, 0.0873, 0.2618};
 
     public: double threshold      = 0.001;   // soglia di occupazione su 1/d^2 (post-smoothing)
@@ -50,44 +47,38 @@ namespace tethys {
     public: double radiusSlowdown = 15.0;
     public: double elevCost       = 25.0;     // penalita' per cambio layer di elevazione
 
-    // --- NUOVO: percorribilita' + limiti attuatori ---
     public: double robotRadius    = 0.6;      // raggio "efficace" del veicolo
     public: double safetyMargin   = 0.6;      // margine di sicurezza
-    // Limite di deflessione delle pinne: SOTTO alpha_stall (0.17 rad nell'SDF)
-    // per restare nel regime lineare e non perdere autorita' di controllo.
+
     public: double maxFinAngle    = 0.15;
     public: double maxThrust      = 31.0;
 
     public: int lastBestDir = -1;
     public: int lastBestEl  = 1;
 
-    // --- VFH dati ---
+    // VFH dati
     public: std::vector<double> histogram = std::vector<double>(NUM_AZ * NUM_EL, 0.0);
     public: double goalX = 0, goalY = 0, goalZ = 0;
 
-    // --- Stato episodio ---
+    // Stato episodio
     public: enum class EpisodeState { RUNNING, ARRIVED, COLLISION, TIMEOUT };
     public: EpisodeState episodeState = EpisodeState::RUNNING;
     public: bool resultPublished = false;
     public: int poseCount = 0;
     public: int64_t maxIterations = 300000;
-
-    // --- NUOVO: clock relativo all'episodio + metriche per la fitness ---
-    // episodeStartIter < 0 => da (ri)inizializzare al prossimo tick di controllo.
-    // Rende timeout/stuck corretti sia che tu rilanci il sim per ogni valutazione
-    // (le iterazioni ripartono da 0), sia che tu resetti live via /es/vfh_params
-    // (le iterazioni continuano a crescere).
     public: int64_t episodeStartIter = -1;
     public: double pathLength = 0.0;
     public: double pathPrevX = 0, pathPrevY = 0, pathPrevZ = 0;
     public: double minClearance = std::numeric_limits<double>::infinity();
 
-    // --- Anti-stuck ---
+    // Anti-stuck
     public: double lastPosX = 0, lastPosY = 0, lastPosZ = 0;
     public: int64_t lastMoveIteration = 0;
     public: int64_t stuckTimeout = 10000; // 10s
 
-    // ---- helper attuatori ----
+    public: std::string modelName = "tethys";
+    public: bool removeOnCollision = false;
+
     public: void StopActuators() {
       gz::msgs::Double z; z.set_data(0.0);
       this->thrustPub.Publish(z);
@@ -95,7 +86,6 @@ namespace tethys {
       this->horizFinPub.Publish(z);
     }
 
-    // ---- helper: distanza grezza in un settore/layer (inf se libero) ----
     public: double RawRange(int sec, int layer) {
       int idx = sec + layer * NUM_AZ;
       if (idx < 0 || idx >= (int)this->ranges.size())
@@ -106,25 +96,26 @@ namespace tethys {
       return (double)d;
     }
 
-    // ---- helper: stringa risultato ricca per la fitness dell'ES ----
-    // Formato:  <TAG>;t=<iter>;dist=<m>;path=<m>;clr=<m>
     //   t    = durata episodio in iterazioni (1000 iter = 1s con dt=1ms)
     //   dist = distanza finale dal goal
     //   path = lunghezza del percorso effettivamente compiuto
     //   clr  = distanza minima da un ostacolo nell'episodio (999 = mai visto ostacoli)
     public: std::string MakeResult(const std::string &tag, int64_t elapsedIter) {
-      double dx = this->goalX - this->posX;
-      double dy = this->goalY - this->posY;
-      double dz = this->goalZ - this->posZ;
-      double dist = std::sqrt(dx*dx + dy*dy + dz*dz);
-      double clr  = std::isinf(this->minClearance) ? 999.0 : this->minClearance;
-      std::ostringstream os;
-      os << tag
-         << ";t="    << elapsedIter
-         << ";dist=" << dist
-         << ";path=" << this->pathLength
-         << ";clr="  << clr;
-      return os.str();
+        double dx = this->goalX - this->posX;
+        double dy = this->goalY - this->posY;
+        double dz = this->goalZ - this->posZ;
+        double dist = std::sqrt(dx*dx + dy*dy + dz*dz);
+        double clr  = std::isinf(this->minClearance) ? 999.0 : this->minClearance;
+        auto [gSec, gElev] = this->GoalDirBody();
+        double headErr = std::abs((gSec <= 180) ? (double)gSec : (double)gSec - 360.0);
+        std::ostringstream os;
+        os << tag
+          << ";t="    << elapsedIter
+          << ";dist=" << dist
+          << ";path=" << this->pathLength
+          << ";clr="  << clr
+          << ";head=" << headErr;
+        return os.str();
     }
 
     // CALLBACK LIDAR
@@ -144,7 +135,7 @@ namespace tethys {
       for (int i = 0; i < _msg.pose_size(); i++) {
         const auto &name = _msg.pose(i).name();
 
-        if (name == "tethys") {
+        if (name == this->modelName) {
           auto &pos = _msg.pose(i).position();
           auto &ori = _msg.pose(i).orientation();
           this->posX = pos.x();
@@ -157,18 +148,6 @@ namespace tethys {
           this->yaw   = std::atan2(2*(oriW*oriZ + oriX*oriY), 1 - 2*(oriY*oriY + oriZ*oriZ));
           this->pitch = std::asin(std::clamp(2*(oriW*oriY - oriZ*oriX), -1.0, 1.0));
           this->roll  = std::atan2(2*(oriW*oriX + oriY*oriZ), 1 - 2*(oriX*oriX + oriY*oriY));
-        }
-
-        if (name == "vertical_fins") {
-          auto &ori = _msg.pose(i).orientation();
-          double w = ori.w(), x = ori.x(), y = ori.y(), z = ori.z();
-          this->vertFinAngle = std::atan2(2*(w*z + x*y), 1 - 2*(y*y + z*z));
-        }
-
-        if (name == "horizontal_fins") {
-          auto &ori = _msg.pose(i).orientation();
-          double w = ori.w(), x = ori.x(), y = ori.y(), z = ori.z();
-          this->horizFinAngle = std::asin(std::clamp(2*(w*y - z*x), -1.0, 1.0));
         }
       }
     }
@@ -189,9 +168,6 @@ namespace tethys {
       const std::string &data = _msg.data();
       std::cout << "[NAV] RAW JSON: " << data << std::endl;
 
-      // Aggiorna SOLO le chiavi effettivamente presenti nel JSON.
-      // (La vecchia getDouble ritornava -1 per le chiavi mancanti e
-      //  sovrascriveva i parametri: bug subdolo per l'ES.)
       auto setD = [&](const std::string &key, double &target) {
         auto p = data.find("\"" + key + "\":");
         if (p == std::string::npos) return;
@@ -217,13 +193,12 @@ namespace tethys {
       setD("max_fin_angle",   this->maxFinAngle);
       setD("max_thrust",      this->maxThrust);
 
-      // reset episodio
       this->episodeState     = EpisodeState::RUNNING;
       this->resultPublished  = false;
       this->lastBestDir      = -1;
       this->lastBestEl       = 1;
-      this->episodeStartIter = -1;   // reinizializzato al prossimo tick (allinea il clock)
-      this->poseCount        = 0;    // aspetta pose fresche prima di agire
+      this->episodeStartIter = -1;   
+      this->poseCount        = 0;   
 
       this->StopActuators();
 
@@ -236,11 +211,11 @@ namespace tethys {
       std::cout << "[NAV] Episode reset" << std::endl;
     }
 
-    // BUILD HISTOGRAM  (magnitudine 1/d^2 + traccia la clearance minima)
+    // BUILD HISTOGRAM  
     public: void BuildHistogram() {
       histogram.assign(NUM_AZ * NUM_EL, 0.0);
       const int need = NUM_AZ * NUM_EL;
-      if ((int)ranges.size() < need) return;   // SAFETY: frame lidar incompleto -> niente OOB
+      if ((int)ranges.size() < need) return;  
       for (int j = 0; j < NUM_EL; j++) {
         for (int i = 0; i < NUM_AZ; i++) {
           int idx = i + j * NUM_AZ;
@@ -255,7 +230,7 @@ namespace tethys {
       }
     }
 
-    // SMOOTH HISTOGRAM  (media mobile in azimuth, con wrap-around)
+    // SMOOTH HISTOGRAM 
     public: void SmoothHistogram() {
       std::vector<double> smoothed(NUM_AZ * NUM_EL, 0.0);
       for (int j = 0; j < NUM_EL; j++) {
@@ -272,9 +247,7 @@ namespace tethys {
     // GOAL DIR BODY  - direzione del goal nel frame del veicolo via quaternione COMPLETO
     // (yaw+pitch+roll). Ritorna {settore_azimuth [0..359], elevazione_rad}.
     // Settore 0 = muso (-X), cresce CCW intorno a +Z: coerente con l'indice del lidar
-    // (scan -pi..+pi -> indice 0 = -X). A pitch/roll piccoli coincide IDENTICAMENTE con
-    // la vecchia GoalAngle, ma a quota variabile corregge il disallineamento di frame
-    // (prima l'elevazione del goal era in frame mondo, i layer del lidar in frame corpo).
+    // (scan -pi..+pi -> indice 0 = -X).
     public: std::pair<int,double> GoalDirBody() {
       double gx = goalX - posX, gy = goalY - posY, gz = goalZ - posZ;
       double w = oriW, x = oriX, y = oriY, z = oriZ;
@@ -300,7 +273,6 @@ namespace tethys {
         if (diff < minElDiff) { minElDiff = diff; goalElLayer = j; }
       }
 
-      // scorciatoia: se la direzione del goal e' libera, vai dritto
       int gidx = goalSector + goalElLayer * NUM_AZ;
       if (histogram[gidx] < this->threshold) {
         lastBestDir = goalSector; lastBestEl = goalElLayer;
@@ -331,14 +303,12 @@ namespace tethys {
         return d;
       };
 
-      // varco lineare minimo richiesto per far passare il veicolo
       const double clearanceNeeded = 2.0 * (this->robotRadius + this->safetyMargin);
 
       int bestAz = -1, bestEl = 1;
       double bestCost = 1e9;
 
       for (int j = 0; j < NUM_EL; j++) {
-        // 1) trova le valli (run di settori liberi) nel layer j
         std::vector<std::pair<int,int>> valleys;
         int valleyStart = -1;
         for (int k = 0; k < NUM_AZ; k++) {
@@ -351,41 +321,36 @@ namespace tethys {
           }
         }
         if (valleyStart != -1) {
-          // la valle in coda si fonde con la prima se questa parte da 0 (wrap-around)
           if (!valleys.empty() && valleys.front().first == 0)
             valleys.front().first = valleyStart;
           else
             valleys.push_back({valleyStart, NUM_AZ - 1});
         }
 
-        // 2) valuta ogni valle
+        // valuta ogni valle
         for (auto &v : valleys) {
-          int s0 = v.first;   // primo settore libero (la valle si estende in +mod)
-          int s1 = v.second;  // ultimo settore libero
-          // larghezza in settori (=gradi), wrap-aware
+          int s0 = v.first;   
+          int s1 = v.second;  
           int width = (s1 >= s0) ? (s1 - s0 + 1) : (NUM_AZ - s0 + s1 + 1);
 
-          // --- gate di percorribilita' (VFH+): il varco deve far passare il veicolo ---
-          int leftObs  = (s0 - 1 + NUM_AZ) % NUM_AZ;  // ostacolo che delimita un lato
-          int rightObs = (s1 + 1) % NUM_AZ;           // ostacolo che delimita l'altro lato
+          int leftObs  = (s0 - 1 + NUM_AZ) % NUM_AZ;  
+          int rightObs = (s1 + 1) % NUM_AZ;           
           double dObs = std::min(RawRange(leftObs, j), RawRange(rightObs, j));
           if (std::isfinite(dObs)) {
             double widthRad  = width * M_PI / 180.0;
             double linearGap = 2.0 * dObs * std::sin(widthRad * 0.5);
-            if (linearGap < clearanceNeeded) continue; // troppo stretto: scarta la valle
+            if (linearGap < clearanceNeeded) continue; 
           }
 
-          // --- direzione candidata DENTRO la valle (wrap-safe) ---
+          // Direzione candidata DENTRO la valle (wrap-safe)
           int theta;
           if (width <= this->sMax) {
-            // centro della valle stretta: (s0 + width/2) mod NUM_AZ funziona anche col wrap
             theta = (s0 + width / 2) % NUM_AZ;
           } else {
-            // valle larga: entra di sMax/2 dal bordo piu' vicino al goal
             int dA = angDist(s0, goalSector);
             int dB = angDist(s1, goalSector);
-            if (dA <= dB) theta = (s0 + this->sMax/2) % NUM_AZ;             // da s0 in avanti
-            else          theta = (s1 - this->sMax/2 + NUM_AZ) % NUM_AZ;    // da s1 indietro
+            if (dA <= dB) theta = (s0 + this->sMax/2) % NUM_AZ;             
+            else          theta = (s1 - this->sMax/2 + NUM_AZ) % NUM_AZ;   
           }
 
           double costAz = (double)angDist(theta, goalSector);
@@ -395,10 +360,6 @@ namespace tethys {
         }
       }
 
-      // Fallback: se il gate di percorribilita' ha scartato tutto (es. ostacolo a
-      // distanza <= lidar_min_range), invece di fermarsi il veicolo punta verso il
-      // settore con la magnitudine piu' bassa (la direzione "meno bloccata").
-      // E' un comportamento di fuga approssimativo ma impedisce il freeze.
       if (bestAz < 0) {
         double minH = 1e9;
         for (int j = 0; j < NUM_EL; j++) {
@@ -415,7 +376,7 @@ namespace tethys {
     }
   };
 
-  // --- NavigationPlugin ---
+  // NavigationPlugin
   NavigationPlugin::NavigationPlugin() : dataPtr(std::make_unique<NavigationPrivateData>()) {}
 
   NavigationPlugin::~NavigationPlugin() = default;
@@ -424,37 +385,35 @@ namespace tethys {
                                    const std::shared_ptr<const sdf::Element> &_sdf,
                                    gz::sim::EntityComponentManager &,
                                    gz::sim::EventManager &) {
-    this->dataPtr->node.Subscribe("/tethys/lidar",
+
+    std::string ns = _sdf->Get<std::string>("namespace", "tethys").first;
+    this->dataPtr->modelName = ns;      
+
+    this->dataPtr->worldName = _sdf->Get<std::string>("world_name", "empty_environment").first;
+
+    this->dataPtr->node.Subscribe("/" + ns + "/lidar",
       &NavigationPrivateData::OnLidar, this->dataPtr.get());
 
     this->dataPtr->node.Subscribe("/world/empty_environment/dynamic_pose/info",
       &NavigationPrivateData::OnPose, this->dataPtr.get());
 
-    // Il topic del contact sensor dipende dalla versione di gz-sim:
-    // - il sistema Sensors onora il <topic> dell'SDF (/tethys/contact)
-    // - il sistema Contact potrebbe usare il path scopato invece.
-    // Ci iscriviamo a ENTRAMBI per sicurezza: uno dei due funzionera'.
-    // Diagnosi: gz topic -l | grep contact
-    this->dataPtr->node.Subscribe("/tethys/contact",
-      &NavigationPrivateData::OnContact, this->dataPtr.get());
-    this->dataPtr->node.Subscribe(
-      "/world/empty_environment/model/tethys/link/base_link/sensor/contact_sensor/contact",
+    this->dataPtr->node.Subscribe("/world/empty_environment/model/" + ns + "/link/base_link/sensor/contact_sensor/contact",
       &NavigationPrivateData::OnContact, this->dataPtr.get());
 
-    this->dataPtr->node.Subscribe("/es/vfh_params",
+    this->dataPtr->node.Subscribe("/" + ns + "/es/vfh_params",
       &NavigationPrivateData::OnParams, this->dataPtr.get());
 
     this->dataPtr->thrustPub = this->dataPtr->node.Advertise<gz::msgs::Double>(
-      "/model/tethys/joint/propeller_joint/cmd_thrust");
+      "/model/" + ns + "/joint/propeller_joint/cmd_thrust");
 
     this->dataPtr->vertFinPub = this->dataPtr->node.Advertise<gz::msgs::Double>(
-      "/model/tethys/joint/vertical_fins_joint/0/cmd_pos");
+      "/model/" + ns + "/joint/vertical_fins_joint/0/cmd_pos");
 
     this->dataPtr->horizFinPub = this->dataPtr->node.Advertise<gz::msgs::Double>(
-      "/model/tethys/joint/horizontal_fins_joint/0/cmd_pos");
+      "/model/" + ns + "/joint/horizontal_fins_joint/0/cmd_pos");
 
     this->dataPtr->resultPub = this->dataPtr->node.Advertise<gz::msgs::StringMsg>(
-      "/es/episode_result");
+      "/" + ns + "/es/episode_result");
 
     this->dataPtr->goalX = _sdf->Get<double>("goal_x", 0.0).first;
     this->dataPtr->goalY = _sdf->Get<double>("goal_y", 0.0).first;
@@ -469,7 +428,7 @@ namespace tethys {
     this->dataPtr->radiusSlowdown = _sdf->Get<double>("radius_slowdown", 15.0).first;
     this->dataPtr->maxIterations  = _sdf->Get<int>   ("max_iterations",  300000).first;
 
-    // --- NUOVO: parametri esponibili anche all'ES ---
+    // Parametri esponibili anche all'ES
     this->dataPtr->elevCost     = _sdf->Get<double>("elev_cost",     10.0).first;
     this->dataPtr->robotRadius  = _sdf->Get<double>("robot_radius",  0.6).first;
     this->dataPtr->safetyMargin = _sdf->Get<double>("safety_margin", 0.6).first;
@@ -478,6 +437,7 @@ namespace tethys {
 
     this->dataPtr->poseCount        = 0;
     this->dataPtr->episodeStartIter = -1;
+    this->dataPtr->removeOnCollision = _sdf->Get<bool>("remove_on_collision", false).first;
 
     std::cout << "[NAV] goal=("
               << this->dataPtr->goalX << ", "
@@ -505,7 +465,6 @@ namespace tethys {
     if (_info.iterations % 100 == 0) {
       std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
 
-      // (ri)inizializza il clock relativo all'episodio e le metriche
       if (this->dataPtr->episodeStartIter < 0) {
         this->dataPtr->episodeStartIter  = (int64_t)_info.iterations;
         this->dataPtr->lastMoveIteration = (int64_t)_info.iterations;
@@ -532,12 +491,24 @@ namespace tethys {
           msg.set_data(this->dataPtr->MakeResult(tag, elapsed));
           this->dataPtr->resultPub.Publish(msg);
           this->dataPtr->resultPublished = true;
+         if (this->dataPtr->removeOnCollision &&
+            (this->dataPtr->episodeState == NavigationPrivateData::EpisodeState::COLLISION ||
+            this->dataPtr->episodeState == NavigationPrivateData::EpisodeState::TIMEOUT  ||
+            this->dataPtr->episodeState == NavigationPrivateData::EpisodeState::ARRIVED)) {
+            gz::msgs::Entity req;
+            req.set_name(this->dataPtr->modelName);
+            req.set_type(gz::msgs::Entity::MODEL);
+            gz::msgs::Boolean rep;
+            bool result;
+            this->dataPtr->node.Request("/world/" + this->dataPtr->worldName + "/remove", req, 2000, rep, result);
+          }
+
           std::cout << "[NAV] Episode ended: " << msg.data() << std::endl;
         }
         return;
       }
 
-      // PATH LENGTH (integra lo spostamento ad ogni tick di controllo)
+      // PATH LENGTH 
       {
         double pdx = this->dataPtr->posX - this->dataPtr->pathPrevX;
         double pdy = this->dataPtr->posY - this->dataPtr->pathPrevY;
@@ -593,7 +564,6 @@ namespace tethys {
       auto [bestDir, bestElLayer] = this->dataPtr->FindBestDirection();
 
       if (bestDir < 0) {
-        // completamente circondato: fermati (lo stuck-timeout chiudera' l'episodio)
         this->dataPtr->StopActuators();
       } else {
         double steerError = bestDir * M_PI / 180.0;
@@ -622,7 +592,7 @@ namespace tethys {
       }
     }
 
-    // STAMPA - ogni 1s
+    // STAMPA 
     if (_info.iterations % 1000 == 0) {
       std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
 
@@ -635,7 +605,8 @@ namespace tethys {
       double headErr = (gSec <= 180) ? (double)gSec : (double)gSec - 360.0;
 
       std::cout << std::fixed << std::setprecision(2);
-      std::cout << "\nt=" << _info.iterations/1000 << "s"
+      std::cout << "[" << this->dataPtr->modelName << "] "
+                << " t=" << _info.iterations/1000 << "s"
                 << " dist=" << distGoal << "m"
                 << " head=" << headErr << "°"
                 << " elev=" << gElev * 180.0/M_PI << "°"

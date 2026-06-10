@@ -1,7 +1,6 @@
 import random
 import numpy as np
 import os
-import re
 
 ROCK_Z_BASE = -113.0
 EXCLUSION_RADIUS = 60.0
@@ -25,13 +24,11 @@ def generate_world(project_dir, seed=None):
         np.random.seed(seed)
         print(f"[GEN] Seed: {seed}")
 
-    # Spawn tethys casuale
     spawn_x = random.uniform(-50, 220)
     spawn_y = random.uniform(-100, 100)
     spawn_yaw = random.uniform(0, 6.28)
     drone_z   = -75.0 + random.uniform(-5, 5)
 
-    # Goal casuale, lontano dallo spawn
     for _ in range(100):
         goal_x = random.uniform(-50, 220)
         goal_y = random.uniform(-100, 100)
@@ -180,6 +177,8 @@ def generate_world(project_dir, seed=None):
     if os.path.exists(template_path):
         with open(template_path, "r") as f:
             content = f.read()
+        content = content.replace("__DRONE_ID__", "0")    
+        content = content.replace("__REMOVE_ON_COLLISION__", "false")
         content = content.replace("__GOAL_X__", f"{goal_x:.2f}")
         content = content.replace("__GOAL_Y__", f"{goal_y:.2f}")
         content = content.replace("__GOAL_Z__", f"{goal_z:.2f}")

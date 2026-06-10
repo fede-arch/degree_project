@@ -87,10 +87,10 @@
       <plugin filename="NavigationPlugin"
         name="tethys::NavigationPlugin">
         <namespace>tethys_0</namespace>
-        <remove_on_collision>false</remove_on_collision>
-        <goal_x>182.88</goal_x>
-        <goal_y>45.81</goal_y>
-        <goal_z>-77.46</goal_z>
+        <remove_on_collision>true</remove_on_collision>
+        <goal_x>130.46</goal_x>
+        <goal_y>96.36</goal_y>
+        <goal_z>-74.56</goal_z>
         <threshold>0.001</threshold>
         <s_max>20</s_max>
         <smooth_l>5</smooth_l>
