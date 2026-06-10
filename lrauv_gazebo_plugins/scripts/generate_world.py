@@ -3,50 +3,53 @@ import numpy as np
 import os
 import re
 
-ROCK_Z_BASE = -100.0
-EXCLUSION_RADIUS = 27.0
-MIN_ROCK_DIST    = 20.0
+ROCK_Z_BASE = -113.0
+EXCLUSION_RADIUS = 60.0
+MIN_ROCK_DIST    = 15.0
+N_ROCKS = 50
 
 ROCK_MODELS = [
     "falling rock 1",
     "falling rock 2",
 ]
 
+def too_close_to_rocks(x, y, positions):
+    for px, py in positions:
+        if np.sqrt((x-px)**2 + (y-py)**2) < MIN_ROCK_DIST:
+            return True
+    return False
+
 def generate_world(project_dir, seed=None):
     if seed is not None:
         random.seed(seed)
         np.random.seed(seed)
+        print(f"[GEN] Seed: {seed}")
 
     # Spawn tethys casuale
-    spawn_x = random.uniform(-20, 20)
-    spawn_y = random.uniform(-20, 20)
+    spawn_x = random.uniform(-50, 220)
+    spawn_y = random.uniform(-100, 100)
     spawn_yaw = random.uniform(0, 6.28)
-    drone_z   = -75.0 + random.uniform(-10, 10)
+    drone_z   = -75.0 + random.uniform(-5, 5)
 
     # Goal casuale, lontano dallo spawn
     for _ in range(100):
-        goal_x = random.uniform(60, 200)
-        goal_y = random.uniform(-80, 80)
-        if np.sqrt((goal_x-spawn_x)**2 + (goal_y-spawn_y)**2) > 80.0:
+        goal_x = random.uniform(-50, 220)
+        goal_y = random.uniform(-100, 100)
+        if np.sqrt((goal_x-spawn_x)**2 + (goal_y-spawn_y)**2) > 120.0:
             break
-    goal_z = -75.0 + random.uniform(-10, 10)
+    goal_z  = drone_z + random.uniform(-6, 6)
 
-    keypoints = [(spawn_x, spawn_y), (goal_x, goal_y)]
+    keypoints = [
+        (spawn_x, spawn_y, EXCLUSION_RADIUS), 
+        (goal_x,  goal_y,  EXCLUSION_RADIUS),  
+    ]
 
     def too_close_to_keypoints(x, y):
-        for px, py in keypoints:
-            if np.sqrt((x-px)**2 + (y-py)**2) < EXCLUSION_RADIUS:
+        for px, py, radius in keypoints:
+            if np.sqrt((x-px)**2 + (y-py)**2) < radius:
                 return True
         return False
 
-    def too_close_to_rocks(x, y, positions):
-        for px, py in positions:
-            if np.sqrt((x-px)**2 + (y-py)**2) < MIN_ROCK_DIST:
-                return True
-        return False
-
-    # Rocce lontane da spawn e goal 
-    N_ROCKS = 20
     rocks_sdf = ""
     placed = 0
     attempts = 0
@@ -54,16 +57,16 @@ def generate_world(project_dir, seed=None):
 
     while placed < N_ROCKS and attempts < 1000:
         attempts += 1
-        x = random.uniform(-30, 180)
-        y = random.uniform(-70, 70)
+        x = random.uniform(-80, 250)
+        y = random.uniform(-130, 130)
         if too_close_to_keypoints(x, y):
             continue
         if too_close_to_rocks(x, y, placed_positions):
             continue
 
-        model    = random.choice(ROCK_MODELS)
-        yaw      = random.uniform(0, 3.14)
-        z_offset = random.uniform(0, 3.0)
+        model = random.choice(ROCK_MODELS)
+        yaw = random.uniform(0, 3.14)
+        z_offset = random.uniform(0, 25)
 
         rocks_sdf += f"""
   <include>
@@ -169,16 +172,25 @@ def generate_world(project_dir, seed=None):
     with open(world_path, "w") as f:
         f.write(world_content)
 
-    # Aggiorna goal nel model.sdf template
     template_path = os.path.join(project_dir,
         "lrauv_description/models/tethys_equipped/model.sdf.template")
+    model_path = os.path.join(project_dir,
+        "lrauv_description/models/tethys_equipped/model.sdf")
+
     if os.path.exists(template_path):
         with open(template_path, "r") as f:
             content = f.read()
-        content = re.sub(r'<goal_x>.*?</goal_x>', f'<goal_x>{goal_x:.2f}</goal_x>', content)
-        content = re.sub(r'<goal_y>.*?</goal_y>', f'<goal_y>{goal_y:.2f}</goal_y>', content)
-        content = re.sub(r'<goal_z>.*?</goal_z>', f'<goal_z>{goal_z:.2f}</goal_z>', content)
-        with open(template_path, "w") as f:
+        content = content.replace("__GOAL_X__", f"{goal_x:.2f}")
+        content = content.replace("__GOAL_Y__", f"{goal_y:.2f}")
+        content = content.replace("__GOAL_Z__", f"{goal_z:.2f}")
+        content = content.replace("__THRESHOLD__", "0.001")
+        content = content.replace("__S_MAX__", "20")
+        content = content.replace("__SMOOTH_L__", "5")
+        content = content.replace("__GAIN_STEER__", "0.5")
+        content = content.replace("__GAIN_PITCH__", "0.5")
+        content = content.replace("__RADIUS_SLOWDOWN__", "15.0")
+        with open(model_path, "w") as f:
             f.write(content)
 
     print(f"[GEN] World: {placed} rocce | spawn=({spawn_x:.1f},{spawn_y:.1f},{drone_z:.1f}) yaw={spawn_yaw:.2f} | goal=({goal_x:.1f},{goal_y:.1f},{goal_z:.1f})")
+    return goal_x, goal_y, goal_z

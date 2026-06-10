@@ -86,9 +86,9 @@
 
       <plugin filename="NavigationPlugin"
         name="tethys::NavigationPlugin">
-        <goal_x>131.58</goal_x>
-        <goal_y>-15.21</goal_y>
-        <goal_z>-69.32</goal_z>
+        <goal_x>173.63</goal_x>
+        <goal_y>-89.11</goal_y>
+        <goal_z>-76.16</goal_z>
         <threshold>0.001</threshold>
         <s_max>20</s_max>
         <smooth_l>5</smooth_l>
@@ -96,7 +96,10 @@
         <gain_pitch>0.5</gain_pitch>
         <radius_arrived>5.0</radius_arrived>
         <radius_slowdown>15.0</radius_slowdown>
-        <max_iterations>300000</max_iterations>
+        <max_iterations>250000</max_iterations>
+        <robot_radius>0.2</robot_radius>
+        <safety_margin>0.3</safety_margin>
+        <max_fin_angle>0.13</max_fin_angle>
       </plugin>
       
     </include>

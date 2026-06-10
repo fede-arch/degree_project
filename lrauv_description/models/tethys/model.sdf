@@ -285,10 +285,10 @@
               <max_angle>3.14159</max_angle>
             </horizontal>
             <vertical>
-              <samples>4</samples>
+              <samples>8</samples>
               <resolution>1</resolution>
-              <min_angle>-0.2618</min_angle>
-              <max_angle>0.2618</max_angle>
+              <min_angle>-0.8727</min_angle>
+              <max_angle>0.8727</max_angle>
             </vertical>
           </scan>
           <range>

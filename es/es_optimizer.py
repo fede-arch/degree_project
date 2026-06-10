@@ -1,7 +1,24 @@
 #!/usr/bin/env python3
 """
 Evolution Strategies per ottimizzare i parametri VFH del NavigationPlugin.
-Docker viene avviato UNA SOLA VOLTA, gli episodi si resettano via gz service.
+
+Differenze rispetto alla versione precedente:
+  - I parametri sono ottimizzati in spazio NORMALIZZATO [0,1] e denormalizzati solo
+    prima di inviarli al sim. Con scale diverse (threshold~0.001, s_max~20) un solo
+    SIGMA esplorava di fatto solo 1-2 parametri; ora SIGMA = "frazione del range".
+  - Reward DENSA: ARRIVED > progresso(TIMEOUT) > COLLISION, con tie-break interni
+    (velocita'/efficienza/progresso) -> cura il problema dei "reward tutti identici".
+  - I plugin vengono compilati UNA SOLA VOLTA prima del loop (build_plugins): niente
+    piu' compilazione dentro il primo worker (che superava lo sleep di avvio).
+  - Il listener del risultato parte PRIMA di play() -> nessuna collisione immediata persa.
+  - Lo stdout del container va su un file di log, cosi' puoi verificare che OnParams
+    riceva davvero i parametri (cerca "[NAV] Params" in es/results/gazebo_last.log).
+  - Aggiunti elev_cost, robot_radius, safety_margin, max_fin_angle al vettore.
+
+NOTA sul budget: passando da 6 a 10 parametri, lo spazio di ricerca cresce. Con sole
+3 coppie antitetiche per generazione la stima del gradiente e' molto rumorosa: valuta
+di alzare N_WORKERS (es. 12-16) e N_GEN, oppure fissare i 3 parametri "fisici"
+(robot_radius, safety_margin, max_fin_angle) e ottimizzare solo quelli comportamentali.
 """
 
 import random
@@ -17,30 +34,39 @@ sys.path.append(os.path.join(SCRIPT_DIR, "../lrauv_gazebo_plugins/scripts"))
 from generate_world import generate_world
 
 # ─── PARAMETRI ES ───────────────────────────────────────────────────────────
-N_WORKERS = 6
-N_GEN     = 10
-SIGMA     = 0.1
-ALPHA     = 0.05
+N_WORKERS    = 6          # perturbazioni per generazione (sequenziali); pari per antitetico
+N_GEN        = 15
+SIGMA        = 0.2        # ampiezza esplorazione, in FRAZIONE del range di ogni parametro
+ALPHA        = 0.05       # learning rate (spazio normalizzato)
+WEIGHT_DECAY = 0.01       # NB: in spazio normalizzato tira verso THETA_MIN; metti 0 per disattivarlo
+STARTUP_WAIT = 20.0       # attesa avvio Gazebo (build gia' fatto, basta il boot)
 
 # ─── PARAMETRI VFH ──────────────────────────────────────────────────────────
-THETA_INIT = np.array([0.001, 20.0, 5.0, 0.5, 0.5, 5.0, 15.0])
-THETA_MIN  = np.array([0.0001, 5.0, 1.0, 0.1, 0.1, 2.0,  8.0])
-THETA_MAX  = np.array([0.01,  40.0, 15.0, 2.0, 2.0, 10.0, 30.0])
+# Ordine coerente con le chiavi che OnParams sa leggere.
+PARAM_NAMES = ["threshold","s_max","smooth_l","gain_steer","gain_pitch","radius_slowdown"]
 
-PARAM_NAMES = ["threshold", "s_max", "smooth_l", "gain_steer",
-               "gain_pitch", "radius_arrived", "radius_slowdown"]
+THETA_MIN   = np.array([0.0001, 5.0, 1.0, 0.1, 0.1,  8.0])
+THETA_MAX   = np.array([0.01,  40.0, 15.0, 2.0, 2.0, 30.0])
+THETA_INIT = np.array([
+    random.uniform(THETA_MIN[i], THETA_MAX[i]) for i in range(len(THETA_MIN))
+])
+SCALE       = THETA_MAX - THETA_MIN
+
+def denorm(theta_n):   # [0,1]^N -> valori reali
+    return THETA_MIN + np.clip(theta_n, 0.0, 1.0) * SCALE
+
+def norm(theta):       # valori reali -> [0,1]^N
+    return (theta - THETA_MIN) / SCALE
 
 # ─── PATH ───────────────────────────────────────────────────────────────────
-PROJECT_DIR   = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
-TEMPLATE_FILE = os.path.join(PROJECT_DIR, "lrauv_description/models/tethys_equipped/model.sdf.template")
-MODEL_FILE    = os.path.join(PROJECT_DIR, "lrauv_description/models/tethys_equipped/model.sdf")
-RESULTS_FILE  = os.path.join(PROJECT_DIR, "es/results/es_results.csv")
-
-# ─── REWARD ─────────────────────────────────────────────────────────────────
-REWARD = {"ARRIVED": 1.0, "COLLISION": -1.0, "TIMEOUT": -0.5}
+PROJECT_DIR  = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
+RESULTS_FILE = os.path.join(PROJECT_DIR, "es/results/es_results.csv")
+BEST_FILE    = os.path.join(PROJECT_DIR, "es/results/best_theta.json")
+LOG_FILE     = os.path.join(PROJECT_DIR, "es/results/gazebo_last.log")
 
 # ─── CONTAINER ──────────────────────────────────────────────────────────────
 docker_proc    = None
+log_handle     = None
 container_name = "es_gazebo"
 
 # ─── SPAWN POSE ──────────────────────────────────────────────────────────────
@@ -49,11 +75,8 @@ SPAWN_QX, SPAWN_QY, SPAWN_QZ, SPAWN_QW = 0.0, 0.0, 1.0, 0.0
 
 # ─── FUNZIONI ────────────────────────────────────────────────────────────────
 
-def clip_theta(theta):
-    return np.clip(theta, THETA_MIN, THETA_MAX)
-
-def theta_to_json(theta):
-    d = {name: float(val) for name, val in zip(PARAM_NAMES, theta)}
+def theta_to_json(theta_real):
+    d = {name: float(val) for name, val in zip(PARAM_NAMES, theta_real)}
     d["s_max"]    = int(round(d["s_max"]))
     d["smooth_l"] = int(round(d["smooth_l"]))
     return json.dumps(d)
@@ -71,8 +94,35 @@ def read_spawn_pose():
     x, y, z, yaw = float(parts[0]), float(parts[1]), float(parts[2]), float(parts[5])
     return x, y, z, yaw
 
+def build_plugins():
+    """Compila i plugin UNA SOLA VOLTA. Il .so finisce in docker_build (volume montato),
+    quindi i container di lancio successivi lo riusano senza ricompilare."""
+    print("[ES] Build plugin (una sola volta)...")
+    subprocess.run(["docker", "rm", "-f", "es_build"], capture_output=True)
+    cmd = [
+        "docker", "run", "--rm", "--name", "es_build",
+        "--volume", f"{PROJECT_DIR}:/lrauv_ws/src/degree_project",
+        "lrauv:harmonic", "bash", "-c",
+        (
+            "source /setup.sh && "
+            "mkdir -p /lrauv_ws/src/degree_project/docker_build && "
+            "cd /lrauv_ws/src/degree_project/docker_build && "
+            "cmake ../lrauv_gazebo_plugins -DCMAKE_BUILD_TYPE=Release -Wno-dev && "
+            "make -j4 HydrodynamicsPlugin && "
+            "make -j4 NavigationPlugin && "
+            "echo BUILD_OK"
+        )
+    ]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if "BUILD_OK" not in (r.stdout + r.stderr):
+        print(r.stdout)
+        print(r.stderr)
+        raise RuntimeError("[ES] Build dei plugin FALLITA")
+    print("[ES] Build OK")
+
 def start_docker():
-    global docker_proc
+    """Lancia Gazebo headless (paused). Niente build qui: gia' fatto da build_plugins()."""
+    global docker_proc, log_handle
     subprocess.run(["docker", "rm", "-f", container_name], capture_output=True)
 
     render_gid = os.popen("getent group render | cut -d: -f3").read().strip()
@@ -85,76 +135,45 @@ def start_docker():
         "--device", "/dev/dri/renderD128",
         "--group-add", render_gid,
         "--group-add", video_gid,
-        "--env", f"DISPLAY={os.environ.get('DISPLAY', ':0')}",
-        "--env", "XDG_RUNTIME_DIR=/tmp/runtime-developer",
-        "--volume", "/tmp/.X11-unix:/tmp/.X11-unix",
         "--volume", f"{PROJECT_DIR}:/lrauv_ws/src/degree_project",
         "lrauv:harmonic",
         "bash", "-c",
         (
             "source /setup.sh && "
-            "NEEDS_CMAKE=false && "
-            "HYDRO_SO=/lrauv_ws/src/degree_project/docker_build/libHydrodynamicsPlugin.so && "
-            "NAV_SO=/lrauv_ws/src/degree_project/docker_build/libNavigationPlugin.so && "
-            "HYDRO_CC=/lrauv_ws/src/degree_project/lrauv_gazebo_plugins/src/HydrodynamicsPlugin.cc && "
-            "NAV_CC=/lrauv_ws/src/degree_project/lrauv_gazebo_plugins/src/NavigationPlugin.cc && "
-            "if [ ! -f $HYDRO_SO ] || [ $HYDRO_CC -nt $HYDRO_SO ]; then "
-            "echo 'HydrodynamicsPlugin needs rebuild...' && NEEDS_CMAKE=true; fi && "
-            "if [ ! -f $NAV_SO ] || [ $NAV_CC -nt $NAV_SO ]; then "
-            "echo 'NavigationPlugin needs rebuild...' && NEEDS_CMAKE=true; fi && "
-            "if [ $NEEDS_CMAKE = 'true' ]; then "
-            "mkdir -p /lrauv_ws/src/degree_project/docker_build && "
-            "cd /lrauv_ws/src/degree_project/docker_build && "
-            "cmake ../lrauv_gazebo_plugins -DCMAKE_BUILD_TYPE=Release -Wno-dev && "
-            "make -j4 HydrodynamicsPlugin && "
-            "make -j4 NavigationPlugin && "
-            "echo 'Build done!'; "
-            "else echo 'Plugins up to date, skipping build...'; fi && "
-            "echo 'Launching Gazebo...' && "
             "export GZ_SIM_RESOURCE_PATH=/lrauv_ws/src/degree_project/lrauv_description/models && "
             "export GZ_SIM_SYSTEM_PLUGIN_PATH=/lrauv_ws/src/degree_project/docker_build && "
-            "gz sim "
+            "gz sim --headless-rendering -s "
             "/lrauv_ws/src/degree_project/lrauv_gazebo_plugins/worlds/navigation_world.sdf"
         )
     ]
 
-    docker_proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT, text=True)
-    print("[ES] Docker avviato, attendo Gazebo...")
-    time.sleep(30.0)
-    print("[ES] Gazebo pronto!")
+    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+    log_handle = open(LOG_FILE, "w")
+    # stdout su file: evita che la pipe si riempia e blocchi gz, e ti lascia
+    # ispezionare i log (cerca "[NAV] Params" per confermare che OnParams riceve i parametri).
+    docker_proc = subprocess.Popen(cmd, stdout=log_handle, stderr=subprocess.STDOUT, text=True)
+    time.sleep(STARTUP_WAIT)
 
 def stop_docker():
-    global docker_proc
+    global docker_proc, log_handle
     subprocess.run(["docker", "rm", "-f", container_name], capture_output=True)
     if docker_proc:
         docker_proc.terminate()
         docker_proc = None
-    print("[ES] Docker fermato.")
+    if log_handle:
+        log_handle.close()
+        log_handle = None
 
-def publish_params(theta):
-    params_json = theta_to_json(theta)
+def publish_params(theta_real):
+    params_json = theta_to_json(theta_real)
+    # Il \" e' l'escape per il text-format protobuf (gz lo riconverte in "): la stringa
+    # ricevuta da OnParams e' JSON valido.
     cmd = [
         "docker", "exec", container_name, "bash", "-c",
-        f"source /setup.sh && gz topic -t /es/vfh_params -m gz.msgs.StringMsg -p 'data: \"{params_json.replace(chr(34), chr(92)+chr(34))}\"'"
+        f"source /setup.sh && gz topic -t /es/vfh_params -m gz.msgs.StringMsg "
+        f"-p 'data: \"{params_json.replace(chr(34), chr(92)+chr(34))}\"'"
     ]
     subprocess.run(cmd, capture_output=True)
-
-def pause_and_reset():
-    cmd_pause = ["docker", "exec", container_name, "bash", "-c",
-        "source /setup.sh && gz service -s /world/empty_environment/control "
-        "--reqtype gz.msgs.WorldControl --reptype gz.msgs.Boolean "
-        "--req 'pause: true' --timeout 2000"]
-    subprocess.run(cmd_pause, capture_output=True)
-    time.sleep(0.5)
-
-    cmd_set_pose = ["docker", "exec", container_name, "bash", "-c",
-        f"source /setup.sh && gz service -s /world/empty_environment/set_pose "
-        f"--reqtype gz.msgs.Pose --reptype gz.msgs.Boolean "
-        f"--req 'name: \"tethys\" position: {{x: {SPAWN_X} y: {SPAWN_Y} z: {SPAWN_Z}}} orientation: {{x: 0 y: 0 z: 1 w: 0}}' "
-        f"--timeout 2000"]
-    subprocess.run(cmd_set_pose, capture_output=True)
-    time.sleep(5.0)
 
 def play():
     cmd_play = ["docker", "exec", container_name, "bash", "-c",
@@ -162,44 +181,77 @@ def play():
         "--reqtype gz.msgs.WorldControl --reptype gz.msgs.Boolean "
         "--req 'pause: false' --timeout 2000"]
     subprocess.run(cmd_play, capture_output=True)
-    time.sleep(1.0)
 
-def wait_for_result(episode_timeout=200):
-    cmd = ["docker", "exec", container_name, "bash", "-c",
-        f"source /setup.sh && gz topic -e -n 1 -t /es/episode_result"]
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=episode_timeout)
-        output = result.stdout + result.stderr
-        for line in output.splitlines():
-            if "ARRIVED" in line:
-                pause_and_reset()
-                return REWARD["ARRIVED"]
-            if "COLLISION" in line:
-                pause_and_reset()
-                return REWARD["COLLISION"]
-            if "TIMEOUT" in line:
-                pause_and_reset()
-                return REWARD["TIMEOUT"]
-        pause_and_reset()
-        return REWARD["TIMEOUT"]
-    except subprocess.TimeoutExpired:
-        pause_and_reset()
-        return REWARD["TIMEOUT"]
+def parse_result(output):
+    """Estrae i campi dal risultato del NavigationPlugin.
+    Formato:  <TAG>;t=<iter>;dist=<m>;path=<m>;clr=<m>  (es. 'data: \"ARRIVED;t=...\"')."""
+    for line in output.splitlines():
+        for tag in ("ARRIVED", "COLLISION", "TIMEOUT"):
+            i = line.find(tag)
+            if i != -1:
+                payload = line[i:].strip().strip('"')
+                f = {"tag": tag}
+                for kv in payload.split(";")[1:]:
+                    if "=" in kv:
+                        k, v = kv.split("=", 1)
+                        try:
+                            f[k] = float(v.strip().strip('"'))
+                        except ValueError:
+                            pass
+                return f
+    return None
 
-def run_episode(theta, episode_timeout=200):
-    publish_params(theta)
+def shaped_reward(f, dist_iniziale):
+    """Reward densa. Usi rank-shaping a valle, quindi conta l'ORDINAMENTO:
+    arrivo (2.0..3.0) > progresso-timeout (0..1) > collisione (-1..-0.5)."""
+    if f is None:
+        return -0.5
+    dist = f.get("dist", dist_iniziale)
+    path = f.get("path", 0.0)
+    t    = f.get("t", 0.0)
+    # clr = f.get("clr", 999.0)   # disponibile: togli reward se vuoi penalizzare margini stretti
+    progress = max(0.0, min(1.0, (dist_iniziale - dist) / max(dist_iniziale, 1e-6)))
+
+    if f["tag"] == "ARRIVED":
+        eff   = dist_iniziale / max(path, dist_iniziale)   # in (0,1], 1 = linea retta
+        speed = 1.0 / (1.0 + (t / 1000.0) / 60.0)          # in (0,1], piu' veloce = meglio
+        return 2.0 + 0.5 * eff + 0.5 * speed
+    if f["tag"] == "COLLISION":
+        return -1.0 + 0.5 * progress                       # schianto vicino al goal = meno peggio
+    return progress                                        # TIMEOUT: quanto si e' avvicinato
+
+def run_episode(theta_real, dist_iniziale, episode_timeout=320):
+    publish_params(theta_real)
     time.sleep(2.0)
+    # Avvia il listener PRIMA di play(): cosi' anche un risultato immediato viene catturato.
+    listener = subprocess.Popen(
+        ["docker", "exec", container_name, "bash", "-c",
+         "source /setup.sh && gz topic -e -n 1 -t /es/episode_result"],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     play()
-    return wait_for_result(episode_timeout)
+    try:
+        out, _ = listener.communicate(timeout=episode_timeout)
+    except subprocess.TimeoutExpired:
+        listener.kill()
+        out = ""
+    return shaped_reward(parse_result(out), dist_iniziale)
 
-def save_results(gen, theta, mean_reward):
+def save_results(gen, theta_real, mean_reward, seed):
     os.makedirs(os.path.dirname(RESULTS_FILE), exist_ok=True)
     header = not os.path.exists(RESULTS_FILE)
-    with open(RESULTS_FILE, "a") as f:
+    with open(RESULTS_FILE, "a") as fh:
         if header:
-            f.write("gen,mean_reward," + ",".join(PARAM_NAMES) + "\n")
-        vals = ",".join(f"{v:.6f}" for v in theta)
-        f.write(f"{gen},{mean_reward:.4f},{vals}\n")
+            fh.write("gen,seed,mean_reward," + ",".join(PARAM_NAMES) + "\n")
+        vals = ",".join(f"{v:.6f}" for v in theta_real)
+        fh.write(f"{gen},{seed},{mean_reward:.4f},{vals}\n")
+
+def save_best(theta_real, reward):
+    os.makedirs(os.path.dirname(BEST_FILE), exist_ok=True)
+    with open(BEST_FILE, "w") as fh:
+        json.dump({
+            "reward": float(reward),
+            "theta": {name: float(val) for name, val in zip(PARAM_NAMES, theta_real)}
+        }, fh, indent=2)
 
 # ─── MAIN ES LOOP ────────────────────────────────────────────────────────────
 
@@ -207,63 +259,55 @@ def main():
     print("=" * 60)
     print("Evolution Strategies - VFH Parameter Optimization")
     print("=" * 60)
-    print(f"Workers per gen: {N_WORKERS}, Generazioni: {N_GEN}, Sigma: {SIGMA}")
+    print(f"Workers/gen: {N_WORKERS}, Generazioni: {N_GEN}, Sigma: {SIGMA}, dims: {len(PARAM_NAMES)}")
     print(f"Parametri iniziali: {dict(zip(PARAM_NAMES, THETA_INIT))}")
     print()
+    global SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_QX, SPAWN_QY, SPAWN_QZ, SPAWN_QW
 
-    theta = THETA_INIT.copy()
+    build_plugins()                       # <-- una sola volta, prima di tutto
+
+    theta = norm(THETA_INIT.copy())       # tutto il loop lavora in spazio normalizzato [0,1]
     best_theta = theta.copy()
     best_reward = -np.inf
 
-    generate_world(PROJECT_DIR, seed=0)
-    global SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_QX, SPAWN_QY, SPAWN_QZ, SPAWN_QW
-    SPAWN_X, SPAWN_Y, SPAWN_Z, syaw = read_spawn_pose()
-    SPAWN_QX, SPAWN_QY, SPAWN_QZ, SPAWN_QW = yaw_to_quaternion(syaw)
+    for gen in range(N_GEN):
+        # Nuovo world (goal + rocce + spawn) ad ogni generazione
+        seed = random.randint(0, 9999)
+        goal_x, goal_y, goal_z = generate_world(PROJECT_DIR, seed=seed)
+        SPAWN_X, SPAWN_Y, SPAWN_Z, syaw = read_spawn_pose()
+        SPAWN_QX, SPAWN_QY, SPAWN_QZ, SPAWN_QW = yaw_to_quaternion(syaw)
+        dist_iniziale = np.sqrt((goal_x-SPAWN_X)**2 + (goal_y-SPAWN_Y)**2 + (goal_z-SPAWN_Z)**2)
 
-    subprocess.run([
-        "sed",
-        "-e", "s/__THRESHOLD__/0.001/",
-        "-e", "s/__S_MAX__/20/",
-        "-e", "s/__SMOOTH_L__/5/",
-        "-e", "s/__GAIN_STEER__/0.5/",
-        "-e", "s/__GAIN_PITCH__/0.5/",
-        "-e", "s/__RADIUS_ARRIVED__/5.0/",
-        "-e", "s/__RADIUS_SLOWDOWN__/15.0/",
-        TEMPLATE_FILE,
-    ], stdout=open(MODEL_FILE, "w"))
+        print(f"─── Generazione {gen+1}/{N_GEN} ───────────────────────────")
 
+        # campionamento antitetico (in spazio normalizzato)
+        epsilons = []
+        for _ in range(N_WORKERS // 2):
+            eps = np.random.randn(len(theta))
+            epsilons.append(eps)
+            epsilons.append(-eps)
 
-    subprocess.run(["xhost", "+local:docker"])
-    start_docker()
+        rewards = []
+        for i, eps in enumerate(epsilons):
+            theta_i = np.clip(theta + SIGMA * eps, 0.0, 1.0)   # normalizzato
+            print(f"  worker {i+1}/{len(epsilons)}: ", end="", flush=True)
 
-    try:
-        for gen in range(N_GEN):
-            # Genera world nuovo ad ogni generazione
-            generate_world(PROJECT_DIR, seed=random.randint(0, 9999))
-            SPAWN_X, SPAWN_Y, SPAWN_Z, SPAWN_QX, SPAWN_QY, SPAWN_QZ, SPAWN_QW
-            SPAWN_X, SPAWN_Y, SPAWN_Z, syaw = read_spawn_pose()
-            SPAWN_QX, SPAWN_QY, SPAWN_QZ, SPAWN_QW = yaw_to_quaternion(syaw)
+            start_docker()
+            try:
+                r = run_episode(denorm(theta_i), dist_iniziale)  # invia valori reali
+            finally:
+                stop_docker()
 
-            print(f"─── Generazione {gen+1}/{N_GEN} ───────────────────────────")
+            rewards.append(r)
+            print(f"reward = {r:+.3f}")
 
-            epsilons = []
-            for i in range(N_WORKERS // 2):
-                eps = np.random.randn(len(theta))
-                epsilons.append(eps)
-                epsilons.append(-eps)
+        rewards = np.array(rewards)
+        mean_reward = float(np.mean(rewards))
 
-            rewards = []
-            for i, eps in enumerate(epsilons):
-                theta_i = clip_theta(theta + SIGMA * eps)
-                print(f"  Worker {i+1}/{len(epsilons)}: ", end="", flush=True)
-                r = run_episode(theta_i)
-                rewards.append(r)
-                label = {1.0: "ARRIVED ✓", -1.0: "COLLISION ✗", -0.5: "TIMEOUT ~"}
-                print(label.get(r, f"{r:.2f}"))
-
-            rewards = np.array(rewards)
-            mean_reward = np.mean(rewards)
-
+        if np.all(rewards == rewards[0]):
+            print("  [WARN] tutti i reward identici, skip update "
+                  "(controlla: OnParams ricevuto? rocce viste dal lidar?)")
+        else:
             ranked = np.argsort(np.argsort(rewards))
             shaped = (ranked / (len(ranked) - 1)) - 0.5
 
@@ -271,27 +315,29 @@ def main():
             for eps, s in zip(epsilons, shaped):
                 grad += s * eps
             grad /= (len(epsilons) * SIGMA)
-            theta = clip_theta(theta + ALPHA * grad)
+            # update + (eventuale) weight decay, il tutto in spazio normalizzato
+            theta = np.clip((1.0 - WEIGHT_DECAY) * theta + ALPHA * grad, 0.0, 1.0)
 
-            if mean_reward > best_reward:
-                best_reward = mean_reward
-                best_theta = theta.copy()
+        if mean_reward > best_reward:
+            best_reward = mean_reward
+            best_theta = theta.copy()
+            save_best(denorm(best_theta), best_reward)
 
-            print(f"  Mean reward: {mean_reward:.3f} | Best so far: {best_reward:.3f}")
-            print(f"  Theta: {dict(zip(PARAM_NAMES, [round(v,4) for v in theta]))}")
-            save_results(gen+1, theta, mean_reward)
-            print()
-
-    finally:
-        stop_docker()
+        print(f"  Mean reward: {mean_reward:.3f} | Best so far: {best_reward:.3f}")
+        print(f"  Theta(real): {dict(zip(PARAM_NAMES, [round(v,4) for v in denorm(theta)]))}")
+        save_results(gen+1, denorm(theta), mean_reward, seed)
+        print()
 
     print("=" * 60)
     print("OTTIMIZZAZIONE COMPLETATA")
     print(f"Best reward: {best_reward:.3f}")
-    print("Best theta:")
-    for name, val in zip(PARAM_NAMES, best_theta):
+    print("Best theta (reali):")
+    for name, val in zip(PARAM_NAMES, denorm(best_theta)):
         print(f"  {name}: {val:.4f}")
-    print(f"\nRisultati salvati in: {RESULTS_FILE}")
+    print(f"\nRisultati: {RESULTS_FILE}\nMigliore: {BEST_FILE}")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    finally:
+        stop_docker()   # non lasciare container orfani se interrompi con Ctrl-C
