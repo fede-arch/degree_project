@@ -10,373 +10,381 @@
 
 namespace tethys {
 
-  // NavigationPrivateData 
+  // --- NavigationPrivateData ---
   class NavigationPrivateData {
 
-    // Gazebo transport 
+    // GAZEBO TRANSPORT
     public: gz::transport::Node node;
     public: gz::transport::Node::Publisher thrustPub;
     public: gz::transport::Node::Publisher vertFinPub;
     public: gz::transport::Node::Publisher horizFinPub;
     public: gz::transport::Node::Publisher resultPub;
     public: std::mutex mtx;
-    public: std::string worldName = "empty_environment";
 
-    // --- Dati lidar ---
-    public: std::vector<float> ranges;
-    public: int horizCount = 0;
-    public: int vertCount = 0;
-
-    // Dati pose 
+    // POSE VEICOLO
     public: double posX = 0, posY = 0, posZ = 0;
-    public: double oriX = 0, oriY = 0, oriZ = 0, oriW = 1;
     public: double yaw = 0, pitch = 0, roll = 0;
 
-    // VFH parametri 
-    static constexpr int NUM_AZ = 360;
-    static constexpr int NUM_EL = 4;
-
-    const double EL_ANGLES[NUM_EL] = {-0.2618, -0.0873, 0.0873, 0.2618};
-
-    public: double threshold      = 0.001;   // soglia di occupazione su 1/d^2 (post-smoothing)
-    public: int    sMax           = 20;       // larghezza max valle "stretta" (settori = gradi)
-    public: int    smoothL        = 5;        // semi-finestra di smoothing in azimuth
-    public: double gainSteer      = 0.5;
-    public: double gainPitch      = 0.5;
-    public: double radiusArrived  = 2.0;
-    public: double radiusSlowdown = 15.0;
-    public: double elevCost       = 25.0;     // penalita' per cambio layer di elevazione
-
-    public: double robotRadius    = 0.6;      // raggio "efficace" del veicolo
-    public: double safetyMargin   = 0.6;      // margine di sicurezza
-
-    public: double maxFinAngle    = 0.15;
-    public: double maxThrust      = 31.0;
-
-    public: int lastBestDir = -1;
-    public: int lastBestEl  = 1;
-
-    // VFH dati
-    public: std::vector<double> histogram = std::vector<double>(NUM_AZ * NUM_EL, 0.0);
+    // GOAL
     public: double goalX = 0, goalY = 0, goalZ = 0;
 
-    // Stato episodio
+    // STATO EPISODIO
     public: enum class EpisodeState { RUNNING, ARRIVED, COLLISION, TIMEOUT };
-    public: EpisodeState episodeState = EpisodeState::RUNNING;
-    public: bool resultPublished = false;
-    public: int poseCount = 0;
-    public: int64_t maxIterations = 300000;
-    public: int64_t episodeStartIter = -1;
-    public: double pathLength = 0.0;
-    public: double pathPrevX = 0, pathPrevY = 0, pathPrevZ = 0;
-    public: double minClearance = std::numeric_limits<double>::infinity();
+    public: EpisodeState episodeState   = EpisodeState::RUNNING;
+    public: bool         resultPublished  = false;
+    public: int64_t      episodeStartIter = -1;
+    public: int64_t      maxIterations    = 300000;
 
-    // Anti-stuck
-    public: double lastPosX = 0, lastPosY = 0, lastPosZ = 0;
-    public: int64_t lastMoveIteration = 0;
-    public: int64_t stuckTimeout = 10000; // 10s
+    // PARAMETRI CONTROLLO
+    public: double gainSteer     = 0.5;
+    public: double gainPitch     = 0.5;
+    public: double maxFinAngle   = 0.15;
+    public: double radiusArrived = 2.0;
 
-    public: std::string modelName = "tethys";
-    public: bool removeOnCollision = false;
+    // PARAMETRI LIDAR
+    public: float r_min = 2.5f;
+    public: float r_max = 60.0f;
 
-    public: void StopActuators() {
-      gz::msgs::Double z; z.set_data(0.0);
-      this->thrustPub.Publish(z);
-      this->vertFinPub.Publish(z);
-      this->horizFinPub.Publish(z);
+    // PARAMETRI GRIGLIA 3D (r x phi x theta)
+    public: int   n_r        = 60;
+    public: float delta_r    = 1.0f;
+    public: float A          = 15.0f;
+    public: float B          = 0.25f;    // A / r_max
+    public: float C_MAX      = 14.0625f;
+    public: float r_active   = 50.0f;
+    public: int   n_r_active = 50;
+    public: std::vector<float> grid_c;  // dimensione: n_r * n_phi * n_theta
+    public: std::vector<float> c_star;  // dimensione: n_r_active * n_phi * n_theta
+    public: float gridDecay  = 0.97f;
+
+    // PARAMETRI ISTOGRAMMA POLARE (phi x theta)
+    public: int   n_phi       = 36;
+    public: int   n_theta     = 36;
+    public: float delta_phi   = M_PI / 36;   // 5 deg/bin
+    public: float delta_theta = M_PI / 36;   // 5 deg/bin
+    public: float phi_min     = -M_PI / 2;
+    public: float phi_max     = +M_PI / 2;
+    public: float theta_min   = -M_PI / 2;
+    public: float theta_max   = +M_PI / 2;
+    public: int   L           = 5;           // semi-finestra smoothing
+    public: float VALLEY_THRESHOLD = 50.0f;
+    public: double measurements[36][36] = {};
+    public: float  h[36][36]        = {};
+    public: float  h_smooth[36][36] = {};
+
+    // VFH - DENSITÀ PHI E RISULTATO
+    public: float phi_density[36] = {};
+    public: float phi_smooth[36]  = {};
+    public: int k_targ       = 18;   // settore phi del goal
+    public: int k_targ_theta = 18;   // settore theta del goal
+    public: int best_phi     = 18;   // phi scelto dal VFH
+    public: int best_theta   = 18;   // theta scelto dal VFH
+    public: int safetyWindow = 3;
+
+    // ACCESSOR INLINE per grid_c e c_star
+    public: inline float& gc(int r, int p, int t) {
+        return grid_c[r * n_phi * n_theta + p * n_theta + t];
+    }
+    public: inline float& cs(int r, int p, int t) {
+        return c_star[r * n_phi * n_theta + p * n_theta + t];
     }
 
-    public: double RawRange(int sec, int layer) {
-      int idx = sec + layer * NUM_AZ;
-      if (idx < 0 || idx >= (int)this->ranges.size())
-        return std::numeric_limits<double>::infinity();
-      float d = this->ranges[idx];
-      if (std::isinf(d) || d <= 0.0f)
-        return std::numeric_limits<double>::infinity();
-      return (double)d;
-    }
-
-    //   t    = durata episodio in iterazioni (1000 iter = 1s con dt=1ms)
-    //   dist = distanza finale dal goal
-    //   path = lunghezza del percorso effettivamente compiuto
-    //   clr  = distanza minima da un ostacolo nell'episodio (999 = mai visto ostacoli)
-    public: std::string MakeResult(const std::string &tag, int64_t elapsedIter) {
-        double dx = this->goalX - this->posX;
-        double dy = this->goalY - this->posY;
-        double dz = this->goalZ - this->posZ;
-        double dist = std::sqrt(dx*dx + dy*dy + dz*dz);
-        double clr  = std::isinf(this->minClearance) ? 999.0 : this->minClearance;
-        auto [gSec, gElev] = this->GoalDirBody();
-        double headErr = std::abs((gSec <= 180) ? (double)gSec : (double)gSec - 360.0);
-        std::ostringstream os;
-        os << tag
-          << ";t="    << elapsedIter
-          << ";dist=" << dist
-          << ";path=" << this->pathLength
-          << ";clr="  << clr
-          << ";head=" << headErr;
-        return os.str();
-    }
-
-    // CALLBACK LIDAR
-    public: void OnLidar(const gz::msgs::LaserScan &_msg) {
+    // FASE 1 -> CALLBACK POINTCLOUD
+    public: void OnPointCloud(const gz::msgs::PointCloudPacked &_msg) {
       std::lock_guard<std::mutex> lock(this->mtx);
-      this->ranges.clear();
-      this->horizCount = _msg.count();
-      this->vertCount  = _msg.vertical_count();
-      for (int i = 0; i < _msg.ranges_size(); i++)
-        this->ranges.push_back(_msg.ranges(i));
+
+      if (episodeState != EpisodeState::RUNNING) return;
+
+      std::memset(measurements, 0, sizeof(measurements));
+      int step         = _msg.point_step();
+      int total_points = _msg.width() * _msg.height();
+      const char *data = _msg.data().data();
+
+      for (int i = 0; i < total_points; i++) {
+        const char *base = data + i * step;
+
+        float x, y, z;
+        std::memcpy(&x, base + 0, 4);
+        std::memcpy(&y, base + 4, 4);
+        std::memcpy(&z, base + 8, 4);
+
+        if (std::isinf(x) || std::isinf(y) || std::isinf(z)) continue;
+
+        // Conversione da cartesiane a polari
+        double r     = std::sqrt(x*x + y*y + z*z);
+        double phi   = std::atan2(y, x);
+        double theta = std::atan2(z, std::sqrt(x*x + y*y));
+
+        if (r < r_min || r > r_max) continue;
+
+        // Discretizzazione angoli → indici
+        int phi_idx   = (int)((phi_max - phi)     / delta_phi);
+        int theta_idx = (int)((theta - theta_min) / delta_theta);
+
+        if (phi_idx   < 0 || phi_idx   >= n_phi)  continue;
+        if (theta_idx < 0 || theta_idx >= n_theta) continue;
+
+        measurements[phi_idx][theta_idx] = (float)r;
+      }
+
+      updateGlobalGrid();
+      extract_active_region();
+      build_polar_histogram();
+      smooth_histogram();
+      findBestDirection();
+    }
+
+    // FASE 2 -> AGGIORNAMENTO GRIGLIA
+    public: void updateGlobalGrid() {
+
+        // Decay: tutte le celle perdono gridDecay per frame
+        for (int ri = 0; ri < n_r; ri++)
+            for (int p = 0; p < n_phi; p++)
+                for (int t = 0; t < n_theta; t++)
+                    gc(ri, p, t) *= gridDecay;
+
+        // Aggiorna con nuove misure
+        for (int phi_idx = 0; phi_idx < n_phi; phi_idx++) {
+            for (int theta_idx = 0; theta_idx < n_theta; theta_idx++) {
+
+                float meas = measurements[phi_idx][theta_idx];
+                if (meas <= 0.0f || meas < r_min) continue;
+
+                int r_idx = (int)(meas / delta_r);
+                if (r_idx < 0 || r_idx >= n_r) continue;
+
+                float magnitude = A - B * meas;
+                if (magnitude < 0.0f) continue;
+
+                gc(r_idx, phi_idx, theta_idx) += magnitude;
+                if (gc(r_idx, phi_idx, theta_idx) > C_MAX)
+                    gc(r_idx, phi_idx, theta_idx) = C_MAX;
+            }
+        }
+    }
+
+    // FASE 3 -> ESTRAZIONE REGIONE REATTIVA
+    public: void extract_active_region() {
+        std::fill(c_star.begin(), c_star.end(), 0.0f);
+
+        for (int r_idx = 0; r_idx < n_r_active; r_idx++)
+            for (int phi_idx = 0; phi_idx < n_phi; phi_idx++)
+                for (int theta_idx = 0; theta_idx < n_theta; theta_idx++)
+                    cs(r_idx, phi_idx, theta_idx) = gc(r_idx, phi_idx, theta_idx);
+    }
+
+    // FASE 4 -> COSTRUZIONE ISTOGRAMMA POLARE
+    public: void build_polar_histogram() {
+        std::memset(h, 0, sizeof(h));
+
+        for (int phi_idx = 0; phi_idx < n_phi; phi_idx++)
+            for (int theta_idx = 0; theta_idx < n_theta; theta_idx++)
+                for (int r_idx = 0; r_idx < n_r_active; r_idx++)
+                    h[phi_idx][theta_idx] += cs(r_idx, phi_idx, theta_idx);
+    }
+
+    // FASE 5 -> SMOOTH ISTOGRAMMA
+    public: void smooth_histogram() {
+        std::memset(h_smooth, 0, sizeof(h_smooth));
+
+        for (int phi_idx = 0; phi_idx < n_phi; phi_idx++) {
+            for (int theta_idx = 0; theta_idx < n_theta; theta_idx++) {
+
+                float sum  = 0.0f;
+                int   count = 0;
+
+                for (int dphi = -L; dphi <= L; dphi++) {
+                    for (int dtheta = -L; dtheta <= L; dtheta++) {
+
+                        int p = phi_idx   + dphi;
+                        int t = theta_idx + dtheta;
+
+                        if (p < 0 || p >= n_phi)  continue;
+                        if (t < 0 || t >= n_theta) continue;
+
+                        int weight = (dphi   == -L || dphi   == L) ? 1 : 2;
+                        weight    *= (dtheta == -L || dtheta == L) ? 1 : 2;
+
+                        sum   += weight * h[p][t];
+                        count += weight;
+                    }
+                }
+
+                h_smooth[phi_idx][theta_idx] = (count > 0) ? sum / count : 0.0f;
+            }
+        }
+    }
+
+
+    // FASE 6 -> TROVA DIREZIONE MIGLIORE
+    public: void findBestDirection() {
+        compute_goal_sectors();
+        find_best_direction_2d();
+
+        // Controlla ARRIVED
+        double dx = goalX - posX, dy = goalY - posY, dz = goalZ - posZ;
+        double dist = std::sqrt(dx*dx + dy*dy + dz*dz);
+        if (dist < radiusArrived && episodeState == EpisodeState::RUNNING) {
+            episodeState = EpisodeState::ARRIVED;
+            std::cout << "[NAV] ARRIVED! dist=" << dist << "m" << std::endl;
+        }
+
+        if (episodeState != EpisodeState::RUNNING) {
+            publish_result_and_stop();
+            return;
+        }
+
+        command_fins();
+    }
+
+    // A1: Collassa h_smooth → phi_density (max su theta)
+    public: void compute_phi_density() {
+        std::memset(phi_density, 0, sizeof(phi_density));
+        for (int p = 0; p < n_phi; p++)
+            for (int t = 0; t < n_theta; t++)
+                phi_density[p] = std::max(phi_density[p], h_smooth[p][t]);
+    }
+
+    // A2: Smooth 1D su phi
+    public: void smooth_phi_density() {
+        std::memset(phi_smooth, 0, sizeof(phi_smooth));
+        for (int k = 0; k < n_phi; k++) {
+            float sum = 0.0f; int cnt = 0;
+            for (int dl = -L; dl <= L; dl++) {
+                int kk = k + dl;
+                if (kk < 0 || kk >= n_phi) continue;
+                int w = (std::abs(dl) == L) ? 1 : 2;
+                sum += w * phi_density[kk];
+                cnt += w;
+            }
+            phi_smooth[k] = (cnt > 0) ? sum / cnt : 0.0f;
+        }
+    }
+
+    // A3: Calcola settori target da goal
+    public: void compute_goal_sectors() {
+        double dx = goalX - posX;
+        double dy = goalY - posY;
+
+        double phi_goal = std::atan2(dy, dx) - yaw - M_PI;
+        while (phi_goal >  M_PI) phi_goal -= 2.0 * M_PI;
+        while (phi_goal < -M_PI) phi_goal += 2.0 * M_PI;
+        phi_goal = std::clamp(phi_goal, (double)phi_min, (double)phi_max);
+        k_targ   = std::clamp((int)((phi_max - phi_goal) / delta_phi), 0, n_phi - 1);
+
+        double dxy        = std::sqrt(dx*dx + dy*dy);
+        double dz         = goalZ - posZ;
+        double theta_goal = std::atan2(dz, dxy);
+        while (theta_goal >  M_PI) theta_goal -= 2.0 * M_PI;
+        while (theta_goal < -M_PI) theta_goal += 2.0 * M_PI;
+        theta_goal   = std::clamp(theta_goal, (double)theta_min, (double)theta_max);
+        k_targ_theta = std::clamp((int)((theta_goal - theta_min) / delta_theta), 0, n_theta - 1);
+    }
+
+    // B: Trova direzione libera più vicina al goal
+    public: void find_best_direction_2d() {
+        best_phi   = k_targ;
+        best_theta = k_targ_theta;
+        float best_cost = std::numeric_limits<float>::max();
+
+        int W = safetyWindow;
+
+        for (int p = 0; p < n_phi; p++) {
+            for (int t = 0; t < n_theta; t++) {
+
+                bool all_free = true;
+                for (int dp = -W; dp <= W && all_free; dp++) {
+                    for (int dt = -W; dt <= W && all_free; dt++) {
+                        int pp = p + dp, tt = t + dt;
+                        if (pp < 0 || pp >= n_phi)  continue;
+                        if (tt < 0 || tt >= n_theta) continue;
+                        if (h_smooth[pp][tt] >= VALLEY_THRESHOLD)
+                            all_free = false;
+                    }
+                }
+
+                if (all_free) {
+                    float dphi   = (float)(p - k_targ);
+                    float dtheta = (float)(t - k_targ_theta);
+                    float cost   = std::sqrt(dphi*dphi + dtheta*dtheta * 4.0f);
+                    if (cost < best_cost) {
+                        best_cost  = cost;
+                        best_phi   = p;
+                        best_theta = t;
+                    }
+                }
+            }
+        }
+    }
+
+    // C: Converte best_phi, best_theta in comandi pinne
+    public: void command_fins() {
+        double phi_best   = phi_max   - best_phi   * delta_phi;
+        double theta_best = theta_min + best_theta * delta_theta;
+
+        double steer_h = std::clamp(phi_best   * gainSteer, -maxFinAngle, maxFinAngle);
+        double steer_v = std::clamp(theta_best * gainPitch, -maxFinAngle, maxFinAngle);
+        steer_v = -steer_v;
+
+        gz::msgs::Double msg_h, msg_v;
+        msg_h.set_data(steer_h);
+        msg_v.set_data(steer_v);
+        this->vertFinPub.Publish(msg_h);
+        this->horizFinPub.Publish(msg_v);
+    }
+
+    // PUBBLICA RISULTATO E FERMA MOTORI
+    public: void publish_result_and_stop() {
+        if (resultPublished) return;
+        resultPublished = true;
+
+        std::string result;
+        switch (episodeState) {
+            case EpisodeState::ARRIVED:   result = "arrived";   break;
+            case EpisodeState::COLLISION: result = "collision"; break;
+            case EpisodeState::TIMEOUT:   result = "timeout";   break;
+            default: return;
+        }
+
+        gz::msgs::StringMsg msg;
+        msg.set_data(result);
+        resultPub.Publish(msg);
+        std::cout << "[NAV] Episode END: " << result << std::endl;
+
+        gz::msgs::Double zero;
+        zero.set_data(0.0);
+        thrustPub.Publish(zero);
+        vertFinPub.Publish(zero);
+        horizFinPub.Publish(zero);
     }
 
     // CALLBACK POSE
     public: void OnPose(const gz::msgs::Pose_V &_msg) {
-      std::lock_guard<std::mutex> lock(this->mtx);
-      this->poseCount++;
-      for (int i = 0; i < _msg.pose_size(); i++) {
-        const auto &name = _msg.pose(i).name();
-
-        if (name == this->modelName) {
-          auto &pos = _msg.pose(i).position();
-          auto &ori = _msg.pose(i).orientation();
-          this->posX = pos.x();
-          this->posY = pos.y();
-          this->posZ = pos.z();
-          this->oriX = ori.x();
-          this->oriY = ori.y();
-          this->oriZ = ori.z();
-          this->oriW = ori.w();
-          this->yaw   = std::atan2(2*(oriW*oriZ + oriX*oriY), 1 - 2*(oriY*oriY + oriZ*oriZ));
-          this->pitch = std::asin(std::clamp(2*(oriW*oriY - oriZ*oriX), -1.0, 1.0));
-          this->roll  = std::atan2(2*(oriW*oriX + oriY*oriZ), 1 - 2*(oriX*oriX + oriY*oriY));
+        std::lock_guard<std::mutex> lock(this->mtx);
+        for (int i = 0; i < _msg.pose_size(); i++) {
+            if (_msg.pose(i).name() != "tethys_0") continue;
+            auto &pos = _msg.pose(i).position();
+            auto &ori = _msg.pose(i).orientation();
+            posX = pos.x(); posY = pos.y(); posZ = pos.z();
+            double ox = ori.x(), oy = ori.y(), oz = ori.z(), ow = ori.w();
+            yaw   = std::atan2(2*(ow*oz + ox*oy), 1 - 2*(oy*oy + oz*oz));
+            pitch = std::asin(std::clamp(2*(ow*oy - oz*ox), -1.0, 1.0));
+            roll  = std::atan2(2*(ow*ox + oy*oz), 1 - 2*(ox*ox + oy*oy));
         }
-      }
     }
 
     // CALLBACK CONTACT
     public: void OnContact(const gz::msgs::Contacts &_msg) {
-      std::lock_guard<std::mutex> lock(this->mtx);
-      if (_msg.contact_size() > 0 &&
-          this->episodeState == EpisodeState::RUNNING) {
-        this->episodeState = EpisodeState::COLLISION;
-        std::cout << "[NAV] COLLISION detected!" << std::endl;
-      }
-    }
-
-    // CALLBACK PARAMS
-    public: void OnParams(const gz::msgs::StringMsg &_msg) {
-      std::lock_guard<std::mutex> lock(this->mtx);
-      const std::string &data = _msg.data();
-      std::cout << "[NAV] RAW JSON: " << data << std::endl;
-
-      auto setD = [&](const std::string &key, double &target) {
-        auto p = data.find("\"" + key + "\":");
-        if (p == std::string::npos) return;
-        p += key.size() + 3;
-        try { target = std::stod(data.substr(p)); } catch (...) {}
-      };
-      auto setI = [&](const std::string &key, int &target) {
-        double tmp = (double)target;
-        setD(key, tmp);
-        target = (int)std::round(tmp);
-      };
-
-      setD("threshold",       this->threshold);
-      setI("s_max",           this->sMax);
-      setI("smooth_l",        this->smoothL);
-      setD("gain_steer",      this->gainSteer);
-      setD("gain_pitch",      this->gainPitch);
-      setD("radius_slowdown", this->radiusSlowdown);
-      setD("radius_arrived",  this->radiusArrived);
-      setD("elev_cost",       this->elevCost);
-      setD("robot_radius",    this->robotRadius);
-      setD("safety_margin",   this->safetyMargin);
-      setD("max_fin_angle",   this->maxFinAngle);
-      setD("max_thrust",      this->maxThrust);
-
-      this->episodeState     = EpisodeState::RUNNING;
-      this->resultPublished  = false;
-      this->lastBestDir      = -1;
-      this->lastBestEl       = 1;
-      this->episodeStartIter = -1;   
-      this->poseCount        = 0;   
-
-      this->StopActuators();
-
-      std::cout << "[NAV] Params: thr=" << this->threshold
-                << " sMax=" << this->sMax << " smoothL=" << this->smoothL
-                << " gSteer=" << this->gainSteer << " gPitch=" << this->gainPitch
-                << " rSlow=" << this->radiusSlowdown
-                << " R=" << this->robotRadius << " margin=" << this->safetyMargin
-                << " maxFin=" << this->maxFinAngle << std::endl;
-      std::cout << "[NAV] Episode reset" << std::endl;
-    }
-
-    // BUILD HISTOGRAM  
-    public: void BuildHistogram() {
-      histogram.assign(NUM_AZ * NUM_EL, 0.0);
-      const int need = NUM_AZ * NUM_EL;
-      if ((int)ranges.size() < need) return;  
-      for (int j = 0; j < NUM_EL; j++) {
-        for (int i = 0; i < NUM_AZ; i++) {
-          int idx = i + j * NUM_AZ;
-          float d = ranges[idx];
-          if (std::isinf(d) || d <= 0.0f) {
-            histogram[idx] = 0.0;
-          } else {
-            histogram[idx] = 1.0 / ((double)d * (double)d);
-            if ((double)d < this->minClearance) this->minClearance = (double)d;
-          }
+        std::lock_guard<std::mutex> lock(this->mtx);
+        if (_msg.contact_size() > 0 && episodeState == EpisodeState::RUNNING) {
+            episodeState = EpisodeState::COLLISION;
+            std::cout << "[NAV] COLLISION detected!" << std::endl;
+            publish_result_and_stop();
         }
-      }
-    }
-
-    // SMOOTH HISTOGRAM 
-    public: void SmoothHistogram() {
-      std::vector<double> smoothed(NUM_AZ * NUM_EL, 0.0);
-      for (int j = 0; j < NUM_EL; j++) {
-        for (int k = 0; k < NUM_AZ; k++) {
-          double sum = 0.0;
-          for (int m = -this->smoothL; m <= this->smoothL; m++)
-            sum += histogram[((k + m + NUM_AZ) % NUM_AZ) + j * NUM_AZ];
-          smoothed[k + j * NUM_AZ] = sum / (2*this->smoothL + 1);
-        }
-      }
-      histogram = smoothed;
-    }
-
-    // GOAL DIR BODY  - direzione del goal nel frame del veicolo via quaternione COMPLETO
-    // (yaw+pitch+roll). Ritorna {settore_azimuth [0..359], elevazione_rad}.
-    // Settore 0 = muso (-X), cresce CCW intorno a +Z: coerente con l'indice del lidar
-    // (scan -pi..+pi -> indice 0 = -X).
-    public: std::pair<int,double> GoalDirBody() {
-      double gx = goalX - posX, gy = goalY - posY, gz = goalZ - posZ;
-      double w = oriW, x = oriX, y = oriY, z = oriZ;
-      // mondo -> corpo  (R^T, con R = corpo->mondo)
-      double bx = (1-2*(y*y+z*z))*gx + (2*(x*y+w*z))*gy + (2*(x*z-w*y))*gz;
-      double by = (2*(x*y-w*z))*gx + (1-2*(x*x+z*z))*gy + (2*(y*z+w*x))*gz;
-      double bz = (2*(x*z+w*y))*gx + (2*(y*z-w*x))*gy + (1-2*(x*x+y*y))*gz;
-      double az = std::atan2(by, bx);                       // 0 = +X (coda), +-pi = -X (muso)
-      int sector = ((int)std::lround(az * 180.0 / M_PI) + 180) % NUM_AZ;
-      if (sector < 0) sector += NUM_AZ;
-      double elev = std::atan2(bz, std::sqrt(bx*bx + by*by)); // + = verso body +Z (in alto)
-      return {sector, elev};
-    }
-
-    // FIND BEST DIRECTION 3D
-    public: std::pair<int,int> FindBestDirection() {
-      auto [goalSector, goalElev] = GoalDirBody();
-
-      int goalElLayer = 1;
-      double minElDiff = 1e9;
-      for (int j = 0; j < NUM_EL; j++) {
-        double diff = std::abs(EL_ANGLES[j] - goalElev);
-        if (diff < minElDiff) { minElDiff = diff; goalElLayer = j; }
-      }
-
-      int gidx = goalSector + goalElLayer * NUM_AZ;
-      if (histogram[gidx] < this->threshold) {
-        lastBestDir = goalSector; lastBestEl = goalElLayer;
-        return {goalSector, goalElLayer};
-      }
-
-      {
-          int layerOrder[NUM_EL];
-          int n = 0;
-          for (int j = goalElLayer; j >= 0; j--)        
-              layerOrder[n++] = j;
-          for (int j = goalElLayer + 1; j < NUM_EL; j++)
-              layerOrder[n++] = j;
-
-          for (int li = 0; li < NUM_EL; li++) {
-              int j = layerOrder[li];
-              int idx = goalSector + j * NUM_AZ;
-              if (histogram[idx] < this->threshold) {
-                  lastBestDir = goalSector; lastBestEl = j;
-                  return {goalSector, j};
-              }
-          }
-      }
-
-      auto angDist = [&](int a, int b) {
-        int d = std::abs(a - b);
-        if (d > NUM_AZ/2) d = NUM_AZ - d;
-        return d;
-      };
-
-      const double clearanceNeeded = 2.0 * (this->robotRadius + this->safetyMargin);
-
-      int bestAz = -1, bestEl = 1;
-      double bestCost = 1e9;
-
-      for (int j = 0; j < NUM_EL; j++) {
-        std::vector<std::pair<int,int>> valleys;
-        int valleyStart = -1;
-        for (int k = 0; k < NUM_AZ; k++) {
-          bool free = histogram[k + j * NUM_AZ] < this->threshold;
-          if (free) {
-            if (valleyStart == -1) valleyStart = k;
-          } else if (valleyStart != -1) {
-            valleys.push_back({valleyStart, k - 1});
-            valleyStart = -1;
-          }
-        }
-        if (valleyStart != -1) {
-          if (!valleys.empty() && valleys.front().first == 0)
-            valleys.front().first = valleyStart;
-          else
-            valleys.push_back({valleyStart, NUM_AZ - 1});
-        }
-
-        // valuta ogni valle
-        for (auto &v : valleys) {
-          int s0 = v.first;   
-          int s1 = v.second;  
-          int width = (s1 >= s0) ? (s1 - s0 + 1) : (NUM_AZ - s0 + s1 + 1);
-
-          int leftObs  = (s0 - 1 + NUM_AZ) % NUM_AZ;  
-          int rightObs = (s1 + 1) % NUM_AZ;           
-          double dObs = std::min(RawRange(leftObs, j), RawRange(rightObs, j));
-          if (std::isfinite(dObs)) {
-            double widthRad  = width * M_PI / 180.0;
-            double linearGap = 2.0 * dObs * std::sin(widthRad * 0.5);
-            if (linearGap < clearanceNeeded) continue; 
-          }
-
-          // Direzione candidata DENTRO la valle (wrap-safe)
-          int theta;
-          if (width <= this->sMax) {
-            theta = (s0 + width / 2) % NUM_AZ;
-          } else {
-            int dA = angDist(s0, goalSector);
-            int dB = angDist(s1, goalSector);
-            if (dA <= dB) theta = (s0 + this->sMax/2) % NUM_AZ;             
-            else          theta = (s1 - this->sMax/2 + NUM_AZ) % NUM_AZ;   
-          }
-
-          double costAz = (double)angDist(theta, goalSector);
-          double costEl = std::abs(j - goalElLayer) * this->elevCost;
-          double cost   = costAz + costEl;
-          if (cost < bestCost) { bestCost = cost; bestAz = theta; bestEl = j; }
-        }
-      }
-
-      if (bestAz < 0) {
-        double minH = 1e9;
-        for (int j = 0; j < NUM_EL; j++) {
-          for (int k = 0; k < NUM_AZ; k++) {
-            double h = histogram[k + j * NUM_AZ];
-            if (h < minH) { minH = h; bestAz = k; bestEl = j; }
-          }
-        }
-      }
-
-      lastBestDir = bestAz;
-      lastBestEl  = bestEl;
-      return {bestAz, bestEl};
     }
   };
 
-  // NavigationPlugin
+  // --- NavigationPlugin ---
   NavigationPlugin::NavigationPlugin() : dataPtr(std::make_unique<NavigationPrivateData>()) {}
 
   NavigationPlugin::~NavigationPlugin() = default;
@@ -385,236 +393,90 @@ namespace tethys {
                                    const std::shared_ptr<const sdf::Element> &_sdf,
                                    gz::sim::EntityComponentManager &,
                                    gz::sim::EventManager &) {
+      auto* d = this->dataPtr.get();
 
-    std::string ns = _sdf->Get<std::string>("namespace", "tethys").first;
-    this->dataPtr->modelName = ns;      
+      // SUBSCRIPTIONS
+      d->node.Subscribe("/tethys_0/lidar/points",
+          &NavigationPrivateData::OnPointCloud, d);
+      d->node.Subscribe("/world/empty_environment/dynamic_pose/info",
+          &NavigationPrivateData::OnPose, d);
+      d->node.Subscribe(
+          "/world/empty_environment/model/tethys_0/link/base_link/sensor/contact_sensor/contact",
+          &NavigationPrivateData::OnContact, d);
 
-    this->dataPtr->worldName = _sdf->Get<std::string>("world_name", "empty_environment").first;
+      // PUBLISHERS
+      d->thrustPub   = d->node.Advertise<gz::msgs::Double>("/model/tethys_0/joint/propeller_joint/cmd_thrust");
+      d->vertFinPub  = d->node.Advertise<gz::msgs::Double>("/model/tethys_0/joint/vertical_fins_joint/0/cmd_pos");
+      d->horizFinPub = d->node.Advertise<gz::msgs::Double>("/model/tethys_0/joint/horizontal_fins_joint/0/cmd_pos");
+      d->resultPub   = d->node.Advertise<gz::msgs::StringMsg>("/es/episode_result");
 
-    this->dataPtr->node.Subscribe("/" + ns + "/lidar",
-      &NavigationPrivateData::OnLidar, this->dataPtr.get());
+      // PARAMETRI DA SDF
+      d->goalX         = _sdf->Get<double>("goal_x",          0.0).first;
+      d->goalY         = _sdf->Get<double>("goal_y",          0.0).first;
+      d->goalZ         = _sdf->Get<double>("goal_z",          0.0).first;
 
-    this->dataPtr->node.Subscribe("/world/empty_environment/dynamic_pose/info",
-      &NavigationPrivateData::OnPose, this->dataPtr.get());
+      d->gainSteer     = _sdf->Get<double>("gain_steer",      0.5).first;
+      d->gainPitch     = _sdf->Get<double>("gain_pitch",      0.5).first;
+      d->maxFinAngle   = _sdf->Get<double>("max_fin_angle",   0.15).first;
+      d->radiusArrived = _sdf->Get<double>("radius_arrived",  2.0).first;
+      d->maxIterations = _sdf->Get<int>   ("max_iterations",  300000).first;
 
-    this->dataPtr->node.Subscribe("/world/empty_environment/model/" + ns + "/link/base_link/sensor/contact_sensor/contact",
-      &NavigationPrivateData::OnContact, this->dataPtr.get());
+      d->r_max            = _sdf->Get<double>("r_max",            60.0).first;
+      d->r_min            = _sdf->Get<double>("r_min",             2.5).first;
+      d->r_active         = _sdf->Get<double>("r_active",         50.0).first;
+      d->VALLEY_THRESHOLD = _sdf->Get<double>("valley_threshold", 50.0).first;
 
-    this->dataPtr->node.Subscribe("/" + ns + "/es/vfh_params",
-      &NavigationPrivateData::OnParams, this->dataPtr.get());
+      d->gridDecay    = _sdf->Get<double>("grid_decay",    0.97).first;
+      d->A            = _sdf->Get<double>("magnitude_a",   15.0).first;
+      d->L            = _sdf->Get<int>   ("smooth_l",      5).first;
+      d->safetyWindow = _sdf->Get<int>   ("safety_window", 3).first;
 
-    this->dataPtr->thrustPub = this->dataPtr->node.Advertise<gz::msgs::Double>(
-      "/model/" + ns + "/joint/propeller_joint/cmd_thrust");
+      // Derivati
+      d->n_r        = (int)(d->r_max    / d->delta_r);
+      d->n_r_active = (int)(d->r_active / d->delta_r);
+      d->B          = d->A / d->r_max;
 
-    this->dataPtr->vertFinPub = this->dataPtr->node.Advertise<gz::msgs::Double>(
-      "/model/" + ns + "/joint/vertical_fins_joint/0/cmd_pos");
+      // Alloca array dinamicamente
+      d->grid_c.assign(d->n_r        * d->n_phi * d->n_theta, 0.0f);
+      d->c_star.assign(d->n_r_active * d->n_phi * d->n_theta, 0.0f);
 
-    this->dataPtr->horizFinPub = this->dataPtr->node.Advertise<gz::msgs::Double>(
-      "/model/" + ns + "/joint/horizontal_fins_joint/0/cmd_pos");
-
-    this->dataPtr->resultPub = this->dataPtr->node.Advertise<gz::msgs::StringMsg>(
-      "/" + ns + "/es/episode_result");
-
-    this->dataPtr->goalX = _sdf->Get<double>("goal_x", 0.0).first;
-    this->dataPtr->goalY = _sdf->Get<double>("goal_y", 0.0).first;
-    this->dataPtr->goalZ = _sdf->Get<double>("goal_z", 0.0).first;
-
-    this->dataPtr->threshold      = _sdf->Get<double>("threshold",       0.001).first;
-    this->dataPtr->sMax           = _sdf->Get<int>   ("s_max",           20).first;
-    this->dataPtr->smoothL        = _sdf->Get<int>   ("smooth_l",        5).first;
-    this->dataPtr->gainSteer      = _sdf->Get<double>("gain_steer",      0.5).first;
-    this->dataPtr->gainPitch      = _sdf->Get<double>("gain_pitch",      0.5).first;
-    this->dataPtr->radiusArrived  = _sdf->Get<double>("radius_arrived",  2.0).first;
-    this->dataPtr->radiusSlowdown = _sdf->Get<double>("radius_slowdown", 15.0).first;
-    this->dataPtr->maxIterations  = _sdf->Get<int>   ("max_iterations",  300000).first;
-
-    // Parametri esponibili anche all'ES
-    this->dataPtr->elevCost     = _sdf->Get<double>("elev_cost",     10.0).first;
-    this->dataPtr->robotRadius  = _sdf->Get<double>("robot_radius",  0.6).first;
-    this->dataPtr->safetyMargin = _sdf->Get<double>("safety_margin", 0.6).first;
-    this->dataPtr->maxFinAngle  = _sdf->Get<double>("max_fin_angle", 0.15).first;
-    this->dataPtr->maxThrust    = _sdf->Get<double>("max_thrust",    31.0).first;
-
-    this->dataPtr->poseCount        = 0;
-    this->dataPtr->episodeStartIter = -1;
-    this->dataPtr->removeOnCollision = _sdf->Get<bool>("remove_on_collision", false).first;
-
-    std::cout << "[NAV] goal=("
-              << this->dataPtr->goalX << ", "
-              << this->dataPtr->goalY << ", "
-              << this->dataPtr->goalZ << ")" << std::endl;
-    std::cout << "[NAV] threshold=" << this->dataPtr->threshold
-              << " sMax=" << this->dataPtr->sMax
-              << " smoothL=" << this->dataPtr->smoothL
-              << " gainSteer=" << this->dataPtr->gainSteer
-              << " gainPitch=" << this->dataPtr->gainPitch
-              << " radiusArrived=" << this->dataPtr->radiusArrived
-              << " radiusSlowdown=" << this->dataPtr->radiusSlowdown
-              << " robotRadius=" << this->dataPtr->robotRadius
-              << " safetyMargin=" << this->dataPtr->safetyMargin
-              << " maxFinAngle=" << this->dataPtr->maxFinAngle
-              << " maxIterations=" << this->dataPtr->maxIterations << std::endl;
+      std::cout << "[CONFIGURE] goal=(" << d->goalX << "," << d->goalY << "," << d->goalZ << ")"
+                << " r_max=" << d->r_max << " n_r=" << d->n_r
+                << " r_active=" << d->r_active << " n_r_active=" << d->n_r_active
+                << " threshold=" << d->VALLEY_THRESHOLD << std::endl;
   }
 
   void NavigationPlugin::PreUpdate(const gz::sim::UpdateInfo &_info,
                                    gz::sim::EntityComponentManager &) {
-    if (_info.paused) return;
-    if (this->dataPtr->poseCount < 3) return;
+      if (_info.paused) return;
 
-    // CONTROLLO - ogni 100ms
-    if (_info.iterations % 100 == 0) {
-      std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
+      {
+          std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
 
-      if (this->dataPtr->episodeStartIter < 0) {
-        this->dataPtr->episodeStartIter  = (int64_t)_info.iterations;
-        this->dataPtr->lastMoveIteration = (int64_t)_info.iterations;
-        this->dataPtr->pathLength        = 0.0;
-        this->dataPtr->minClearance      = std::numeric_limits<double>::infinity();
-        this->dataPtr->lastPosX  = this->dataPtr->posX;
-        this->dataPtr->lastPosY  = this->dataPtr->posY;
-        this->dataPtr->lastPosZ  = this->dataPtr->posZ;
-        this->dataPtr->pathPrevX = this->dataPtr->posX;
-        this->dataPtr->pathPrevY = this->dataPtr->posY;
-        this->dataPtr->pathPrevZ = this->dataPtr->posZ;
-      }
+          if (this->dataPtr->episodeStartIter < 0)
+              this->dataPtr->episodeStartIter = _info.iterations;
 
-      int64_t elapsed = (int64_t)_info.iterations - this->dataPtr->episodeStartIter;
-
-      // FINE EPISODIO
-      if (this->dataPtr->episodeState != NavigationPrivateData::EpisodeState::RUNNING) {
-        if (!this->dataPtr->resultPublished) {
-          std::string tag =
-            (this->dataPtr->episodeState == NavigationPrivateData::EpisodeState::ARRIVED)   ? "ARRIVED"   :
-            (this->dataPtr->episodeState == NavigationPrivateData::EpisodeState::COLLISION) ? "COLLISION" :
-                                                                                              "TIMEOUT";
-          gz::msgs::StringMsg msg;
-          msg.set_data(this->dataPtr->MakeResult(tag, elapsed));
-          this->dataPtr->resultPub.Publish(msg);
-          this->dataPtr->resultPublished = true;
-         if (this->dataPtr->removeOnCollision &&
-            (this->dataPtr->episodeState == NavigationPrivateData::EpisodeState::COLLISION ||
-            this->dataPtr->episodeState == NavigationPrivateData::EpisodeState::TIMEOUT  ||
-            this->dataPtr->episodeState == NavigationPrivateData::EpisodeState::ARRIVED)) {
-            gz::msgs::Entity req;
-            req.set_name(this->dataPtr->modelName);
-            req.set_type(gz::msgs::Entity::MODEL);
-            gz::msgs::Boolean rep;
-            bool result;
-            this->dataPtr->node.Request("/world/" + this->dataPtr->worldName + "/remove", req, 2000, rep, result);
+          if (this->dataPtr->episodeState == NavigationPrivateData::EpisodeState::RUNNING) {
+              int64_t elapsed = _info.iterations - this->dataPtr->episodeStartIter;
+              if (elapsed > this->dataPtr->maxIterations) {
+                  this->dataPtr->episodeState = NavigationPrivateData::EpisodeState::TIMEOUT;
+                  std::cout << "[NAV] TIMEOUT!" << std::endl;
+                  this->dataPtr->publish_result_and_stop();
+              }
           }
 
-          std::cout << "[NAV] Episode ended: " << msg.data() << std::endl;
-        }
-        return;
+          if (this->dataPtr->episodeState != NavigationPrivateData::EpisodeState::RUNNING)
+              return;
       }
 
-      // PATH LENGTH 
-      {
-        double pdx = this->dataPtr->posX - this->dataPtr->pathPrevX;
-        double pdy = this->dataPtr->posY - this->dataPtr->pathPrevY;
-        double pdz = this->dataPtr->posZ - this->dataPtr->pathPrevZ;
-        this->dataPtr->pathLength += std::sqrt(pdx*pdx + pdy*pdy + pdz*pdz);
-        this->dataPtr->pathPrevX = this->dataPtr->posX;
-        this->dataPtr->pathPrevY = this->dataPtr->posY;
-        this->dataPtr->pathPrevZ = this->dataPtr->posZ;
+      if (_info.iterations % 100 == 0) {
+          gz::msgs::Double thrustMsg;
+          thrustMsg.set_data(-31.0);
+          this->dataPtr->thrustPub.Publish(thrustMsg);
       }
-
-      // TIMEOUT (relativo all'episodio)
-      if (elapsed > this->dataPtr->maxIterations) {
-        this->dataPtr->episodeState = NavigationPrivateData::EpisodeState::TIMEOUT;
-        return;
-      }
-
-      // STUCK CHECK
-      double moveDist = std::sqrt(
-          std::pow(this->dataPtr->posX - this->dataPtr->lastPosX, 2) +
-          std::pow(this->dataPtr->posY - this->dataPtr->lastPosY, 2) +
-          std::pow(this->dataPtr->posZ - this->dataPtr->lastPosZ, 2));
-
-      if (moveDist > 0.5) {
-        this->dataPtr->lastPosX = this->dataPtr->posX;
-        this->dataPtr->lastPosY = this->dataPtr->posY;
-        this->dataPtr->lastPosZ = this->dataPtr->posZ;
-        this->dataPtr->lastMoveIteration = (int64_t)_info.iterations;
-      }
-
-      if ((int64_t)_info.iterations - this->dataPtr->lastMoveIteration > this->dataPtr->stuckTimeout) {
-        this->dataPtr->episodeState = NavigationPrivateData::EpisodeState::TIMEOUT;
-        std::cout << "[NAV] STUCK detected! Episode ended as TIMEOUT" << std::endl;
-        return;
-      }
-
-      // DISTANZA DAL GOAL
-      double dx = this->dataPtr->goalX - this->dataPtr->posX;
-      double dy = this->dataPtr->goalY - this->dataPtr->posY;
-      double dz = this->dataPtr->goalZ - this->dataPtr->posZ;
-      double distGoal = std::sqrt(dx*dx + dy*dy + dz*dz);
-
-      if (distGoal < this->dataPtr->radiusArrived) {
-        this->dataPtr->episodeState = NavigationPrivateData::EpisodeState::ARRIVED;
-        this->dataPtr->StopActuators();
-        return;
-      }
-
-      if (!this->dataPtr->ranges.empty()) {
-        this->dataPtr->BuildHistogram();
-        this->dataPtr->SmoothHistogram();
-      }
-
-      auto [bestDir, bestElLayer] = this->dataPtr->FindBestDirection();
-
-      if (bestDir < 0) {
-        this->dataPtr->StopActuators();
-      } else {
-        double steerError = bestDir * M_PI / 180.0;
-        if (steerError > M_PI) steerError -= 2*M_PI;
-        double finCmd = std::clamp(steerError * this->dataPtr->gainSteer,
-                                   -this->dataPtr->maxFinAngle, this->dataPtr->maxFinAngle);
-
-        auto [_, goalElev] = this->dataPtr->GoalDirBody();
-        double horizFinCmd = std::clamp(-goalElev * this->dataPtr->gainPitch,
-                                        -this->dataPtr->maxFinAngle, this->dataPtr->maxFinAngle);
-
-        double thrust = -this->dataPtr->maxThrust;
-
-        if (distGoal < this->dataPtr->radiusSlowdown) {
-            thrust *= (distGoal / this->dataPtr->radiusSlowdown);
-            horizFinCmd *= (distGoal / this->dataPtr->radiusSlowdown);
-        }
-        gz::msgs::Double thrustMsg, finMsg, horizMsg;
-        thrustMsg.set_data(thrust);
-        finMsg.set_data(finCmd);
-        horizMsg.set_data(horizFinCmd);
-
-        this->dataPtr->thrustPub.Publish(thrustMsg);
-        this->dataPtr->vertFinPub.Publish(finMsg);
-        this->dataPtr->horizFinPub.Publish(horizMsg);
-      }
-    }
-
-    // STAMPA 
-    if (_info.iterations % 1000 == 0) {
-      std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
-
-      double dx = this->dataPtr->goalX - this->dataPtr->posX;
-      double dy = this->dataPtr->goalY - this->dataPtr->posY;
-      double dz = this->dataPtr->goalZ - this->dataPtr->posZ;
-      double distGoal = std::sqrt(dx*dx + dy*dy + dz*dz);
-      double clr = std::isinf(this->dataPtr->minClearance) ? 999.0 : this->dataPtr->minClearance;
-      auto [gSec, gElev] = this->dataPtr->GoalDirBody();
-      double headErr = (gSec <= 180) ? (double)gSec : (double)gSec - 360.0;
-
-      std::cout << std::fixed << std::setprecision(2);
-      std::cout << "[" << this->dataPtr->modelName << "] "
-                << " t=" << _info.iterations/1000 << "s"
-                << " dist=" << distGoal << "m"
-                << " head=" << headErr << "°"
-                << " elev=" << gElev * 180.0/M_PI << "°"
-                << " path=" << this->dataPtr->pathLength << "m"
-                << " clr="  << clr << "m" << std::endl;
-    }
   }
-}
+
+} // namespace tethys
 
 GZ_ADD_PLUGIN(
   tethys::NavigationPlugin,

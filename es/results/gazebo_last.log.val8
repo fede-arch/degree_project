@@ -1,0 +1,56 @@
+fixuid: fixuid should only ever be used on development systems. DO NOT USE IN PRODUCTION
+fixuid: runtime UID '1000' already matches container user 'developer' UID
+fixuid: runtime GID '1000' already matches container group 'developer' GID
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/time.proto
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/header.proto
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/vector3d.proto
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/stringmsg.proto
+[NAV] goal=(17.75, -29.41, -64.93)
+[NAV] threshold=0.001 sMax=20 smoothL=5 gainSteer=0.5 gainPitch=0.5 radiusArrived=5 radiusSlowdown=15 maxFinAngle=0.13 maxIterations=150000
+[1;31m[Err] [Buoyancy.cc:370] [0m[1;31mUnsupported collision geometry[[0m[1;31m6[0m[1;31m][0m
+[1;31m[Err] [Buoyancy.cc:370] [0m[1;31mUnsupported collision geometry[[0m[1;31m6[0m[1;31m][0m
+amdgpu: os_same_file_description couldn't determine if two DRM fds reference the same file description.
+If they do, bad things may happen!
+amdgpu: os_same_file_description couldn't determine if two DRM fds reference the same file description.
+If they do, bad things may happen!
+[NAV] RAW JSON: {"s_max": 36, "smooth_l": 3, "gain_steer": 1.918199406418284, "gain_pitch": 0.21666942045521206, "radius_slowdown": 8.150378063838868, "elev_cost": 1.7459942314126156, "threshold": 0.001}
+[NAV] Params: thr=0.001 sMax=36 smoothL=3 gSteer=1.9182 gPitch=0.216669 rSlow=8.15038 maxFin=0.13
+[NAV] Episode reset
+[1;36mDbg[0m ODE Heightfield AABB: min = {-499.512, -499.512, -98.6872} max = {499.512, 499.512, 1.10914e-13}
+[tethys_0] t=1s dist=125.25m head=-36.00° elev=4.23° path=0.08m clr=999.00m
+[tethys_0] t=2s dist=125.03m head=-36.00° elev=4.22° path=0.36m clr=999.00m
+[tethys_0] t=3s dist=124.64m head=-36.00° elev=4.14° path=0.83m clr=999.00m
+[tethys_0] t=4s dist=124.11m head=-34.00° elev=3.97° path=1.50m clr=999.00m
+[tethys_0] t=5s dist=123.43m head=-32.00° elev=3.70° path=2.34m clr=999.00m
+[tethys_0] t=6s dist=122.59m head=-30.00° elev=3.39° path=3.35m clr=999.00m
+[tethys_0] t=7s dist=121.61m head=-28.00° elev=3.10° path=4.51m clr=999.00m
+[tethys_0] t=8s dist=120.51m head=-24.00° elev=2.85° path=5.79m clr=999.00m
+[tethys_0] t=9s dist=119.26m head=-22.00° elev=2.66° path=7.21m clr=999.00m
+[tethys_0] t=10s dist=117.89m head=-20.00° elev=2.51° path=8.73m clr=999.00m
+[tethys_0] t=11s dist=116.42m head=-18.00° elev=2.40° path=10.34m clr=999.00m
+[tethys_0] t=12s dist=114.83m head=-14.00° elev=2.30° path=12.04m clr=999.00m
+[tethys_0] t=13s dist=113.15m head=-12.00° elev=2.22° path=13.81m clr=999.00m
+[tethys_0] t=14s dist=111.38m head=-8.00° elev=2.15° path=15.65m clr=999.00m
+[tethys_0] t=15s dist=109.55m head=-6.00° elev=2.09° path=17.53m clr=999.00m
+[tethys_0] t=16s dist=107.63m head=-2.00° elev=2.05° path=19.47m clr=999.00m
+[tethys_0] t=17s dist=105.68m head=-2.00° elev=2.03° path=21.44m clr=999.00m
+[tethys_0] t=18s dist=103.68m head=-2.00° elev=2.01° path=23.45m clr=29.48m
+[tethys_0] t=19s dist=101.65m head=-6.00° elev=2.00° path=25.48m clr=27.95m
+[tethys_0] t=20s dist=99.60m head=-12.00° elev=2.07° path=27.54m clr=26.50m
+[tethys_0] t=21s dist=97.56m head=-16.00° elev=2.23° path=29.62m clr=24.79m
+[tethys_0] t=22s dist=95.54m head=-20.00° elev=2.20° path=31.70m clr=23.16m
+[tethys_0] t=23s dist=93.54m head=-22.00° elev=2.18° path=33.80m clr=21.58m
+[tethys_0] t=24s dist=91.53m head=-20.00° elev=2.28° path=35.92m clr=19.91m
+[tethys_0] t=25s dist=89.49m head=-14.00° elev=2.20° path=38.06m clr=18.51m
+[tethys_0] t=26s dist=87.42m head=-8.00° elev=2.08° path=40.21m clr=16.94m
+[tethys_0] t=27s dist=85.33m head=-4.00° elev=2.10° path=42.33m clr=15.38m
+[tethys_0] t=28s dist=83.20m head=-2.00° elev=2.15° path=44.49m clr=13.79m
+[tethys_0] t=29s dist=81.06m head=2.00° elev=2.21° path=46.64m clr=12.29m
+[tethys_0] t=30s dist=78.95m head=6.00° elev=2.26° path=48.76m clr=10.74m
+[tethys_0] t=31s dist=76.78m head=10.00° elev=2.25° path=50.93m clr=9.12m
+[tethys_0] t=32s dist=74.64m head=14.00° elev=2.41° path=53.09m clr=7.49m
+[tethys_0] t=33s dist=72.54m head=18.00° elev=2.65° path=55.23m clr=5.80m
+[tethys_0] t=34s dist=70.46m head=22.00° elev=2.62° path=57.37m clr=4.05m
+[tethys_0] t=35s dist=68.41m head=26.00° elev=2.71° path=59.53m clr=2.50m
+[NAV] COLLISION detected!
+[NAV] Episode ended: COLLISION;t=35800;dist=66.6814;path=61.2581;clr=2.5;head=28

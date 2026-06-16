@@ -1,0 +1,170 @@
+fixuid: fixuid should only ever be used on development systems. DO NOT USE IN PRODUCTION
+fixuid: runtime UID '1000' already matches container user 'developer' UID
+fixuid: runtime GID '1000' already matches container group 'developer' GID
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/time.proto
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/header.proto
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/vector3d.proto
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/stringmsg.proto
+[NAV] goal=(17.75, -29.41, -64.93)
+[NAV] threshold=0.001 sMax=20 smoothL=5 gainSteer=0.5 gainPitch=0.5 radiusArrived=5 radiusSlowdown=15 maxFinAngle=0.13 maxIterations=150000
+[1;31m[Err] [Buoyancy.cc:370] [0m[1;31mUnsupported collision geometry[[0m[1;31m6[0m[1;31m][0m
+[1;31m[Err] [Buoyancy.cc:370] [0m[1;31mUnsupported collision geometry[[0m[1;31m6[0m[1;31m][0m
+amdgpu: os_same_file_description couldn't determine if two DRM fds reference the same file description.
+If they do, bad things may happen!
+amdgpu: os_same_file_description couldn't determine if two DRM fds reference the same file description.
+If they do, bad things may happen!
+[NAV] RAW JSON: {"s_max": 36, "smooth_l": 3, "gain_steer": 1.918199406418284, "gain_pitch": 0.21666942045521206, "radius_slowdown": 8.150378063838868, "elev_cost": 1.7459942314126156, "threshold": 0.001}
+[NAV] Params: thr=0.001 sMax=36 smoothL=3 gSteer=1.9182 gPitch=0.216669 rSlow=8.15038 maxFin=0.13
+[NAV] Episode reset
+[1;36mDbg[0m ODE Heightfield AABB: min = {-499.512, -499.512, -98.6872} max = {499.512, 499.512, 1.10914e-13}
+[tethys_0] t=1s dist=19.41m head=20.00° elev=37.80° path=0.08m clr=999.00m
+[tethys_0] t=2s dist=19.20m head=20.00° elev=38.20° path=0.36m clr=999.00m
+[tethys_0] t=3s dist=18.86m head=20.00° elev=38.73° path=0.84m clr=999.00m
+[tethys_0] t=4s dist=18.39m head=20.00° elev=39.31° path=1.50m clr=999.00m
+[tethys_0] t=5s dist=17.80m head=18.00° elev=40.03° path=2.34m clr=999.00m
+[tethys_0] t=6s dist=17.11m head=18.00° elev=41.05° path=3.34m clr=999.00m
+[tethys_0] t=7s dist=16.33m head=16.00° elev=42.60° path=4.49m clr=999.00m
+[tethys_0] t=8s dist=15.48m head=16.00° elev=44.83° path=5.79m clr=999.00m
+[tethys_0] t=9s dist=14.61m head=16.00° elev=47.78° path=7.21m clr=999.00m
+[tethys_0] t=10s dist=13.74m head=18.00° elev=51.54° path=8.73m clr=999.00m
+[tethys_0] t=11s dist=12.92m head=20.00° elev=56.10° path=10.33m clr=999.00m
+[tethys_0] t=12s dist=12.18m head=22.00° elev=61.49° path=12.03m clr=999.00m
+[tethys_0] t=13s dist=11.60m head=30.00° elev=67.48° path=13.80m clr=999.00m
+[tethys_0] t=14s dist=11.21m head=46.00° elev=73.25° path=15.63m clr=999.00m
+[tethys_0] t=15s dist=11.08m head=76.00° elev=76.56° path=17.52m clr=999.00m
+[tethys_0] t=16s dist=11.23m head=110.00° elev=74.67° path=19.44m clr=999.00m
+[tethys_0] t=17s dist=11.67m head=130.00° elev=69.07° path=21.40m clr=999.00m
+[tethys_0] t=18s dist=12.38m head=140.00° elev=62.53° path=23.38m clr=999.00m
+[tethys_0] t=19s dist=13.32m head=144.00° elev=56.18° path=25.41m clr=29.46m
+[tethys_0] t=20s dist=14.45m head=146.00° elev=50.55° path=27.44m clr=28.31m
+[tethys_0] t=21s dist=15.73m head=148.00° elev=45.63° path=29.50m clr=27.60m
+[tethys_0] t=22s dist=17.12m head=148.00° elev=41.44° path=31.56m clr=26.21m
+[tethys_0] t=23s dist=18.60m head=148.00° elev=37.84° path=33.64m clr=25.19m
+[tethys_0] t=24s dist=20.16m head=146.00° elev=34.69° path=35.76m clr=24.34m
+[tethys_0] t=25s dist=21.74m head=146.00° elev=32.01° path=37.85m clr=23.67m
+[tethys_0] t=26s dist=23.35m head=144.00° elev=29.65° path=39.95m clr=23.58m
+[tethys_0] t=27s dist=25.00m head=144.00° elev=27.53° path=42.09m clr=23.58m
+[tethys_0] t=28s dist=26.66m head=142.00° elev=25.63° path=44.22m clr=23.58m
+[tethys_0] t=29s dist=28.30m head=140.00° elev=23.93° path=46.34m clr=23.58m
+[tethys_0] t=30s dist=29.94m head=140.00° elev=22.36° path=48.46m clr=23.58m
+[tethys_0] t=31s dist=31.58m head=138.00° elev=20.88° path=50.61m clr=23.58m
+[tethys_0] t=32s dist=33.20m head=136.00° elev=19.50° path=52.74m clr=23.58m
+[tethys_0] t=33s dist=34.80m head=134.00° elev=18.19° path=54.88m clr=23.58m
+[tethys_0] t=34s dist=36.35m head=134.00° elev=16.94° path=57.00m clr=23.58m
+[tethys_0] t=35s dist=37.92m head=132.00° elev=15.70° path=59.17m clr=23.58m
+[tethys_0] t=36s dist=39.43m head=130.00° elev=14.53° path=61.30m clr=23.58m
+[tethys_0] t=37s dist=40.91m head=128.00° elev=13.37° path=63.45m clr=23.58m
+[tethys_0] t=38s dist=42.36m head=128.00° elev=12.21° path=65.60m clr=23.58m
+[tethys_0] t=39s dist=43.75m head=126.00° elev=11.08° path=67.73m clr=23.58m
+[tethys_0] t=40s dist=45.13m head=124.00° elev=9.95° path=69.89m clr=23.58m
+[tethys_0] t=41s dist=46.44m head=122.00° elev=7.89° path=72.02m clr=23.58m
+[tethys_0] t=42s dist=47.72m head=122.00° elev=5.96° path=74.16m clr=23.58m
+[tethys_0] t=43s dist=48.98m head=120.00° elev=4.61° path=76.34m clr=23.58m
+[tethys_0] t=44s dist=50.17m head=118.00° elev=3.45° path=78.47m clr=23.58m
+[tethys_0] t=45s dist=51.33m head=116.00° elev=2.25° path=80.62m clr=23.58m
+[tethys_0] t=46s dist=52.42m head=114.00° elev=1.20° path=82.76m clr=23.58m
+[tethys_0] t=47s dist=53.48m head=114.00° elev=0.25° path=84.91m clr=23.58m
+[tethys_0] t=48s dist=54.48m head=112.00° elev=-1.20° path=87.08m clr=23.58m
+[tethys_0] t=49s dist=55.44m head=110.00° elev=-2.81° path=89.25m clr=23.58m
+[tethys_0] t=50s dist=56.33m head=108.00° elev=-3.70° path=91.40m clr=23.58m
+[tethys_0] t=51s dist=57.16m head=106.00° elev=-4.44° path=93.54m clr=23.58m
+[tethys_0] t=52s dist=57.94m head=106.00° elev=-5.35° path=95.70m clr=23.58m
+[tethys_0] t=53s dist=58.66m head=104.00° elev=-6.02° path=97.86m clr=23.58m
+[tethys_0] t=54s dist=59.32m head=102.00° elev=-6.50° path=100.00m clr=23.58m
+[tethys_0] t=55s dist=59.93m head=100.00° elev=-7.22° path=102.15m clr=23.58m
+[tethys_0] t=56s dist=60.47m head=98.00° elev=-7.90° path=104.31m clr=23.58m
+[tethys_0] t=57s dist=60.95m head=96.00° elev=-8.28° path=106.46m clr=23.58m
+[tethys_0] t=58s dist=61.38m head=96.00° elev=-8.75° path=108.62m clr=23.58m
+[tethys_0] t=59s dist=61.74m head=94.00° elev=-9.41° path=110.76m clr=23.58m
+[tethys_0] t=60s dist=62.04m head=92.00° elev=-9.80° path=112.93m clr=23.58m
+[tethys_0] t=61s dist=62.28m head=90.00° elev=-10.07° path=115.08m clr=23.58m
+[tethys_0] t=62s dist=62.46m head=88.00° elev=-10.59° path=117.23m clr=23.58m
+[tethys_0] t=63s dist=62.56m head=86.00° elev=-10.87° path=119.40m clr=23.58m
+[tethys_0] t=64s dist=62.60m head=84.00° elev=-10.71° path=121.53m clr=23.58m
+[tethys_0] t=65s dist=62.58m head=82.00° elev=-10.74° path=123.69m clr=23.58m
+[tethys_0] t=66s dist=62.48m head=80.00° elev=-10.91° path=125.84m clr=23.58m
+[tethys_0] t=67s dist=62.32m head=80.00° elev=-10.62° path=127.99m clr=23.58m
+[tethys_0] t=68s dist=62.10m head=78.00° elev=-10.24° path=130.16m clr=23.58m
+[tethys_0] t=69s dist=61.81m head=76.00° elev=-10.18° path=132.30m clr=23.58m
+[tethys_0] t=70s dist=61.45m head=74.00° elev=-9.89° path=134.47m clr=23.58m
+[tethys_0] t=71s dist=61.03m head=72.00° elev=-9.85° path=136.62m clr=23.58m
+[tethys_0] t=72s dist=60.56m head=72.00° elev=-10.09° path=138.75m clr=23.58m
+[tethys_0] t=73s dist=60.03m head=70.00° elev=-9.91° path=140.92m clr=23.58m
+[tethys_0] t=74s dist=59.44m head=68.00° elev=-9.80° path=143.08m clr=23.58m
+[tethys_0] t=75s dist=58.80m head=66.00° elev=-9.69° path=145.23m clr=23.58m
+[tethys_0] t=76s dist=58.10m head=64.00° elev=-10.05° path=147.39m clr=23.58m
+[tethys_0] t=77s dist=57.35m head=62.00° elev=-9.69° path=149.51m clr=23.58m
+[tethys_0] t=78s dist=56.53m head=62.00° elev=-9.41° path=151.69m clr=23.58m
+[tethys_0] t=79s dist=55.67m head=60.00° elev=-9.65° path=153.84m clr=23.58m
+[tethys_0] t=80s dist=54.76m head=58.00° elev=-10.00° path=155.97m clr=23.58m
+[tethys_0] t=81s dist=53.79m head=56.00° elev=-9.49° path=158.15m clr=23.58m
+[tethys_0] t=82s dist=52.77m head=56.00° elev=-9.42° path=160.29m clr=23.58m
+[tethys_0] t=83s dist=51.70m head=54.00° elev=-9.89° path=162.46m clr=23.58m
+[tethys_0] t=84s dist=50.59m head=52.00° elev=-9.72° path=164.59m clr=23.58m
+[tethys_0] t=85s dist=49.43m head=50.00° elev=-9.46° path=166.75m clr=23.58m
+[tethys_0] t=86s dist=48.21m head=50.00° elev=-9.82° path=168.92m clr=23.58m
+[tethys_0] t=87s dist=46.97m head=48.00° elev=-9.73° path=171.06m clr=23.58m
+[tethys_0] t=88s dist=45.67m head=46.00° elev=-9.62° path=173.22m clr=23.58m
+[tethys_0] t=89s dist=44.32m head=44.00° elev=-9.89° path=175.40m clr=23.58m
+[tethys_0] t=90s dist=42.97m head=44.00° elev=-9.79° path=177.52m clr=23.58m
+[tethys_0] t=91s dist=41.54m head=42.00° elev=-10.05° path=179.68m clr=23.58m
+[tethys_0] t=92s dist=40.08m head=40.00° elev=-9.79° path=181.85m clr=23.58m
+[tethys_0] t=93s dist=38.59m head=40.00° elev=-9.93° path=184.00m clr=23.58m
+[tethys_0] t=94s dist=37.07m head=38.00° elev=-10.05° path=186.16m clr=23.58m
+[tethys_0] t=95s dist=35.53m head=36.00° elev=-10.02° path=188.29m clr=23.58m
+[tethys_0] t=96s dist=33.94m head=36.00° elev=-9.95° path=190.45m clr=23.58m
+[tethys_0] t=97s dist=32.34m head=34.00° elev=-9.99° path=192.61m clr=23.58m
+[tethys_0] t=98s dist=30.69m head=34.00° elev=-10.09° path=194.77m clr=23.58m
+[tethys_0] t=99s dist=29.06m head=32.00° elev=-10.22° path=196.89m clr=23.58m
+[tethys_0] t=100s dist=27.38m head=32.00° elev=-10.01° path=199.04m clr=23.58m
+[tethys_0] t=101s dist=25.69m head=30.00° elev=-10.34° path=201.19m clr=23.58m
+[tethys_0] t=102s dist=23.99m head=30.00° elev=-9.94° path=203.33m clr=23.58m
+[tethys_0] t=103s dist=22.24m head=30.00° elev=-10.49° path=205.51m clr=23.58m
+[tethys_0] t=104s dist=20.54m head=30.00° elev=-10.73° path=207.64m clr=23.58m
+[tethys_0] t=105s dist=18.82m head=30.00° elev=-10.82° path=209.78m clr=23.58m
+[tethys_0] t=106s dist=17.09m head=30.00° elev=-11.02° path=211.95m clr=23.58m
+[tethys_0] t=107s dist=15.40m head=30.00° elev=-11.94° path=214.10m clr=23.58m
+[tethys_0] t=108s dist=13.73m head=32.00° elev=-12.98° path=216.25m clr=23.58m
+[tethys_0] t=109s dist=12.13m head=36.00° elev=-13.81° path=218.41m clr=23.58m
+[tethys_0] t=110s dist=10.61m head=40.00° elev=-15.36° path=220.55m clr=23.58m
+[tethys_0] t=111s dist=9.24m head=46.00° elev=-17.69° path=222.71m clr=23.58m
+[tethys_0] t=112s dist=8.10m head=54.00° elev=-19.53° path=224.83m clr=23.58m
+[tethys_0] t=113s dist=7.28m head=66.00° elev=-21.07° path=226.99m clr=23.58m
+[tethys_0] t=114s dist=6.92m head=80.00° elev=-22.56° path=229.11m clr=23.58m
+[tethys_0] t=115s dist=7.07m head=96.00° elev=-21.90° path=231.22m clr=23.58m
+[tethys_0] t=116s dist=7.70m head=108.00° elev=-19.16° path=233.31m clr=23.58m
+[tethys_0] t=117s dist=8.69m head=118.00° elev=-16.93° path=235.41m clr=23.58m
+[tethys_0] t=118s dist=9.94m head=126.00° elev=-15.18° path=237.49m clr=23.58m
+[tethys_0] t=119s dist=11.36m head=130.00° elev=-12.77° path=239.61m clr=23.58m
+[tethys_0] t=120s dist=12.89m head=134.00° elev=-10.80° path=241.72m clr=23.58m
+[tethys_0] t=121s dist=14.50m head=136.00° elev=-9.84° path=243.84m clr=23.58m
+[tethys_0] t=122s dist=16.14m head=138.00° elev=-7.31° path=245.95m clr=23.58m
+[tethys_0] t=123s dist=17.83m head=138.00° elev=-4.69° path=248.08m clr=23.58m
+[tethys_0] t=124s dist=19.55m head=138.00° elev=-3.52° path=250.23m clr=23.58m
+[tethys_0] t=125s dist=21.26m head=138.00° elev=-2.88° path=252.36m clr=23.58m
+[tethys_0] t=126s dist=22.98m head=138.00° elev=-1.55° path=254.51m clr=23.58m
+[tethys_0] t=127s dist=24.67m head=138.00° elev=-0.54° path=256.63m clr=23.58m
+[tethys_0] t=128s dist=26.38m head=136.00° elev=-0.31° path=258.79m clr=23.58m
+[tethys_0] t=129s dist=28.07m head=136.00° elev=0.73° path=260.95m clr=23.58m
+[tethys_0] t=130s dist=29.73m head=136.00° elev=3.29° path=263.09m clr=23.58m
+[tethys_0] t=131s dist=31.35m head=134.00° elev=4.19° path=265.22m clr=23.58m
+[tethys_0] t=132s dist=32.99m head=132.00° elev=4.46° path=267.40m clr=23.58m
+[tethys_0] t=133s dist=34.56m head=132.00° elev=5.53° path=269.53m clr=23.58m
+[tethys_0] t=134s dist=36.11m head=130.00° elev=6.17° path=271.67m clr=23.58m
+[tethys_0] t=135s dist=37.63m head=130.00° elev=5.96° path=273.82m clr=23.58m
+[tethys_0] t=136s dist=39.12m head=128.00° elev=6.54° path=275.98m clr=23.58m
+[tethys_0] t=137s dist=40.59m head=126.00° elev=7.53° path=278.15m clr=23.58m
+[tethys_0] t=138s dist=41.99m head=126.00° elev=7.41° path=280.29m clr=23.58m
+[tethys_0] t=139s dist=43.38m head=124.00° elev=7.39° path=282.46m clr=23.58m
+[tethys_0] t=140s dist=44.70m head=122.00° elev=8.38° path=284.59m clr=23.58m
+[tethys_0] t=141s dist=45.99m head=122.00° elev=8.69° path=286.75m clr=23.58m
+[tethys_0] t=142s dist=47.24m head=120.00° elev=8.25° path=288.90m clr=23.58m
+[tethys_0] t=143s dist=48.46m head=118.00° elev=8.87° path=291.08m clr=23.58m
+[tethys_0] t=144s dist=49.61m head=116.00° elev=9.64° path=293.22m clr=23.58m
+[tethys_0] t=145s dist=50.73m head=116.00° elev=9.19° path=295.39m clr=23.58m
+[tethys_0] t=146s dist=51.78m head=114.00° elev=9.19° path=297.54m clr=23.58m
+[tethys_0] t=147s dist=52.79m head=112.00° elev=10.16° path=299.69m clr=23.58m
+[tethys_0] t=148s dist=53.75m head=110.00° elev=10.79° path=301.84m clr=23.58m
+[tethys_0] t=149s dist=54.65m head=108.00° elev=10.67° path=304.01m clr=23.58m
+[tethys_0] t=150s dist=55.49m head=106.00° elev=11.42° path=306.15m clr=23.58m
+[NAV] Episode ended: TIMEOUT;t=150200;dist=55.7278;path=306.597;clr=23.5801;head=106

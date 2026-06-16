@@ -88,21 +88,30 @@
         name="tethys::NavigationPlugin">
         <world_name>empty_environment</world_name>
         <namespace>tethys___DRONE_ID__</namespace>
-        <remove_on_collision>__REMOVE_ON_COLLISION__</remove_on_collision>
+
+        <!-- GOAL -->
         <goal_x>__GOAL_X__</goal_x>
         <goal_y>__GOAL_Y__</goal_y>
         <goal_z>__GOAL_Z__</goal_z>
-        <threshold>__THRESHOLD__</threshold>
-        <s_max>__S_MAX__</s_max>
-        <smooth_l>__SMOOTH_L__</smooth_l>
+
+        <!-- CONTROLLO -->
         <gain_steer>__GAIN_STEER__</gain_steer>
         <gain_pitch>__GAIN_PITCH__</gain_pitch>
-        <radius_arrived>5.0</radius_arrived>
-        <radius_slowdown>__RADIUS_SLOWDOWN__</radius_slowdown>
-        <max_iterations>150000</max_iterations>
-        <robot_radius>0.2</robot_radius>
-        <safety_margin>0.3</safety_margin>
-        <max_fin_angle>0.13</max_fin_angle>
+        <max_fin_angle>__MAX_FIN_ANGLE__</max_fin_angle>
+        <radius_arrived>__RADIUS_ARRIVED__</radius_arrived>
+        <max_iterations>__MAX_ITERATIONS__</max_iterations>
+
+        <!-- LIDAR -->
+        <r_max>__R_MAX__</r_max>
+        <r_min>__R_MIN__</r_min>
+        <r_active>__R_ACTIVE__</r_active>
+
+        <!-- VFH -->
+        <valley_threshold>__VALLEY_THRESHOLD__</valley_threshold>
+        <smooth_l>__SMOOTH_L__</smooth_l>
+        <safety_window>__SAFETY_WINDOW__</safety_window>
+        <grid_decay>__GRID_DECAY__</grid_decay>
+        <magnitude_a>__MAGNITUDE_A__</magnitude_a>
       </plugin>
 
       <experimental:params>

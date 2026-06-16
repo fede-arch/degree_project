@@ -1,0 +1,45 @@
+fixuid: fixuid should only ever be used on development systems. DO NOT USE IN PRODUCTION
+fixuid: runtime UID '1000' already matches container user 'developer' UID
+fixuid: runtime GID '1000' already matches container group 'developer' GID
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/time.proto
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/header.proto
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/vector3d.proto
+[libprotobuf ERROR google/protobuf/descriptor_database.cc:120] File already exists in database: gz/msgs/stringmsg.proto
+[NAV] goal=(17.75, -29.41, -64.93)
+[NAV] threshold=0.001 sMax=20 smoothL=5 gainSteer=0.5 gainPitch=0.5 radiusArrived=5 radiusSlowdown=15 maxFinAngle=0.13 maxIterations=150000
+[1;31m[Err] [Buoyancy.cc:370] [0m[1;31mUnsupported collision geometry[[0m[1;31m6[0m[1;31m][0m
+[1;31m[Err] [Buoyancy.cc:370] [0m[1;31mUnsupported collision geometry[[0m[1;31m6[0m[1;31m][0m
+amdgpu: os_same_file_description couldn't determine if two DRM fds reference the same file description.
+If they do, bad things may happen!
+amdgpu: os_same_file_description couldn't determine if two DRM fds reference the same file description.
+If they do, bad things may happen!
+[NAV] RAW JSON: {"s_max": 36, "smooth_l": 3, "gain_steer": 1.918199406418284, "gain_pitch": 0.21666942045521206, "radius_slowdown": 8.150378063838868, "elev_cost": 1.7459942314126156, "threshold": 0.001}
+[NAV] Params: thr=0.001 sMax=36 smoothL=3 gSteer=1.9182 gPitch=0.216669 rSlow=8.15038 maxFin=0.13
+[NAV] Episode reset
+[1;36mDbg[0m ODE Heightfield AABB: min = {-499.512, -499.512, -98.6872} max = {499.512, 499.512, 1.10914e-13}
+[tethys_0] t=1s dist=54.46m head=102.00° elev=18.01° path=0.08m clr=999.00m
+[tethys_0] t=2s dist=54.52m head=102.00° elev=18.01° path=0.36m clr=999.00m
+[tethys_0] t=3s dist=54.61m head=102.00° elev=18.04° path=0.83m clr=999.00m
+[tethys_0] t=4s dist=54.75m head=100.00° elev=18.12° path=1.49m clr=999.00m
+[tethys_0] t=5s dist=54.92m head=98.00° elev=18.18° path=2.34m clr=999.00m
+[tethys_0] t=6s dist=55.10m head=96.00° elev=18.17° path=3.34m clr=999.00m
+[tethys_0] t=7s dist=55.30m head=96.00° elev=18.07° path=4.50m clr=999.00m
+[tethys_0] t=8s dist=55.49m head=94.00° elev=17.90° path=5.79m clr=999.00m
+[tethys_0] t=9s dist=55.68m head=92.00° elev=17.68° path=7.19m clr=29.53m
+[tethys_0] t=10s dist=55.84m head=90.00° elev=17.40° path=8.71m clr=28.13m
+[tethys_0] t=11s dist=55.99m head=90.00° elev=17.07° path=10.34m clr=26.59m
+[tethys_0] t=12s dist=56.10m head=88.00° elev=16.71° path=12.03m clr=24.99m
+[tethys_0] t=13s dist=56.18m head=86.00° elev=16.29° path=13.79m clr=23.30m
+[tethys_0] t=14s dist=56.21m head=84.00° elev=15.83° path=15.63m clr=21.56m
+[tethys_0] t=15s dist=56.21m head=84.00° elev=15.33° path=17.52m clr=19.71m
+[tethys_0] t=16s dist=56.16m head=82.00° elev=14.79° path=19.44m clr=17.83m
+[tethys_0] t=17s dist=56.06m head=80.00° elev=14.20° path=21.39m clr=15.91m
+[tethys_0] t=18s dist=55.91m head=80.00° elev=13.58° path=23.39m clr=13.93m
+[tethys_0] t=19s dist=55.72m head=78.00° elev=12.94° path=25.39m clr=11.95m
+[tethys_0] t=20s dist=55.47m head=76.00° elev=12.23° path=27.45m clr=9.97m
+[tethys_0] t=21s dist=55.17m head=76.00° elev=11.52° path=29.48m clr=7.95m
+[tethys_0] t=22s dist=54.82m head=74.00° elev=10.76° path=31.56m clr=5.96m
+[tethys_0] t=23s dist=54.41m head=72.00° elev=9.98° path=33.63m clr=3.97m
+[tethys_0] t=24s dist=53.95m head=72.00° elev=9.66° path=35.76m clr=2.50m
+[NAV] COLLISION detected!
+[NAV] Episode ended: COLLISION;t=24700;dist=53.5886;path=37.2284;clr=2.5;head=70

@@ -294,7 +294,7 @@
           </scan>
           <range>
             <min>2.5</min>
-            <max>100.0</max>
+            <max>__R_MAX__</max>
             <resolution>0.01</resolution>
           </range>
           <noise>

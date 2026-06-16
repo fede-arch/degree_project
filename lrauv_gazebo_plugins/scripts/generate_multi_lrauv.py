@@ -14,6 +14,17 @@ ROCK_MODELS = [
     "falling rock 2",
 ]
 
+def on_path(x, y, spawn_x, spawn_y, goal_x, goal_y, margin=25.0):
+    """True se (x,y) è entro margin metri dal segmento spawn->goal."""
+    dx, dy = goal_x - spawn_x, goal_y - spawn_y
+    length = np.sqrt(dx*dx + dy*dy)
+    if length < 1e-6:
+        return False
+    t = np.clip(((x - spawn_x)*dx + (y - spawn_y)*dy) / (length*length), 0.0, 1.0)
+    px = spawn_x + t*dx
+    py = spawn_y + t*dy
+    return np.sqrt((x-px)**2 + (y-py)**2) < margin
+
 def too_close_to_rocks(x, y, positions):
     for px, py in positions:
         if np.sqrt((x-px)**2 + (y-py)**2) < MIN_ROCK_DIST:
@@ -72,6 +83,8 @@ def generate_multi_lrauv(project_dir, seed=None, n_drones=3):
     placed           = 0
     attempts         = 0
     placed_positions = []
+    on_path_count = 0
+    MIN_ON_PATH = 5 
 
     while placed < N_ROCKS and attempts < 1000:
         attempts += 1
@@ -81,9 +94,16 @@ def generate_multi_lrauv(project_dir, seed=None, n_drones=3):
             continue
         if too_close_to_rocks(x, y, placed_positions):
             continue
-        model    = random.choice(ROCK_MODELS)
-        yaw      = random.uniform(0, 3.14)
+        
+        is_on = on_path(x, y, spawn_x, spawn_y, goal_x, goal_y)
+
+        if on_path_count < MIN_ON_PATH and not is_on:
+          continue
+
+        model = random.choice(ROCK_MODELS)
+        yaw = random.uniform(0, 3.14)
         z_offset = random.uniform(0, 25)
+
         rocks_sdf += f"""
   <include>
     <name>rock_{placed}</name>
@@ -93,6 +113,8 @@ def generate_multi_lrauv(project_dir, seed=None, n_drones=3):
   </include>
 """
         placed_positions.append((x, y))
+        if is_on:
+            on_path_count += 1
         placed += 1
 
     # ── SDF droni e target ────────────────────────────────────────────────────
