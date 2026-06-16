@@ -1,32 +1,30 @@
-# vscode related...
-.vscode/
-
-# VIM related stuff...
-
-# Swap
-[._]*.s[a-v][a-z]
-!*.svg  # comment out if you don't need vector files
-[._]*.sw[a-p]
-[._]s[a-rt-v][a-z]
-[._]ss[a-gi-z]
-[._]sw[a-p]
-*.kate-swp
-
-# Session
-Session.vim
-Sessionx.vim
-
-# Temporary
-.netrwhist
-*~
-# Auto-generated tag files
-tags
-# Persistent undo
-[._]*.un~
+# Build artifacts
 build/
-*.deb
-lrauv_description/models/tethys/model.sdf
-build/
-*.deb
-lrauv_description/models/tethys/model.sdf
 docker_build/
+*.so
+*.deb
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+Makefile
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Results & logs
+es/results/
+multi/gazebo.log
+multi/results/
+*.log
+*.log.*
+
+# Generated model files
+lrauv_description/models/tethys/model.sdf
+
+# Editor stuff
+.vscode/
+.idea/
