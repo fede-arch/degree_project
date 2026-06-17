@@ -3,13 +3,14 @@ import random
 import numpy as np
 import os
 
-ROCK_Z_BASE    = -83.0
+ROCK_Z_BASE    = -88.0
 EXCLUSION_RADIUS = 60.0
-N_ROCKS        = 30
+N_ROCKS        = 10
 ROCK_MODEL     = "falling rock 1"
+MIN_ROCK_DIST = 20.0
 
 
-def on_path(x, y, spawn_x, spawn_y, goal_x, goal_y, margin=25.0):
+def on_path(x, y, spawn_x, spawn_y, goal_x, goal_y, margin=35.0):
     """True se (x,y) è entro margin metri dal segmento spawn->goal."""
     dx, dy = goal_x - spawn_x, goal_y - spawn_y
     length = np.sqrt(dx*dx + dy*dy)
@@ -31,19 +32,18 @@ def generate_world(project_dir, seed=None, face_goal=False):
     if seed is not None:
         random.seed(seed)
         np.random.seed(seed)
-        print(f"[GEN] Seed: {seed}")
 
     # --- Spawn e goal ---
     spawn_x = random.uniform(-50, 220)
     spawn_y = random.uniform(-100, 100)
-    drone_z = -60.0
+    drone_z = -70.0
 
     for _ in range(100):
         goal_x = random.uniform(-50, 220)
         goal_y = random.uniform(-100, 100)
         if np.sqrt((goal_x - spawn_x)**2 + (goal_y - spawn_y)**2) > 120.0:
             break
-    goal_z = drone_z + random.uniform(-10, 7)
+    goal_z = drone_z + random.uniform(-5, 5)
 
     dx = goal_x - spawn_x
     dy = goal_y - spawn_y
@@ -59,20 +59,24 @@ def generate_world(project_dir, seed=None, face_goal=False):
         (spawn_x, spawn_y, EXCLUSION_RADIUS),
         (goal_x,  goal_y,  EXCLUSION_RADIUS),
     ]
+    placed_rocks = []
 
     def too_close(x, y):
-        return any(
-            np.sqrt((x-px)**2 + (y-py)**2) < r
-            for px, py, r in keypoints
-        )
+      # Troppo vicino a spawn o goal
+      if any(np.sqrt((x-px)**2 + (y-py)**2) < r for px, py, r in keypoints):
+          return True
+      # Troppo vicino ad altre rocce
+      if any(np.sqrt((x-rx)**2 + (y-ry)**2) < MIN_ROCK_DIST for rx, ry in placed_rocks):
+          return True
+      return False
 
     rocks_sdf = ""
     placed = 0
     attempts = 0
     on_path_count = 0
-    MIN_ON_PATH = 4
+    MIN_ON_PATH = 2
 
-    while placed < N_ROCKS and attempts < 1000:
+    while placed < N_ROCKS and attempts < 3000:
         attempts += 1
         x = random.uniform(-80, 250)
         y = random.uniform(-130, 130)
@@ -94,6 +98,7 @@ def generate_world(project_dir, seed=None, face_goal=False):
 """
         if is_on:
             on_path_count += 1
+        placed_rocks.append((x, y))    
         placed += 1
 
     # --- World SDF ---
@@ -203,9 +208,6 @@ def generate_world(project_dir, seed=None, face_goal=False):
         project_dir, "lrauv_gazebo_plugins/worlds/navigation_world.sdf")
     with open(world_path, "w") as f:
         f.write(world_content)
-
-    print(f"[GEN] World: {placed} rocce | "
-          f"spawn=({spawn_x:.1f},{spawn_y:.1f},{drone_z:.1f}) yaw={spawn_yaw:.2f} | "
-          f"goal=({goal_x:.1f},{goal_y:.1f},{goal_z:.1f})")
+    print(f"[GEN] Seed: {seed} | {placed} rocce")    
 
     return goal_x, goal_y, goal_z

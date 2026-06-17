@@ -86,22 +86,32 @@
 
       <plugin filename="NavigationPlugin"
         name="tethys::NavigationPlugin">
+        <world_name>empty_environment</world_name>
         <namespace>tethys_0</namespace>
-        <remove_on_collision>true</remove_on_collision>
-        <goal_x>130.46</goal_x>
-        <goal_y>96.36</goal_y>
-        <goal_z>-74.56</goal_z>
-        <threshold>0.001</threshold>
-        <s_max>20</s_max>
+
+        <!-- GOAL -->
+        <goal_x>-123.50</goal_x>
+        <goal_y>6.54</goal_y>
+        <goal_z>-55.15</goal_z>
+
+        <!-- CONTROLLO -->
+        <gain_steer>0.8</gain_steer>
+        <gain_pitch>0.8</gain_pitch>
+        <max_fin_angle>0.15</max_fin_angle>
+        <radius_arrived>4.0</radius_arrived>
+        <max_iterations>200000</max_iterations>
+
+        <!-- LIDAR -->
+        <r_max>100.0</r_max>
+        <r_min>2.5</r_min>
+        <r_active>75.0</r_active>
+
+        <!-- VFH -->
+        <valley_threshold>34.4</valley_threshold>
         <smooth_l>5</smooth_l>
-        <gain_steer>0.5</gain_steer>
-        <gain_pitch>0.5</gain_pitch>
-        <radius_arrived>5.0</radius_arrived>
-        <radius_slowdown>15.0</radius_slowdown>
-        <max_iterations>150000</max_iterations>
-        <robot_radius>0.2</robot_radius>
-        <safety_margin>0.3</safety_margin>
-        <max_fin_angle>0.13</max_fin_angle>
+        <safety_window>2</safety_window>
+        <grid_decay>0.982</grid_decay>
+        <magnitude_a>10.88</magnitude_a>
       </plugin>
 
       <experimental:params>

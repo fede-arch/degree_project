@@ -2,14 +2,16 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SEED="${1:-$RANDOM}"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+N_DRONES="${1:-3}"
+SEED="${2:-$RANDOM}"
 
 # ─── Parametri plugin (unica fonte di verità) ────────────────────
 GAIN_STEER="0.8"
 GAIN_PITCH="0.8"
 MAX_FIN_ANGLE="0.15"
-RADIUS_ARRIVED="10.0"
+RADIUS_ARRIVED="4.0"
 MAX_ITERATIONS="200000"
 R_MAX="100.0"
 VALLEY_THRESHOLD="34.4"
@@ -19,9 +21,13 @@ SMOOTH_L="5"
 SAFETY_WINDOW="2"
 FACE_GOAL="False"
 
-echo " Gazebo GUI run  |  seed=$SEED"
+R_ACTIVE=$(echo "$R_MAX * 0.75" | bc)
+
+echo "============================================================"
+echo " Gazebo GUI run  |  seed=$SEED  |  droni=$N_DRONES"
 echo "============================================================"
 echo "   r_max          = $R_MAX m"
+echo "   r_active       = $R_ACTIVE m (75% automatico)"
 echo "   valley_thr     = $VALLEY_THRESHOLD"
 echo "   smooth_l       = $SMOOTH_L"
 echo "   grid_decay     = $GRID_DECAY"
@@ -34,57 +40,72 @@ echo "   radius_arrived = $RADIUS_ARRIVED m"
 echo "   max_iterations = $MAX_ITERATIONS"
 echo ""
 
-# ─── 1. Genera il world e scrivi model.sdf ───────────────────────
-echo "[RUN] Generazione world..."
+# ─── 1. Genera il world e scrivi i model.sdf ─────────────────────
+echo "[RUN] Generazione world con $N_DRONES droni..."
 python3 - <<EOF
-import sys
+import sys, json
 sys.path.insert(0, '$PROJECT_DIR/lrauv_gazebo_plugins/scripts')
-from generate_world import generate_world
+from generate_world_multi import generate_world_multi
 
-gx, gy, gz = generate_world('$PROJECT_DIR', seed=$SEED, face_goal=$FACE_GOAL)
+n_drones = $N_DRONES
 
-tmpl = '$PROJECT_DIR/lrauv_description/models/tethys_equipped/model.sdf.template'
-dest = '$PROJECT_DIR/lrauv_description/models/tethys_equipped/model.sdf'
+# Genera world con n_drones coppie spawn/goal
+spawns, goals = generate_world_multi(
+    '$PROJECT_DIR', seed=$SEED, face_goal=$FACE_GOAL, n_drones=n_drones)
+
+tmpl      = '$PROJECT_DIR/lrauv_description/models/tethys_equipped/model.sdf.template'
 lidar_tmpl = '$PROJECT_DIR/lrauv_description/models/tethys/model.sdf.template'
 lidar_dest = '$PROJECT_DIR/lrauv_description/models/tethys/model.sdf'
 
 r_max    = float('$R_MAX')
 r_active = r_max * 0.75
 
+# Aggiorna lidar SDF (uguale per tutti i droni)
 with open(lidar_tmpl) as f:
     lidar_content = f.read()
-
 lidar_content = lidar_content.replace('__R_MAX__', str(r_max))
-
 with open(lidar_dest, 'w') as f:
     f.write(lidar_content)
 
-with open(tmpl) as f:
-    content = f.read()
+# Genera un model.sdf per ogni drone
+for i in range(n_drones):
+    gx, gy, gz = goals[i]
+    dest = f'$PROJECT_DIR/lrauv_description/models/tethys_equipped_{i}/model.sdf'
 
-content = content.replace('__DRONE_ID__',            '0')
-content = content.replace('__GOAL_X__',              f'{gx:.2f}')
-content = content.replace('__GOAL_Y__',              f'{gy:.2f}')
-content = content.replace('__GOAL_Z__',              f'{gz:.2f}')
-content = content.replace('__GAIN_STEER__',          '$GAIN_STEER')
-content = content.replace('__GAIN_PITCH__',          '$GAIN_PITCH')
-content = content.replace('__SMOOTH_L__',            '$SMOOTH_L')
-content = content.replace('__MAX_FIN_ANGLE__',       '$MAX_FIN_ANGLE')
-content = content.replace('__RADIUS_ARRIVED__',      '$RADIUS_ARRIVED')
-content = content.replace('__MAX_ITERATIONS__',      '$MAX_ITERATIONS')
-content = content.replace('__R_MAX__',                  str(r_max))
-content = content.replace('__R_MIN__',                       '2.5')
-content = content.replace('__R_ACTIVE__',               str(r_active))
-content = content.replace('__VALLEY_THRESHOLD__',    '$VALLEY_THRESHOLD')
-content = content.replace('__GRID_DECAY__',          '$GRID_DECAY')
-content = content.replace('__MAGNITUDE_A__',         '$MAGNITUDE_A')
-content = content.replace('__SAFETY_WINDOW__',       '$SAFETY_WINDOW')
+    import os, shutil
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
 
+    # Copia model.config
+    src_config = '$PROJECT_DIR/lrauv_description/models/tethys_equipped/model.config'
+    dst_config = f'$PROJECT_DIR/lrauv_description/models/tethys_equipped_{i}/model.config'
+    shutil.copy(src_config, dst_config)
 
-with open(dest, 'w') as f:
-    f.write(content)
+    with open(tmpl) as f:
+        content = f.read()
 
-print(f'[RUN] Goal: ({gx:.1f}, {gy:.1f}, {gz:.1f})')
+    content = content.replace('__DRONE_ID__',         str(i))
+    content = content.replace('__GOAL_X__',           f'{gx:.2f}')
+    content = content.replace('__GOAL_Y__',           f'{gy:.2f}')
+    content = content.replace('__GOAL_Z__',           f'{gz:.2f}')
+    content = content.replace('__GAIN_STEER__',       '$GAIN_STEER')
+    content = content.replace('__GAIN_PITCH__',       '$GAIN_PITCH')
+    content = content.replace('__SMOOTH_L__',         '$SMOOTH_L')
+    content = content.replace('__MAX_FIN_ANGLE__',    '$MAX_FIN_ANGLE')
+    content = content.replace('__RADIUS_ARRIVED__',   '$RADIUS_ARRIVED')
+    content = content.replace('__MAX_ITERATIONS__',   '$MAX_ITERATIONS')
+    content = content.replace('__R_MAX__',            str(r_max))
+    content = content.replace('__R_MIN__',            '2.5')
+    content = content.replace('__R_ACTIVE__',         str(r_active))
+    content = content.replace('__VALLEY_THRESHOLD__', '$VALLEY_THRESHOLD')
+    content = content.replace('__GRID_DECAY__',       '$GRID_DECAY')
+    content = content.replace('__MAGNITUDE_A__',      '$MAGNITUDE_A')
+    content = content.replace('__SAFETY_WINDOW__',    '$SAFETY_WINDOW')
+
+    with open(dest, 'w') as f:
+        f.write(content)
+
+    print(f'[RUN] Drone {i}: spawn=({spawns[i][0]:.1f},{spawns[i][1]:.1f},{spawns[i][2]:.1f}) goal=({gx:.1f},{gy:.1f},{gz:.1f})')
+
 EOF
 
 # ─── 2. Ricompila plugin se sorgenti modificati ──────────────────
@@ -141,6 +162,13 @@ echo "[RUN] Avvio Gazebo con GUI..."
 echo "[RUN] Chiudi la finestra di Gazebo per terminare."
 echo ""
 
+# Costruisci resource path con tutte le cartelle dei droni
+CONTAINER_BASE="/lrauv_ws/src/degree_project/lrauv_description/models"
+CONTAINER_RESOURCE_PATH="$CONTAINER_BASE"
+for (( i=0; i<N_DRONES; i++ )); do
+    CONTAINER_RESOURCE_PATH="$CONTAINER_BASE/tethys_equipped_${i}:$CONTAINER_RESOURCE_PATH"
+done
+
 docker run --rm \
   --name es_gui \
   --device /dev/dri/card1 \
@@ -152,7 +180,7 @@ docker run --rm \
   lrauv:harmonic \
   bash -c "
     source /setup.sh
-    export GZ_SIM_RESOURCE_PATH=/lrauv_ws/src/degree_project/lrauv_description/models
+    export GZ_SIM_RESOURCE_PATH=$CONTAINER_RESOURCE_PATH:\$GZ_SIM_RESOURCE_PATH
     export GZ_SIM_SYSTEM_PLUGIN_PATH=/lrauv_ws/src/degree_project/docker_build
-    gz sim -r /lrauv_ws/src/degree_project/lrauv_gazebo_plugins/worlds/navigation_world.sdf
+    gz sim -r /lrauv_ws/src/degree_project/lrauv_gazebo_plugins/worlds/navigation_world_multi.sdf
   "

@@ -1,0 +1,6 @@
+                 ES       DEFAULT
+Arrived rate:    93%      73%
+Collision:        3%      27%
+Timeout:          3%       0%
+Tempo medio:   109s       94s
+Path medio:    220m      190m

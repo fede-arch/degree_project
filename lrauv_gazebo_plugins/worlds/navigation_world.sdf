@@ -51,14 +51,14 @@
 
     <!-- Tethys -->
     <include>
-      <pose>205.56 -16.46 -60.00 0 0 -6.16</pose>
+      <pose>104.28 -14.22 -70.00 0 0 -1.15</pose>
       <uri>tethys_equipped</uri>
     </include>
 
     <!-- Target -->
     <model name="target_marker">
       <static>true</static>
-      <pose>91.95 -63.32 -53.97 0 0 0</pose>
+      <pose>17.50 90.56 -65.03 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -76,14 +76,70 @@
   <include>
     <name>rock_0</name>
     <uri>falling rock 1</uri>
-    <pose>161.44 -57.41 -65.46 0 0 2.10</pose>
+    <pose>73.04 63.36 -74.94 0 0 2.18</pose>
     <static>true</static>
   </include>
 
   <include>
     <name>rock_1</name>
     <uri>falling rock 1</uri>
-    <pose>155.74 -61.47 -67.98 0 0 2.64</pose>
+    <pose>59.75 42.66 -81.35 0 0 1.74</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_2</name>
+    <uri>falling rock 1</uri>
+    <pose>40.23 33.09 -82.76 0 0 1.97</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_3</name>
+    <uri>falling rock 1</uri>
+    <pose>121.23 97.48 -71.69 0 0 2.74</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_4</name>
+    <uri>falling rock 1</uri>
+    <pose>-56.84 -19.89 -86.62 0 0 0.28</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_5</name>
+    <uri>falling rock 1</uri>
+    <pose>4.05 -11.21 -72.28 0 0 2.38</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_6</name>
+    <uri>falling rock 1</uri>
+    <pose>147.58 57.16 -77.87 0 0 2.52</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_7</name>
+    <uri>falling rock 1</uri>
+    <pose>181.87 120.83 -69.98 0 0 3.12</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_8</name>
+    <uri>falling rock 1</uri>
+    <pose>-58.39 90.29 -87.59 0 0 2.63</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_9</name>
+    <uri>falling rock 1</uri>
+    <pose>28.13 -46.25 -72.74 0 0 2.32</pose>
     <static>true</static>
   </include>
 

@@ -7,6 +7,7 @@
 #include <sstream>
 #include <vector>
 #include <utility>
+#include <chrono>
 
 namespace tethys {
 
@@ -20,6 +21,7 @@ namespace tethys {
     public: gz::transport::Node::Publisher horizFinPub;
     public: gz::transport::Node::Publisher resultPub;
     public: std::mutex mtx;
+    public: std::string droneNs = "tethys_0";
 
     // POSE VEICOLO
     public: double posX = 0, posY = 0, posZ = 0;
@@ -34,6 +36,12 @@ namespace tethys {
     public: bool         resultPublished  = false;
     public: int64_t      episodeStartIter = -1;
     public: int64_t      maxIterations    = 300000;
+
+    // METRICHE EPISODIO
+    public: double simTimeSec   = 0.0;
+    public: double pathLength   = 0.0;
+    public: double prevX        = 0.0, prevY = 0.0, prevZ = 0.0;
+    public: bool   pathStarted  = false;
 
     // PARAMETRI CONTROLLO
     public: double gainSteer     = 0.5;
@@ -215,7 +223,6 @@ namespace tethys {
         }
     }
 
-
     // FASE 6 -> TROVA DIREZIONE MIGLIORE
     public: void findBestDirection() {
         compute_goal_sectors();
@@ -346,23 +353,47 @@ namespace tethys {
             default: return;
         }
 
+        double dx   = goalX - posX, dy = goalY - posY, dz = goalZ - posZ;
+        double dist = std::sqrt(dx*dx + dy*dy + dz*dz);
+
+        std::string payload = result
+            + ";t="    + std::to_string(simTimeSec)
+            + ";path=" + std::to_string(pathLength)
+            + ";dist=" + std::to_string(dist);
+
         gz::msgs::StringMsg msg;
-        msg.set_data(result);
+        msg.set_data(payload);
         resultPub.Publish(msg);
-        std::cout << "[NAV] Episode END: " << result << std::endl;
 
         gz::msgs::Double zero;
         zero.set_data(0.0);
         thrustPub.Publish(zero);
         vertFinPub.Publish(zero);
         horizFinPub.Publish(zero);
+
+        // Rimuovi il drone dal mondo
+        gz::msgs::Entity entityMsg;
+        entityMsg.set_name(droneNs);
+        entityMsg.set_type(gz::msgs::Entity::MODEL);
+        gz::msgs::Boolean rep1;
+        bool res1;
+        node.Request("/world/empty_environment/remove", entityMsg, 2000, rep1, res1);
+
+        // Rimuovi il target marker
+        std::string droneId = droneNs.substr(droneNs.find_last_of('_') + 1);
+        gz::msgs::Entity targetMsg;
+        targetMsg.set_name("target_marker_" + droneId);
+        targetMsg.set_type(gz::msgs::Entity::MODEL);
+        gz::msgs::Boolean rep2;
+        bool res2;
+        node.Request("/world/empty_environment/remove", targetMsg, 2000, rep2, res2);
     }
 
     // CALLBACK POSE
     public: void OnPose(const gz::msgs::Pose_V &_msg) {
         std::lock_guard<std::mutex> lock(this->mtx);
         for (int i = 0; i < _msg.pose_size(); i++) {
-            if (_msg.pose(i).name() != "tethys_0") continue;
+            if (_msg.pose(i).name() != droneNs) continue;
             auto &pos = _msg.pose(i).position();
             auto &ori = _msg.pose(i).orientation();
             posX = pos.x(); posY = pos.y(); posZ = pos.z();
@@ -370,6 +401,16 @@ namespace tethys {
             yaw   = std::atan2(2*(ow*oz + ox*oy), 1 - 2*(oy*oy + oz*oz));
             pitch = std::asin(std::clamp(2*(ow*oy - oz*ox), -1.0, 1.0));
             roll  = std::atan2(2*(ow*ox + oy*oz), 1 - 2*(ox*ox + oy*oy));
+
+            // Accumula path
+            if (episodeState == EpisodeState::RUNNING) {
+                if (pathStarted)
+                    pathLength += std::sqrt((posX-prevX)*(posX-prevX) +
+                                            (posY-prevY)*(posY-prevY) +
+                                            (posZ-prevZ)*(posZ-prevZ));
+                prevX = posX; prevY = posY; prevZ = posZ;
+                pathStarted = true;
+            }
         }
     }
 
@@ -394,21 +435,27 @@ namespace tethys {
                                    gz::sim::EntityComponentManager &,
                                    gz::sim::EventManager &) {
       auto* d = this->dataPtr.get();
+      d->droneNs = _sdf->Get<std::string>("namespace", "tethys_0").first;
 
-      // SUBSCRIPTIONS
-      d->node.Subscribe("/tethys_0/lidar/points",
-          &NavigationPrivateData::OnPointCloud, d);
-      d->node.Subscribe("/world/empty_environment/dynamic_pose/info",
-          &NavigationPrivateData::OnPose, d);
-      d->node.Subscribe(
-          "/world/empty_environment/model/tethys_0/link/base_link/sensor/contact_sensor/contact",
-          &NavigationPrivateData::OnContact, d);
+        // SUBSCRIPTIONS
+        d->node.Subscribe("/" + d->droneNs + "/lidar/points",
+            &NavigationPrivateData::OnPointCloud, d);
+        d->node.Subscribe("/world/empty_environment/dynamic_pose/info",
+            &NavigationPrivateData::OnPose, d);
+        d->node.Subscribe(
+            "/world/empty_environment/model/" + d->droneNs + 
+            "/link/base_link/sensor/contact_sensor/contact",
+            &NavigationPrivateData::OnContact, d);
 
-      // PUBLISHERS
-      d->thrustPub   = d->node.Advertise<gz::msgs::Double>("/model/tethys_0/joint/propeller_joint/cmd_thrust");
-      d->vertFinPub  = d->node.Advertise<gz::msgs::Double>("/model/tethys_0/joint/vertical_fins_joint/0/cmd_pos");
-      d->horizFinPub = d->node.Advertise<gz::msgs::Double>("/model/tethys_0/joint/horizontal_fins_joint/0/cmd_pos");
-      d->resultPub   = d->node.Advertise<gz::msgs::StringMsg>("/es/episode_result");
+        // PUBLISHERS
+        d->thrustPub   = d->node.Advertise<gz::msgs::Double>(
+            "/model/" + d->droneNs + "/joint/propeller_joint/cmd_thrust");
+        d->vertFinPub  = d->node.Advertise<gz::msgs::Double>(
+            "/model/" + d->droneNs + "/joint/vertical_fins_joint/0/cmd_pos");
+        d->horizFinPub = d->node.Advertise<gz::msgs::Double>(
+            "/model/" + d->droneNs + "/joint/horizontal_fins_joint/0/cmd_pos");
+        d->resultPub   = d->node.Advertise<gz::msgs::StringMsg>(
+            "/" + d->droneNs + "/es/episode_result");
 
       // PARAMETRI DA SDF
       d->goalX         = _sdf->Get<double>("goal_x",          0.0).first;
@@ -439,11 +486,6 @@ namespace tethys {
       // Alloca array dinamicamente
       d->grid_c.assign(d->n_r        * d->n_phi * d->n_theta, 0.0f);
       d->c_star.assign(d->n_r_active * d->n_phi * d->n_theta, 0.0f);
-
-      std::cout << "[CONFIGURE] goal=(" << d->goalX << "," << d->goalY << "," << d->goalZ << ")"
-                << " r_max=" << d->r_max << " n_r=" << d->n_r
-                << " r_active=" << d->r_active << " n_r_active=" << d->n_r_active
-                << " threshold=" << d->VALLEY_THRESHOLD << std::endl;
   }
 
   void NavigationPlugin::PreUpdate(const gz::sim::UpdateInfo &_info,
@@ -452,7 +494,9 @@ namespace tethys {
 
       {
           std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
-
+          
+          this->dataPtr->simTimeSec =                          
+            std::chrono::duration<double>(_info.simTime).count();
           if (this->dataPtr->episodeStartIter < 0)
               this->dataPtr->episodeStartIter = _info.iterations;
 

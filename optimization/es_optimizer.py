@@ -34,16 +34,16 @@ PARAM_NAMES = [
     "magnitude_a", "smooth_l", "safety_window"
 ]
 THETA_MIN  = np.array([0.3,  0.3,  20.0, 0.90,  5.0, 2, 1])
-THETA_MAX  = np.array([1.5,  1.5, 100.0, 0.99, 25.0, 8, 5])
-THETA_INIT = np.array([1.0,  1.0,  50.0, 0.97, 15.0, 5, 3])
+THETA_MAX  = np.array([2.5,  2.0, 100.0, 0.99, 25.0, 8, 5])
+THETA_INIT = np.array([1.1,  0.85, 50.6, 0.988, 12.5, 5, 3])
 SCALE      = THETA_MAX - THETA_MIN
 
 # ── PARAMETRI FISSI (non ottimizzati) ────────────────────────────
 R_MAX          = 60.0
 R_MIN          = 2.5
 MAX_FIN_ANGLE  = 0.15
-RADIUS_ARRIVED = 4.0
-MAX_ITERATIONS = 300000
+RADIUS_ARRIVED = 6.0
+MAX_ITERATIONS = 200000
 
 # ── PATHS ─────────────────────────────────────────────────────────
 RESULTS_DIR  = os.path.join(PROJECT_DIR, "es/results")
@@ -72,6 +72,17 @@ def write_worker_sdf(worker_id, theta_real, goal_x, goal_y, goal_z):
     worker_model_dir = os.path.join(
         WORKERS_DIR, f"worker_{worker_id}", "tethys_equipped")
     os.makedirs(worker_model_dir, exist_ok=True)
+
+    worker_model_dir = os.path.join(
+    WORKERS_DIR, f"worker_{worker_id}", "tethys_equipped")
+    os.makedirs(worker_model_dir, exist_ok=True)
+
+    # Copia model.config richiesto da Gazebo
+    src_config = os.path.join(PROJECT_DIR,
+        "lrauv_description/models/tethys_equipped/model.config")
+    dst_config = os.path.join(worker_model_dir, "model.config")
+    if not os.path.exists(dst_config):
+        shutil.copy(src_config, dst_config)
 
     params   = dict(zip(PARAM_NAMES, theta_real))
     r_active = R_MAX * 0.75
@@ -102,21 +113,73 @@ def write_worker_sdf(worker_id, theta_real, goal_x, goal_y, goal_z):
 
 # ── REWARD ────────────────────────────────────────────────────────
 def parse_result(output):
-    """Estrae arrived/collision/timeout dall'output del topic."""
+    """Estrae tag, path e t dall'output del topic."""
     for line in output.splitlines():
         low = line.lower()
         for tag in ("arrived", "collision", "timeout"):
             if tag in low:
-                return tag
-    return None
+                result = {"tag": tag, "path": None, "t": None}
+                # Cerca "path=X;t=Y"
+                try:
+                    if "path=" in low:
+                        result["path"] = float(low.split("path=")[1].split(";")[0])
+                    if ";t=" in low:
+                        result["t"] = float(low.split(";t=")[1].split(";")[0].strip('"'))
+                except:
+                    pass
+                return result
+    return {"tag": None, "path": None, "t": None}
 
-def shaped_reward(result):
-    if result == "arrived":   return +1.0
-    if result == "collision": return -1.0
-    return -0.5  # timeout o None
+def shaped_reward(result, dist_init):
+    tag  = result["tag"]
+    path = result["path"]
+    t    = result["t"]
+
+    MAX_TIME = 300.0   # secondi simulati (300000 iter * 0.001)
+    MAX_PATH = dist_init * 3.0  # path massimo ragionevole
+
+    if tag == "arrived":
+        base = 1.0
+        # Bonus efficienza percorso: 1.0 = dritto, 0.0 = giro lungo
+        path_bonus = 0.5 * max(0.0, 1.0 - (path / MAX_PATH)) if path else 0.0
+        # Bonus velocità: 1.0 = subito, 0.0 = al limite
+        time_bonus = 0.3 * max(0.0, 1.0 - (t / MAX_TIME)) if t else 0.0
+        return base + path_bonus + time_bonus  # [1.0, 1.8]
+
+    if tag == "collision":
+        progress = max(0.0, (dist_init - (path or dist_init)) / dist_init)
+        return -1.0 + 0.4 * progress  # [-1.0, -0.6]
+
+    # timeout o None
+    progress = max(0.0, (dist_init - (path or dist_init)) / dist_init)
+    return -0.5 + 0.4 * progress  # [-0.5, -0.1]
 
 # ── BUILD ─────────────────────────────────────────────────────────
 def build_plugins():
+    plugin_so = os.path.join(PROJECT_DIR, "docker_build/libNavigationPlugin.so")
+    src_dirs  = [
+        os.path.join(PROJECT_DIR, "lrauv_gazebo_plugins/src"),
+        os.path.join(PROJECT_DIR, "lrauv_gazebo_plugins/include"),
+    ]
+
+    needs_build = not os.path.exists(plugin_so)
+    if not needs_build:
+        so_mtime = os.path.getmtime(plugin_so)
+        for d in src_dirs:
+            for root, _, files in os.walk(d):
+                for f in files:
+                    if f.endswith(('.cc', '.hh', '.cpp', '.hpp')):
+                        if os.path.getmtime(os.path.join(root, f)) > so_mtime:
+                            print(f"[ES] Sorgente modificato: {f} → ricompilazione...")
+                            needs_build = True
+                            break
+                if needs_build: break
+            if needs_build: break
+
+    if not needs_build:
+        print("[ES] Plugin aggiornato, nessuna ricompilazione")
+        return
+
     print("[ES] Build NavigationPlugin...")
     subprocess.run(["docker", "rm", "-f", "es_build"], capture_output=True)
     r = subprocess.run([
@@ -142,7 +205,7 @@ def build_plugins():
 # ── WORKER ────────────────────────────────────────────────────────
 def run_worker(args):
     """Lancia un container Gazebo headless isolato e restituisce (reward, tag)."""
-    worker_id, theta_real, goal_x, goal_y, goal_z = args
+    worker_id, theta_real, goal_x, goal_y, goal_z, dist_init = args
 
     cname     = f"es_gazebo_{worker_id}"
     partition = f"es_part_{worker_id}"
@@ -155,8 +218,6 @@ def run_worker(args):
         f"/lrauv_ws/src/degree_project/lrauv_description/models"
     )
 
-    render_gid = os.popen("getent group render | cut -d: -f3").read().strip()
-    video_gid  = os.popen("getent group video  | cut -d: -f3").read().strip()
     subprocess.run(["docker", "rm", "-f", cname], capture_output=True)
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
@@ -164,10 +225,6 @@ def run_worker(args):
 
     proc = subprocess.Popen([
         "docker", "run", "--rm", "--name", cname,
-        "--device", "/dev/dri/card1",
-        "--device", "/dev/dri/renderD128",
-        "--group-add", render_gid,
-        "--group-add", video_gid,
         "--volume", f"{PROJECT_DIR}:/lrauv_ws/src/degree_project",
         "lrauv:harmonic", "bash", "-c",
         (
@@ -176,7 +233,7 @@ def run_worker(args):
             f"export GZ_SIM_RESOURCE_PATH={resource_path} && "
             f"export GZ_SIM_SYSTEM_PLUGIN_PATH="
             f"/lrauv_ws/src/degree_project/docker_build && "
-            f"gz sim --headless-rendering -r "
+            f"gz sim -s -r "
             f"/lrauv_ws/src/degree_project/lrauv_gazebo_plugins/worlds/navigation_world.sdf"
         )
     ], stdout=log, stderr=subprocess.STDOUT)
@@ -200,9 +257,9 @@ def run_worker(args):
         proc.terminate()
         log.close()
 
-    tag    = parse_result(out)
-    reward = shaped_reward(tag)
-    return reward, tag
+    result = parse_result(out)
+    reward = shaped_reward(result, dist_init)
+    return reward, result["tag"]
 
 # ── SALVATAGGIO ───────────────────────────────────────────────────
 def save_results(gen, theta_real, mean_reward, seed):
@@ -264,7 +321,7 @@ def main():
         args = [
             (i,
              denorm(np.clip(theta + SIGMA * eps, 0.0, 1.0)),
-             goal_x, goal_y, goal_z)
+             goal_x, goal_y, goal_z, dist_init)
             for i, eps in enumerate(epsilons)
         ]
 

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <sdf version="1.9" xmlns:experimental="http://sdformat.org/schemas/experimental">
-  <model name="tethys_0">
+  <model name="tethys_25">
     <enable_wind>true</enable_wind>
     <include merge="true">
       
@@ -21,7 +21,7 @@
 
       <plugin filename="gz-sim-thruster-system"
         name="gz::sim::systems::Thruster">
-        <namespace>tethys_0</namespace>
+        <namespace>tethys_25</namespace>
         <joint_name>propeller_joint</joint_name>
         <thrust_coefficient>0.004422</thrust_coefficient>
         <fluid_density>1025</fluid_density>
@@ -87,18 +87,18 @@
       <plugin filename="NavigationPlugin"
         name="tethys::NavigationPlugin">
         <world_name>empty_environment</world_name>
-        <namespace>tethys_0</namespace>
+        <namespace>tethys_25</namespace>
 
         <!-- GOAL -->
-        <goal_x>17.50</goal_x>
-        <goal_y>90.56</goal_y>
-        <goal_z>-65.03</goal_z>
+        <goal_x>-130.51</goal_x>
+        <goal_y>-14.39</goal_y>
+        <goal_z>-67.57</goal_z>
 
         <!-- CONTROLLO -->
         <gain_steer>0.8</gain_steer>
         <gain_pitch>0.8</gain_pitch>
         <max_fin_angle>0.15</max_fin_angle>
-        <radius_arrived>10.0</radius_arrived>
+        <radius_arrived>4.0</radius_arrived>
         <max_iterations>200000</max_iterations>
 
         <!-- LIDAR -->
@@ -116,10 +116,10 @@
 
       <experimental:params>
         <sensor element_id="base_link::contact_sensor" action="modify">
-          <topic>/tethys_0/contact</topic>
+          <topic>/tethys_25/contact</topic>
         </sensor>
         <sensor element_id="lidar_link::gpu_lidar" action="modify">
-          <topic>/tethys_0/lidar</topic>
+          <topic>/tethys_25/lidar</topic>
         </sensor>
       </experimental:params>
 
