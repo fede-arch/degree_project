@@ -1,18 +1,19 @@
 #include "NavigationPlugin.hh"
 #include <iostream>
 #include <cmath>
-#include <iomanip>
 #include <algorithm>
 #include <limits>
-#include <sstream>
 #include <vector>
-#include <utility>
 #include <chrono>
+
+using namespace std;
 
 namespace tethys {
 
   // --- NavigationPrivateData ---
   class NavigationPrivateData {
+    public: static constexpr double THRUST_FORCE  = -31.0;
+    public: static constexpr int    THRUST_PERIOD = 100;
 
     // GAZEBO TRANSPORT
     public: gz::transport::Node node;
@@ -20,12 +21,12 @@ namespace tethys {
     public: gz::transport::Node::Publisher vertFinPub;
     public: gz::transport::Node::Publisher horizFinPub;
     public: gz::transport::Node::Publisher resultPub;
-    public: std::mutex mtx;
-    public: std::string droneNs = "tethys_0";
+    public: mutex mtx;
+    public: string droneNs = "tethys_0";
 
     // POSE VEICOLO
     public: double posX = 0, posY = 0, posZ = 0;
-    public: double yaw = 0, pitch = 0, roll = 0;
+    public: double yaw = 0, pitch = 0;
 
     // GOAL
     public: double goalX = 0, goalY = 0, goalZ = 0;
@@ -61,8 +62,8 @@ namespace tethys {
     public: float C_MAX      = 14.0625f;
     public: float r_active   = 50.0f;
     public: int   n_r_active = 50;
-    public: std::vector<float> grid_c;  // dimensione: n_r * n_phi * n_theta
-    public: std::vector<float> c_star;  // dimensione: n_r_active * n_phi * n_theta
+    public: vector<float> grid_c;  // dimensione: n_r * n_phi * n_theta
+    public: vector<float> c_star;  // dimensione: n_r_active * n_phi * n_theta
     public: float gridDecay  = 0.97f;
 
     // PARAMETRI ISTOGRAMMA POLARE (phi x theta)
@@ -76,9 +77,9 @@ namespace tethys {
     public: float theta_max   = +M_PI / 2;
     public: int   L           = 5;           // semi-finestra smoothing
     public: float VALLEY_THRESHOLD = 50.0f;
-    public: double measurements[36][36] = {};
-    public: float  h[36][36]        = {};
-    public: float  h_smooth[36][36] = {};
+    public: vector<double> measurements;
+    public: vector<float>  h;
+    public: vector<float>  h_smooth;
 
     // VFH 
     public: int k_targ       = 18;   // settore phi del goal
@@ -87,7 +88,16 @@ namespace tethys {
     public: int best_theta   = 18;   // theta scelto dal VFH
     public: int safetyWindow = 3;
 
-    // ACCESSOR INLINE per grid_c e c_star
+    // ACCESSOR INLINE
+    public: inline double& meas(int p, int t) {
+        return measurements[p * n_theta + t];
+    }
+    public: inline float& hh(int p, int t) {
+        return h[p * n_theta + t];
+    }
+    public: inline float& hs(int p, int t) {
+        return h_smooth[p * n_theta + t];
+    }
     public: inline float& gc(int r, int p, int t) {
         return grid_c[r * n_phi * n_theta + p * n_theta + t];
     }
@@ -97,11 +107,11 @@ namespace tethys {
 
     // FASE 1 -> CALLBACK POINTCLOUD
     public: void OnPointCloud(const gz::msgs::PointCloudPacked &_msg) {
-      std::lock_guard<std::mutex> lock(this->mtx);
+      lock_guard<mutex> lock(this->mtx);
 
       if (episodeState != EpisodeState::RUNNING) return;
 
-      std::memset(measurements, 0, sizeof(measurements));
+      fill(measurements.begin(), measurements.end(), 0.0);
       int step         = _msg.point_step();
       int total_points = _msg.width() * _msg.height();
       const char *data = _msg.data().data();
@@ -110,16 +120,16 @@ namespace tethys {
         const char *base = data + i * step;
 
         float x, y, z;
-        std::memcpy(&x, base + 0, 4);
-        std::memcpy(&y, base + 4, 4);
-        std::memcpy(&z, base + 8, 4);
+        memcpy(&x, base + 0, 4);
+        memcpy(&y, base + 4, 4);
+        memcpy(&z, base + 8, 4);
 
-        if (std::isinf(x) || std::isinf(y) || std::isinf(z)) continue;
+        if (isinf(x) || isinf(y) || isinf(z)) continue;
 
         // Conversione da cartesiane a polari
-        double r     = std::sqrt(x*x + y*y + z*z);
-        double phi   = std::atan2(y, x);
-        double theta = std::atan2(z, std::sqrt(x*x + y*y));
+        double r     = sqrt(x*x + y*y + z*z);
+        double phi   = atan2(y, x);
+        double theta = atan2(z, sqrt(x*x + y*y));
 
         if (r < r_min || r > r_max) continue;
 
@@ -130,7 +140,7 @@ namespace tethys {
         if (phi_idx   < 0 || phi_idx   >= n_phi)  continue;
         if (theta_idx < 0 || theta_idx >= n_theta) continue;
 
-        measurements[phi_idx][theta_idx] = (float)r;
+        meas(phi_idx, theta_idx) = (float)r;
       }
 
       updateGlobalGrid();
@@ -153,13 +163,13 @@ namespace tethys {
         for (int phi_idx = 0; phi_idx < n_phi; phi_idx++) {
             for (int theta_idx = 0; theta_idx < n_theta; theta_idx++) {
 
-                float meas = measurements[phi_idx][theta_idx];
-                if (meas <= 0.0f || meas < r_min) continue;
+                float m = this->meas(phi_idx, theta_idx);
+                if (m <= 0.0f || m < r_min) continue;
 
-                int r_idx = (int)(meas / delta_r);
+                int r_idx = (int)(m / delta_r);
                 if (r_idx < 0 || r_idx >= n_r) continue;
 
-                float magnitude = A - B * meas;
+                float magnitude = A - B * m;
                 if (magnitude < 0.0f) continue;
 
                 gc(r_idx, phi_idx, theta_idx) += magnitude;
@@ -171,7 +181,7 @@ namespace tethys {
 
     // FASE 3 -> ESTRAZIONE REGIONE REATTIVA
     public: void extract_active_region() {
-        std::fill(c_star.begin(), c_star.end(), 0.0f);
+        fill(c_star.begin(), c_star.end(), 0.0f);
 
         for (int r_idx = 0; r_idx < n_r_active; r_idx++)
             for (int phi_idx = 0; phi_idx < n_phi; phi_idx++)
@@ -181,17 +191,17 @@ namespace tethys {
 
     // FASE 4 -> COSTRUZIONE ISTOGRAMMA POLARE
     public: void build_polar_histogram() {
-        std::memset(h, 0, sizeof(h));
+        fill(h.begin(), h.end(), 0.0f);
 
         for (int phi_idx = 0; phi_idx < n_phi; phi_idx++)
             for (int theta_idx = 0; theta_idx < n_theta; theta_idx++)
                 for (int r_idx = 0; r_idx < n_r_active; r_idx++)
-                    h[phi_idx][theta_idx] += cs(r_idx, phi_idx, theta_idx);
+                    hh(phi_idx, theta_idx) += cs(r_idx, phi_idx, theta_idx);
     }
 
     // FASE 5 -> SMOOTH ISTOGRAMMA
     public: void smooth_histogram() {
-        std::memset(h_smooth, 0, sizeof(h_smooth));
+        fill(h_smooth.begin(), h_smooth.end(), 0.0f);
 
         for (int phi_idx = 0; phi_idx < n_phi; phi_idx++) {
             for (int theta_idx = 0; theta_idx < n_theta; theta_idx++) {
@@ -211,12 +221,12 @@ namespace tethys {
                         int weight = (dphi   == -L || dphi   == L) ? 1 : 2;
                         weight    *= (dtheta == -L || dtheta == L) ? 1 : 2;
 
-                        sum   += weight * h[p][t];
+                        sum += weight * hh(p, t);
                         count += weight;
                     }
                 }
 
-                h_smooth[phi_idx][theta_idx] = (count > 0) ? sum / count : 0.0f;
+                hs(phi_idx, theta_idx) = (count > 0) ? sum / count : 0.0f;
             }
         }
     }
@@ -228,10 +238,10 @@ namespace tethys {
 
         // Controlla ARRIVED
         double dx = goalX - posX, dy = goalY - posY, dz = goalZ - posZ;
-        double dist = std::sqrt(dx*dx + dy*dy + dz*dz);
+        double dist = sqrt(dx*dx + dy*dy + dz*dz);
         if (dist < radiusArrived && episodeState == EpisodeState::RUNNING) {
             episodeState = EpisodeState::ARRIVED;
-            std::cout << "[NAV] ARRIVED! dist=" << dist << "m" << std::endl;
+            cout << "[NAV] ARRIVED! dist=" << dist << "m" << endl;
         }
 
         if (episodeState != EpisodeState::RUNNING) {
@@ -247,26 +257,26 @@ namespace tethys {
         double dx = goalX - posX;
         double dy = goalY - posY;
 
-        double phi_goal = std::atan2(dy, dx) - yaw - M_PI;
+        double phi_goal = atan2(dy, dx) - yaw - M_PI;
         while (phi_goal >  M_PI) phi_goal -= 2.0 * M_PI;
         while (phi_goal < -M_PI) phi_goal += 2.0 * M_PI;
-        phi_goal = std::clamp(phi_goal, (double)phi_min, (double)phi_max);
-        k_targ   = std::clamp((int)((phi_max - phi_goal) / delta_phi), 0, n_phi - 1);
+        phi_goal = clamp(phi_goal, (double)phi_min, (double)phi_max);
+        k_targ   = clamp((int)((phi_max - phi_goal) / delta_phi), 0, n_phi - 1);
 
-        double dxy        = std::sqrt(dx*dx + dy*dy);
+        double dxy        = sqrt(dx*dx + dy*dy);
         double dz         = goalZ - posZ;
-        double theta_goal = std::atan2(dz, dxy);
+        double theta_goal = atan2(dz, dxy);
         while (theta_goal >  M_PI) theta_goal -= 2.0 * M_PI;
         while (theta_goal < -M_PI) theta_goal += 2.0 * M_PI;
-        theta_goal   = std::clamp(theta_goal, (double)theta_min, (double)theta_max);
-        k_targ_theta = std::clamp((int)((theta_goal - theta_min) / delta_theta), 0, n_theta - 1);
+        theta_goal   = clamp(theta_goal, (double)theta_min, (double)theta_max);
+        k_targ_theta = clamp((int)((theta_goal - theta_min) / delta_theta), 0, n_theta - 1);
     }
 
     // B: Trova direzione libera più vicina al goal
     public: void find_best_direction_2d() {
         best_phi   = k_targ;
         best_theta = k_targ_theta;
-        float best_cost = std::numeric_limits<float>::max();
+        float best_cost = numeric_limits<float>::max();
 
         int W = safetyWindow;
 
@@ -279,7 +289,7 @@ namespace tethys {
                         int pp = p + dp, tt = t + dt;
                         if (pp < 0 || pp >= n_phi)  continue;
                         if (tt < 0 || tt >= n_theta) continue;
-                        if (h_smooth[pp][tt] >= VALLEY_THRESHOLD)
+                        if (hs(pp,tt) >= VALLEY_THRESHOLD)
                             all_free = false;
                     }
                 }
@@ -287,7 +297,7 @@ namespace tethys {
                 if (all_free) {
                     float dphi   = (float)(p - k_targ);
                     float dtheta = (float)(t - k_targ_theta);
-                    float cost   = std::sqrt(dphi*dphi + dtheta*dtheta * 4.0f);
+                    float cost   = sqrt(dphi*dphi + dtheta*dtheta * 4.0f);
                     if (cost < best_cost) {
                         best_cost  = cost;
                         best_phi   = p;
@@ -303,8 +313,8 @@ namespace tethys {
         double phi_best   = phi_max   - best_phi   * delta_phi;
         double theta_best = theta_min + best_theta * delta_theta;
 
-        double steer_h = std::clamp(phi_best   * gainSteer, -maxFinAngle, maxFinAngle);
-        double steer_v = std::clamp(theta_best * gainPitch, -maxFinAngle, maxFinAngle);
+        double steer_h = clamp(phi_best   * gainSteer, -maxFinAngle, maxFinAngle);
+        double steer_v = clamp(theta_best * gainPitch, -maxFinAngle, maxFinAngle);
         steer_v = -steer_v;
 
         gz::msgs::Double msg_h, msg_v;
@@ -319,7 +329,7 @@ namespace tethys {
         if (resultPublished) return;
         resultPublished = true;
 
-        std::string result;
+        string result;
         switch (episodeState) {
             case EpisodeState::ARRIVED:   result = "arrived";   break;
             case EpisodeState::COLLISION: result = "collision"; break;
@@ -328,12 +338,12 @@ namespace tethys {
         }
 
         double dx   = goalX - posX, dy = goalY - posY, dz = goalZ - posZ;
-        double dist = std::sqrt(dx*dx + dy*dy + dz*dz);
+        double dist = sqrt(dx*dx + dy*dy + dz*dz);
 
-        std::string payload = result
-            + ";t="    + std::to_string(simTimeSec)
-            + ";path=" + std::to_string(pathLength)
-            + ";dist=" + std::to_string(dist);
+        string payload = result
+            + ";t="    + to_string(simTimeSec)
+            + ";path=" + to_string(pathLength)
+            + ";dist=" + to_string(dist);
 
         gz::msgs::StringMsg msg;
         msg.set_data(payload);
@@ -354,7 +364,7 @@ namespace tethys {
         node.Request("/world/empty_environment/remove", entityMsg, 2000, rep1, res1);
 
         // Rimuovi il target marker
-        std::string droneId = droneNs.substr(droneNs.find_last_of('_') + 1);
+        string droneId = droneNs.substr(droneNs.find_last_of('_') + 1);
         gz::msgs::Entity targetMsg;
         targetMsg.set_name("target_marker_" + droneId);
         targetMsg.set_type(gz::msgs::Entity::MODEL);
@@ -365,21 +375,20 @@ namespace tethys {
 
     // CALLBACK POSE
     public: void OnPose(const gz::msgs::Pose_V &_msg) {
-        std::lock_guard<std::mutex> lock(this->mtx);
+        lock_guard<mutex> lock(this->mtx);
         for (int i = 0; i < _msg.pose_size(); i++) {
             if (_msg.pose(i).name() != droneNs) continue;
             auto &pos = _msg.pose(i).position();
             auto &ori = _msg.pose(i).orientation();
             posX = pos.x(); posY = pos.y(); posZ = pos.z();
             double ox = ori.x(), oy = ori.y(), oz = ori.z(), ow = ori.w();
-            yaw   = std::atan2(2*(ow*oz + ox*oy), 1 - 2*(oy*oy + oz*oz));
-            pitch = std::asin(std::clamp(2*(ow*oy - oz*ox), -1.0, 1.0));
-            roll  = std::atan2(2*(ow*ox + oy*oz), 1 - 2*(ox*ox + oy*oy));
+            yaw   = atan2(2*(ow*oz + ox*oy), 1 - 2*(oy*oy + oz*oz));
+            pitch = asin(clamp(2*(ow*oy - oz*ox), -1.0, 1.0));
 
             // Accumula path
             if (episodeState == EpisodeState::RUNNING) {
                 if (pathStarted)
-                    pathLength += std::sqrt((posX-prevX)*(posX-prevX) +
+                    pathLength += sqrt((posX-prevX)*(posX-prevX) +
                                             (posY-prevY)*(posY-prevY) +
                                             (posZ-prevZ)*(posZ-prevZ));
                 prevX = posX; prevY = posY; prevZ = posZ;
@@ -390,76 +399,83 @@ namespace tethys {
 
     // CALLBACK CONTACT
     public: void OnContact(const gz::msgs::Contacts &_msg) {
-        std::lock_guard<std::mutex> lock(this->mtx);
+        lock_guard<mutex> lock(this->mtx);
         if (_msg.contact_size() > 0 && episodeState == EpisodeState::RUNNING) {
             episodeState = EpisodeState::COLLISION;
-            std::cout << "[NAV] COLLISION detected!" << std::endl;
+            cout << "[NAV] COLLISION detected!" << endl;
             publish_result_and_stop();
         }
     }
   };
 
   // --- NavigationPlugin ---
-  NavigationPlugin::NavigationPlugin() : dataPtr(std::make_unique<NavigationPrivateData>()) {}
+  NavigationPlugin::NavigationPlugin() : dataPtr(make_unique<NavigationPrivateData>()) {}
 
   NavigationPlugin::~NavigationPlugin() = default;
 
   void NavigationPlugin::Configure(const gz::sim::Entity &,
-                                   const std::shared_ptr<const sdf::Element> &_sdf,
+                                   const shared_ptr<const sdf::Element> &_sdf,
                                    gz::sim::EntityComponentManager &,
                                    gz::sim::EventManager &) {
-      auto* d = this->dataPtr.get();
-      d->droneNs = _sdf->Get<std::string>("namespace", "tethys_0").first;
+    auto* d = this->dataPtr.get();
+    d->droneNs = _sdf->Get<string>("namespace", "tethys_0").first;
 
-        // SUBSCRIPTIONS
-        d->node.Subscribe("/" + d->droneNs + "/lidar/points",
-            &NavigationPrivateData::OnPointCloud, d);
-        d->node.Subscribe("/world/empty_environment/dynamic_pose/info",
-            &NavigationPrivateData::OnPose, d);
-        d->node.Subscribe(
-            "/world/empty_environment/model/" + d->droneNs + 
-            "/link/base_link/sensor/contact_sensor/contact",
-            &NavigationPrivateData::OnContact, d);
+    // SUBSCRIPTIONS
+    d->node.Subscribe("/" + d->droneNs + "/lidar/points",
+        &NavigationPrivateData::OnPointCloud, d);
+    d->node.Subscribe("/world/empty_environment/dynamic_pose/info",
+        &NavigationPrivateData::OnPose, d);
+    d->node.Subscribe(
+        "/world/empty_environment/model/" + d->droneNs + 
+        "/link/base_link/sensor/contact_sensor/contact",
+        &NavigationPrivateData::OnContact, d);
 
-        // PUBLISHERS
-        d->thrustPub   = d->node.Advertise<gz::msgs::Double>(
-            "/model/" + d->droneNs + "/joint/propeller_joint/cmd_thrust");
-        d->vertFinPub  = d->node.Advertise<gz::msgs::Double>(
-            "/model/" + d->droneNs + "/joint/vertical_fins_joint/0/cmd_pos");
-        d->horizFinPub = d->node.Advertise<gz::msgs::Double>(
-            "/model/" + d->droneNs + "/joint/horizontal_fins_joint/0/cmd_pos");
-        d->resultPub   = d->node.Advertise<gz::msgs::StringMsg>(
-            "/" + d->droneNs + "/es/episode_result");
+    // PUBLISHERS
+    d->thrustPub   = d->node.Advertise<gz::msgs::Double>(
+        "/model/" + d->droneNs + "/joint/propeller_joint/cmd_thrust");
+    d->vertFinPub  = d->node.Advertise<gz::msgs::Double>(
+        "/model/" + d->droneNs + "/joint/vertical_fins_joint/0/cmd_pos");
+    d->horizFinPub = d->node.Advertise<gz::msgs::Double>(
+        "/model/" + d->droneNs + "/joint/horizontal_fins_joint/0/cmd_pos");
+    d->resultPub   = d->node.Advertise<gz::msgs::StringMsg>(
+        "/" + d->droneNs + "/es/episode_result");
 
-      // PARAMETRI DA SDF
-      d->goalX         = _sdf->Get<double>("goal_x",          0.0).first;
-      d->goalY         = _sdf->Get<double>("goal_y",          0.0).first;
-      d->goalZ         = _sdf->Get<double>("goal_z",          0.0).first;
+    // PARAMETRI DA SDF
+    d->goalX         = _sdf->Get<double>("goal_x",          0.0).first;
+    d->goalY         = _sdf->Get<double>("goal_y",          0.0).first;
+    d->goalZ         = _sdf->Get<double>("goal_z",          0.0).first;
 
-      d->gainSteer     = _sdf->Get<double>("gain_steer",      0.5).first;
-      d->gainPitch     = _sdf->Get<double>("gain_pitch",      0.5).first;
-      d->maxFinAngle   = _sdf->Get<double>("max_fin_angle",   0.15).first;
-      d->radiusArrived = _sdf->Get<double>("radius_arrived",  2.0).first;
-      d->maxIterations = _sdf->Get<int>   ("max_iterations",  300000).first;
+    d->gainSteer     = _sdf->Get<double>("gain_steer",      0.5).first;
+    d->gainPitch     = _sdf->Get<double>("gain_pitch",      0.5).first;
+    d->maxFinAngle   = _sdf->Get<double>("max_fin_angle",   0.15).first;
+    d->radiusArrived = _sdf->Get<double>("radius_arrived",  2.0).first;
+    d->maxIterations = _sdf->Get<int>   ("max_iterations",  300000).first;
 
-      d->r_max            = _sdf->Get<double>("r_max",            60.0).first;
-      d->r_min            = _sdf->Get<double>("r_min",             2.5).first;
-      d->r_active         = _sdf->Get<double>("r_active",         50.0).first;
-      d->VALLEY_THRESHOLD = _sdf->Get<double>("valley_threshold", 50.0).first;
+    d->r_max            = _sdf->Get<double>("r_max",            60.0).first;
+    d->r_min            = _sdf->Get<double>("r_min",             2.5).first;
+    d->r_active         = _sdf->Get<double>("r_active",         50.0).first;
+    d->VALLEY_THRESHOLD = _sdf->Get<double>("valley_threshold", 50.0).first;
 
-      d->gridDecay    = _sdf->Get<double>("grid_decay",    0.97).first;
-      d->A            = _sdf->Get<double>("magnitude_a",   15.0).first;
-      d->L            = _sdf->Get<int>   ("smooth_l",      5).first;
-      d->safetyWindow = _sdf->Get<int>   ("safety_window", 3).first;
+    d->gridDecay    = _sdf->Get<double>("grid_decay",    0.97).first;
+    d->A            = _sdf->Get<double>("magnitude_a",   15.0).first;
+    d->L            = _sdf->Get<int>   ("smooth_l",      5).first;
+    d->safetyWindow = _sdf->Get<int>   ("safety_window", 3).first;
 
-      // Derivati
-      d->n_r        = (int)(d->r_max    / d->delta_r);
-      d->n_r_active = (int)(d->r_active / d->delta_r);
-      d->B          = d->A / d->r_max;
+    // Derivati
+    d->n_r        = (int)(d->r_max    / d->delta_r);
+    d->n_r_active = (int)(d->r_active / d->delta_r);
+    d->B          = d->A / d->r_max;
+    d->C_MAX      = d->A;                   
+    d->delta_phi   = M_PI / d->n_phi;       
+    d->delta_theta = M_PI / d->n_theta; 
 
-      // Alloca array dinamicamente
-      d->grid_c.assign(d->n_r        * d->n_phi * d->n_theta, 0.0f);
-      d->c_star.assign(d->n_r_active * d->n_phi * d->n_theta, 0.0f);
+    // Alloca array dinamicamente
+    d->grid_c.assign(d->n_r        * d->n_phi * d->n_theta, 0.0f);
+    d->c_star.assign(d->n_r_active * d->n_phi * d->n_theta, 0.0f);
+
+    d->measurements.assign(d->n_phi * d->n_theta, 0.0);
+    d->h.assign(d->n_phi * d->n_theta, 0.0f);
+    d->h_smooth.assign(d->n_phi * d->n_theta, 0.0f);
   }
 
   void NavigationPlugin::PreUpdate(const gz::sim::UpdateInfo &_info,
@@ -467,10 +483,10 @@ namespace tethys {
       if (_info.paused) return;
 
       {
-          std::lock_guard<std::mutex> lock(this->dataPtr->mtx);
+          lock_guard<mutex> lock(this->dataPtr->mtx);
           
           this->dataPtr->simTimeSec =                          
-            std::chrono::duration<double>(_info.simTime).count();
+            chrono::duration<double>(_info.simTime).count();
           if (this->dataPtr->episodeStartIter < 0)
               this->dataPtr->episodeStartIter = _info.iterations;
 
@@ -478,7 +494,7 @@ namespace tethys {
               int64_t elapsed = _info.iterations - this->dataPtr->episodeStartIter;
               if (elapsed > this->dataPtr->maxIterations) {
                   this->dataPtr->episodeState = NavigationPrivateData::EpisodeState::TIMEOUT;
-                  std::cout << "[NAV] TIMEOUT!" << std::endl;
+                  cout << "[NAV] TIMEOUT!" << endl;
                   this->dataPtr->publish_result_and_stop();
               }
           }
@@ -487,11 +503,11 @@ namespace tethys {
               return;
       }
 
-      if (_info.iterations % 100 == 0) {
-          gz::msgs::Double thrustMsg;
-          thrustMsg.set_data(-31.0);
-          this->dataPtr->thrustPub.Publish(thrustMsg);
-      }
+      if (_info.iterations % NavigationPrivateData::THRUST_PERIOD == 0) {
+            gz::msgs::Double thrustMsg;
+            thrustMsg.set_data(NavigationPrivateData::THRUST_FORCE);
+            this->dataPtr->thrustPub.Publish(thrustMsg);
+        }
   }
 
 } // namespace tethys

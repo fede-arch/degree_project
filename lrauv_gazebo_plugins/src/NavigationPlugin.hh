@@ -4,11 +4,8 @@
 #include <gz/sim/System.hh>
 #include <gz/plugin/Register.hh>
 #include <gz/transport/Node.hh>
-#include <gz/msgs/pose.pb.h>
 #include <gz/msgs.hh>
 #include <memory>
-#include <mutex>
-#include <vector>
 
 namespace tethys {
 
