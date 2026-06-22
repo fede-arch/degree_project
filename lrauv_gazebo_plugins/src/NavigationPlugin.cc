@@ -80,9 +80,7 @@ namespace tethys {
     public: float  h[36][36]        = {};
     public: float  h_smooth[36][36] = {};
 
-    // VFH - DENSITÀ PHI E RISULTATO
-    public: float phi_density[36] = {};
-    public: float phi_smooth[36]  = {};
+    // VFH 
     public: int k_targ       = 18;   // settore phi del goal
     public: int k_targ_theta = 18;   // settore theta del goal
     public: int best_phi     = 18;   // phi scelto dal VFH
@@ -242,30 +240,6 @@ namespace tethys {
         }
 
         command_fins();
-    }
-
-    // A1: Collassa h_smooth → phi_density (max su theta)
-    public: void compute_phi_density() {
-        std::memset(phi_density, 0, sizeof(phi_density));
-        for (int p = 0; p < n_phi; p++)
-            for (int t = 0; t < n_theta; t++)
-                phi_density[p] = std::max(phi_density[p], h_smooth[p][t]);
-    }
-
-    // A2: Smooth 1D su phi
-    public: void smooth_phi_density() {
-        std::memset(phi_smooth, 0, sizeof(phi_smooth));
-        for (int k = 0; k < n_phi; k++) {
-            float sum = 0.0f; int cnt = 0;
-            for (int dl = -L; dl <= L; dl++) {
-                int kk = k + dl;
-                if (kk < 0 || kk >= n_phi) continue;
-                int w = (std::abs(dl) == L) ? 1 : 2;
-                sum += w * phi_density[kk];
-                cnt += w;
-            }
-            phi_smooth[k] = (cnt > 0) ? sum / cnt : 0.0f;
-        }
     }
 
     // A3: Calcola settori target da goal

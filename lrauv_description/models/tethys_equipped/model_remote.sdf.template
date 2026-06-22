@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <sdf version="1.9" xmlns:experimental="http://sdformat.org/schemas/experimental">
-  <model name="tethys_1">
+  <model name="tethys___DRONE_ID__">
     <enable_wind>true</enable_wind>
     <include merge="true">
       
@@ -21,7 +21,7 @@
 
       <plugin filename="gz-sim-thruster-system"
         name="gz::sim::systems::Thruster">
-        <namespace>tethys_1</namespace>
+        <namespace>tethys___DRONE_ID__</namespace>
         <joint_name>propeller_joint</joint_name>
         <thrust_coefficient>0.004422</thrust_coefficient>
         <fluid_density>1025</fluid_density>
@@ -84,42 +84,14 @@
         <nR>0</nR>
       </plugin>
 
-      <plugin filename="NavigationPlugin"
-        name="tethys::NavigationPlugin">
-        <world_name>empty_environment</world_name>
-        <namespace>tethys_1</namespace>
-
-        <!-- GOAL -->
-        <goal_x>-201.31</goal_x>
-        <goal_y>-7.81</goal_y>
-        <goal_z>-69.49</goal_z>
-
-        <!-- CONTROLLO -->
-        <gain_steer>0.8</gain_steer>
-        <gain_pitch>0.8</gain_pitch>
-        <max_fin_angle>0.15</max_fin_angle>
-        <radius_arrived>4.0</radius_arrived>
-        <max_iterations>200000</max_iterations>
-
-        <!-- LIDAR -->
-        <r_max>100.0</r_max>
-        <r_min>2.5</r_min>
-        <r_active>75.0</r_active>
-
-        <!-- VFH -->
-        <valley_threshold>34.4</valley_threshold>
-        <smooth_l>5</smooth_l>
-        <safety_window>2</safety_window>
-        <grid_decay>0.982</grid_decay>
-        <magnitude_a>10.88</magnitude_a>
-      </plugin>
+      
 
       <experimental:params>
         <sensor element_id="base_link::contact_sensor" action="modify">
-          <topic>/tethys_1/contact</topic>
+          <topic>/tethys___DRONE_ID__/contact</topic>
         </sensor>
         <sensor element_id="lidar_link::gpu_lidar" action="modify">
-          <topic>/tethys_1/lidar</topic>
+          <topic>/tethys___DRONE_ID__/lidar</topic>
         </sensor>
       </experimental:params>
 

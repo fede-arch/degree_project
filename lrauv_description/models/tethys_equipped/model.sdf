@@ -84,35 +84,7 @@
         <nR>0</nR>
       </plugin>
 
-      <plugin filename="NavigationPlugin"
-        name="tethys::NavigationPlugin">
-        <world_name>empty_environment</world_name>
-        <namespace>tethys_0</namespace>
-
-        <!-- GOAL -->
-        <goal_x>17.50</goal_x>
-        <goal_y>90.56</goal_y>
-        <goal_z>-65.03</goal_z>
-
-        <!-- CONTROLLO -->
-        <gain_steer>0.8</gain_steer>
-        <gain_pitch>0.8</gain_pitch>
-        <max_fin_angle>0.15</max_fin_angle>
-        <radius_arrived>10.0</radius_arrived>
-        <max_iterations>200000</max_iterations>
-
-        <!-- LIDAR -->
-        <r_max>100.0</r_max>
-        <r_min>2.5</r_min>
-        <r_active>75.0</r_active>
-
-        <!-- VFH -->
-        <valley_threshold>34.4</valley_threshold>
-        <smooth_l>5</smooth_l>
-        <safety_window>2</safety_window>
-        <grid_decay>0.982</grid_decay>
-        <magnitude_a>10.88</magnitude_a>
-      </plugin>
+      
 
       <experimental:params>
         <sensor element_id="base_link::contact_sensor" action="modify">
