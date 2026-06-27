@@ -2,7 +2,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SEED="${1:-$RANDOM}"
 
 GAIN_STEER="0.8"
@@ -22,7 +22,7 @@ echo " Gazebo SERVER (remoto)  |  seed=$SEED"
 # Genera world con template SENZA NavigationPlugin
 python3 - <<PYEOF
 import sys
-sys.path.insert(0, '$PROJECT_DIR/lrauv_gazebo_plugins/scripts')
+sys.path.insert(0, '$PROJECT_DIR/scripts')
 from generate_world import generate_world
 
 gx, gy, gz = generate_world('$PROJECT_DIR', seed=$SEED, face_goal=False)
@@ -47,7 +47,7 @@ print(f'[REMOTE] ./standalone_controller tethys_0 {gx:.2f} {gy:.2f} {gz:.2f}')
 PYEOF
 
 # Ricompila plugin se sorgenti modificati
-source "$SCRIPT_DIR/../../tools/setup/build_plugin.sh"
+source "$SCRIPT_DIR/../tools/setup/build_plugin.sh"
 
 # Permessi GPU
 RENDER_GID=$(getent group render | cut -d: -f3 2>/dev/null || echo "")

@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 import argparse
 
 from es_utils import *
-sys.path.append(os.path.join(PROJECT_DIR, "lrauv_gazebo_plugins/scripts"))
+sys.path.append(os.path.join(PROJECT_DIR, "scripts"))
 from generate_world import generate_world
 
 DEFAULT_THETA = {

@@ -7,7 +7,7 @@ Testa con N_DRONES droni su N_SEEDS seed diversi e raccoglie metriche.
 import json, os, sys, shutil, subprocess, time
 
 from es_utils import *
-sys.path.append(os.path.join(PROJECT_DIR, "lrauv_gazebo_plugins/scripts"))
+sys.path.append(os.path.join(PROJECT_DIR, "scripts"))
 from generate_world_multi import generate_world_multi
 
 # PATH
