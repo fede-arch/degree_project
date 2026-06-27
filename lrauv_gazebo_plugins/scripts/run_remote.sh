@@ -17,9 +17,7 @@ MAGNITUDE_A="10.88"
 SMOOTH_L="5"
 SAFETY_WINDOW="2"
 
-echo "============================================================"
 echo " Gazebo SERVER (remoto)  |  seed=$SEED"
-echo "============================================================"
 
 # Genera world con template SENZA NavigationPlugin
 python3 - <<PYEOF
@@ -31,9 +29,6 @@ gx, gy, gz = generate_world('$PROJECT_DIR', seed=$SEED, face_goal=False)
 
 tmpl = '$PROJECT_DIR/lrauv_description/models/tethys_equipped/model_remote.sdf.template'
 dest = '$PROJECT_DIR/lrauv_description/models/tethys_equipped/model.sdf'
-
-r_max    = float('$R_MAX')
-r_active = r_max * 0.75
 
 with open(tmpl) as f:
     content = f.read()
@@ -50,6 +45,9 @@ print(f'[REMOTE] Goal: ({gx:.1f}, {gy:.1f}, {gz:.1f})')
 print(f'[REMOTE] Avvia sul portatile:')
 print(f'[REMOTE] ./standalone_controller tethys_0 {gx:.2f} {gy:.2f} {gz:.2f}')
 PYEOF
+
+# Ricompila plugin se sorgenti modificati
+source "$SCRIPT_DIR/../../tools/setup/build_plugin.sh"
 
 # Permessi GPU
 RENDER_GID=$(getent group render | cut -d: -f3 2>/dev/null || echo "")
