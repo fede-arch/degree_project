@@ -28,3 +28,6 @@ lrauv_description/models/tethys/model.sdf
 # Editor stuff
 .vscode/
 .idea/
+
+# Modelli droni generati a runtime
+lrauv_description/models/tethys_equipped_*/
