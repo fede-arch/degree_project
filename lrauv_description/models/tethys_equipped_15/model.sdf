@@ -90,9 +90,9 @@
         <namespace>tethys_15</namespace>
 
         <!-- GOAL -->
-        <goal_x>-202.72</goal_x>
-        <goal_y>44.72</goal_y>
-        <goal_z>-60.27</goal_z>
+        <goal_x>-205.24</goal_x>
+        <goal_y>12.99</goal_y>
+        <goal_z>-58.09</goal_z>
 
         <!-- CONTROLLO -->
         <gain_steer>0.8</gain_steer>

@@ -9,7 +9,6 @@ N_ROCKS        = 10
 ROCK_MODEL     = "falling rock 1"
 MIN_ROCK_DIST = 20.0
 
-
 def on_path(x, y, spawn_x, spawn_y, goal_x, goal_y, margin=35.0):
     """True se (x,y) è entro margin metri dal segmento spawn->goal."""
     dx, dy = goal_x - spawn_x, goal_y - spawn_y
@@ -20,7 +19,6 @@ def on_path(x, y, spawn_x, spawn_y, goal_x, goal_y, margin=35.0):
     px = spawn_x + t*dx
     py = spawn_y + t*dy
     return np.sqrt((x-px)**2 + (y-py)**2) < margin
-
 
 def generate_world(project_dir, seed=None, face_goal=False):
     """

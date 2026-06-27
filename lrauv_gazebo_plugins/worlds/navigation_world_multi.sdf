@@ -52,14 +52,14 @@
     
     <!-- Drone 0 -->
     <include>
-      <pose>-146.06 -47.50 -60.00 0 0 -0.24</pose>
+      <pose>-199.22 -4.44 -60.00 0 0 -4.43</pose>
       <uri>tethys_equipped_0</uri>
     </include>
 
     <!-- Target 0 -->
     <model name="target_marker_0">
       <static>true</static>
-      <pose>-182.50 -27.68 -57.48 0 0 0</pose>
+      <pose>-197.10 -47.24 -53.15 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -74,14 +74,14 @@
 
     <!-- Drone 1 -->
     <include>
-      <pose>-142.33 39.22 -60.00 0 0 -5.38</pose>
+      <pose>-172.14 11.09 -60.00 0 0 -5.77</pose>
       <uri>tethys_equipped_1</uri>
     </include>
 
     <!-- Target 1 -->
     <model name="target_marker_1">
       <static>true</static>
-      <pose>-201.31 -7.81 -69.49 0 0 0</pose>
+      <pose>-208.52 -14.80 -57.88 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -96,14 +96,14 @@
 
     <!-- Drone 2 -->
     <include>
-      <pose>-188.14 0.54 -60.00 0 0 -5.07</pose>
+      <pose>-122.43 38.48 -60.00 0 0 0.07</pose>
       <uri>tethys_equipped_2</uri>
     </include>
 
     <!-- Target 2 -->
     <model name="target_marker_2">
       <static>true</static>
-      <pose>-207.35 -30.12 -58.95 0 0 0</pose>
+      <pose>-202.09 39.27 -68.18 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -118,14 +118,14 @@
 
     <!-- Drone 3 -->
     <include>
-      <pose>-155.51 -27.96 -60.00 0 0 -1.76</pose>
+      <pose>-111.27 23.81 -60.00 0 0 -0.30</pose>
       <uri>tethys_equipped_3</uri>
     </include>
 
     <!-- Target 3 -->
     <model name="target_marker_3">
       <static>true</static>
-      <pose>-151.07 30.94 -69.89 0 0 0</pose>
+      <pose>-189.84 39.12 -66.34 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -140,14 +140,14 @@
 
     <!-- Drone 4 -->
     <include>
-      <pose>-129.42 19.81 -60.00 0 0 -5.64</pose>
+      <pose>-138.48 15.47 -60.00 0 0 -5.32</pose>
       <uri>tethys_equipped_4</uri>
     </include>
 
     <!-- Target 4 -->
     <model name="target_marker_4">
       <static>true</static>
-      <pose>-176.34 -40.73 -68.36 0 0 0</pose>
+      <pose>-169.71 -14.99 -56.82 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -162,14 +162,14 @@
 
     <!-- Drone 5 -->
     <include>
-      <pose>-125.25 10.37 -60.00 0 0 -5.37</pose>
+      <pose>-116.79 4.92 -60.00 0 0 -0.11</pose>
       <uri>tethys_equipped_5</uri>
     </include>
 
     <!-- Target 5 -->
     <model name="target_marker_5">
       <static>true</static>
-      <pose>-186.72 -39.90 -65.27 0 0 0</pose>
+      <pose>-169.78 26.18 -65.08 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -184,14 +184,14 @@
 
     <!-- Drone 6 -->
     <include>
-      <pose>-146.43 -13.52 -60.00 0 0 -2.12</pose>
+      <pose>-125.79 -37.20 -60.00 0 0 0.07</pose>
       <uri>tethys_equipped_6</uri>
     </include>
 
     <!-- Target 6 -->
     <model name="target_marker_6">
       <static>true</static>
-      <pose>-116.33 14.80 -59.64 0 0 0</pose>
+      <pose>-162.87 -29.99 -69.48 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -206,14 +206,14 @@
 
     <!-- Drone 7 -->
     <include>
-      <pose>-192.89 22.91 -60.00 0 0 -3.74</pose>
+      <pose>-143.58 33.80 -60.00 0 0 -5.31</pose>
       <uri>tethys_equipped_7</uri>
     </include>
 
     <!-- Target 7 -->
     <model name="target_marker_7">
       <static>true</static>
-      <pose>-146.00 5.69 -58.36 0 0 0</pose>
+      <pose>-180.47 -40.84 -56.41 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -228,14 +228,14 @@
 
     <!-- Drone 8 -->
     <include>
-      <pose>-187.10 -46.79 -60.00 0 0 -2.28</pose>
+      <pose>-137.24 -33.49 -60.00 0 0 -1.20</pose>
       <uri>tethys_equipped_8</uri>
     </include>
 
     <!-- Target 8 -->
     <model name="target_marker_8">
       <static>true</static>
-      <pose>-115.71 37.64 -64.65 0 0 0</pose>
+      <pose>-156.67 12.12 -67.32 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -250,14 +250,14 @@
 
     <!-- Drone 9 -->
     <include>
-      <pose>-118.55 -4.11 -60.00 0 0 -0.45</pose>
+      <pose>-200.01 30.61 -60.00 0 0 -3.58</pose>
       <uri>tethys_equipped_9</uri>
     </include>
 
     <!-- Target 9 -->
     <model name="target_marker_9">
       <static>true</static>
-      <pose>-183.73 8.46 -54.74 0 0 0</pose>
+      <pose>-120.87 -39.14 -67.00 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -272,14 +272,14 @@
 
     <!-- Drone 10 -->
     <include>
-      <pose>-170.06 -28.07 -60.00 0 0 -2.53</pose>
+      <pose>-123.98 -3.44 -60.00 0 0 -5.48</pose>
       <uri>tethys_equipped_10</uri>
     </include>
 
     <!-- Target 10 -->
     <model name="target_marker_10">
       <static>true</static>
-      <pose>-110.25 0.95 -68.45 0 0 0</pose>
+      <pose>-145.28 -45.30 -61.76 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -294,14 +294,14 @@
 
     <!-- Drone 11 -->
     <include>
-      <pose>-205.29 -39.04 -60.00 0 0 -1.92</pose>
+      <pose>-189.16 33.94 -60.00 0 0 -5.37</pose>
       <uri>tethys_equipped_11</uri>
     </include>
 
     <!-- Target 11 -->
     <model name="target_marker_11">
       <static>true</static>
-      <pose>-157.09 47.11 -55.37 0 0 0</pose>
+      <pose>-209.49 -0.66 -61.52 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -316,14 +316,14 @@
 
     <!-- Drone 12 -->
     <include>
-      <pose>-208.85 22.07 -60.00 0 0 -4.13</pose>
+      <pose>-163.76 -29.44 -60.00 0 0 -3.69</pose>
       <uri>tethys_equipped_12</uri>
     </include>
 
     <!-- Target 12 -->
     <model name="target_marker_12">
       <static>true</static>
-      <pose>-145.90 -38.84 -62.61 0 0 0</pose>
+      <pose>-131.30 -43.17 -66.57 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -338,14 +338,14 @@
 
     <!-- Drone 13 -->
     <include>
-      <pose>-164.63 45.38 -60.00 0 0 -4.18</pose>
+      <pose>-128.95 -19.17 -60.00 0 0 -0.90</pose>
       <uri>tethys_equipped_13</uri>
     </include>
 
     <!-- Target 13 -->
     <model name="target_marker_13">
       <static>true</static>
-      <pose>-122.41 -23.66 -61.49 0 0 0</pose>
+      <pose>-147.68 17.09 -68.34 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -360,14 +360,124 @@
 
     <!-- Drone 14 -->
     <include>
-      <pose>-192.13 41.26 -60.00 0 0 -4.98</pose>
+      <pose>-165.35 35.00 -60.00 0 0 -5.33</pose>
       <uri>tethys_equipped_14</uri>
     </include>
 
     <!-- Target 14 -->
     <model name="target_marker_14">
       <static>true</static>
-      <pose>-209.94 -17.58 -69.67 0 0 0</pose>
+      <pose>-197.38 -29.10 -68.13 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Drone 15 -->
+    <include>
+      <pose>-182.30 -29.19 -60.00 0 0 -1.29</pose>
+      <uri>tethys_equipped_15</uri>
+    </include>
+
+    <!-- Target 15 -->
+    <model name="target_marker_15">
+      <static>true</static>
+      <pose>-205.24 12.99 -58.09 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Drone 16 -->
+    <include>
+      <pose>-180.13 -47.40 -60.00 0 0 -1.74</pose>
+      <uri>tethys_equipped_16</uri>
+    </include>
+
+    <!-- Target 16 -->
+    <model name="target_marker_16">
+      <static>true</static>
+      <pose>-179.67 2.00 -61.03 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Drone 17 -->
+    <include>
+      <pose>-145.89 -0.33 -60.00 0 0 -2.73</pose>
+      <uri>tethys_equipped_17</uri>
+    </include>
+
+    <!-- Target 17 -->
+    <model name="target_marker_17">
+      <static>true</static>
+      <pose>-117.25 17.37 -56.97 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Drone 18 -->
+    <include>
+      <pose>-197.31 17.41 -60.00 0 0 -3.85</pose>
+      <uri>tethys_equipped_18</uri>
+    </include>
+
+    <!-- Target 18 -->
+    <model name="target_marker_18">
+      <static>true</static>
+      <pose>-131.23 -18.93 -56.27 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Drone 19 -->
+    <include>
+      <pose>-185.94 47.62 -60.00 0 0 -4.73</pose>
+      <uri>tethys_equipped_19</uri>
+    </include>
+
+    <!-- Target 19 -->
+    <model name="target_marker_19">
+      <static>true</static>
+      <pose>-184.04 -24.30 -63.55 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>

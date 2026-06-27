@@ -4,10 +4,10 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-N_DRONES="${1:-3}"
+N_DRONES="20"
 SEED="${2:-$RANDOM}"
 
-# ─── Parametri plugin (unica fonte di verità) ────────────────────
+# Parametri plugin
 GAIN_STEER="0.8"
 GAIN_PITCH="0.8"
 MAX_FIN_ANGLE="0.15"
@@ -40,7 +40,7 @@ echo "   radius_arrived = $RADIUS_ARRIVED m"
 echo "   max_iterations = $MAX_ITERATIONS"
 echo ""
 
-# ─── 1. Genera il world e scrivi i model.sdf ─────────────────────
+# 1. Genera il world e scrivi i model.sdf 
 echo "[RUN] Generazione world con $N_DRONES droni..."
 python3 - <<EOF
 import sys, json
@@ -108,7 +108,7 @@ for i in range(n_drones):
 
 EOF
 
-# ─── 2. Ricompila plugin se sorgenti modificati ──────────────────
+# 2. Ricompila plugin se sorgenti modificati
 PLUGIN_SO="$PROJECT_DIR/docker_build/libNavigationPlugin.so"
 SRC_DIR="$PROJECT_DIR/lrauv_gazebo_plugins/src"
 HDR_DIR="$PROJECT_DIR/lrauv_gazebo_plugins/include"
@@ -148,7 +148,7 @@ else
     echo "[RUN] Plugin aggiornato, nessuna ricompilazione"
 fi
 
-# ─── 3. X11 forwarding ───────────────────────────────────────────
+# 3. X11 forwarding
 xhost +local:docker 2>/dev/null || true
 
 RENDER_GID=$(getent group render | cut -d: -f3 2>/dev/null || echo "")
@@ -157,7 +157,7 @@ EXTRA_GROUPS=()
 [[ -n "$RENDER_GID" ]] && EXTRA_GROUPS+=(--group-add "$RENDER_GID")
 [[ -n "$VIDEO_GID"  ]] && EXTRA_GROUPS+=(--group-add "$VIDEO_GID")
 
-# ─── 4. Lancia Gazebo con GUI ────────────────────────────────────
+# 4. Lancia Gazebo con GUI
 echo "[RUN] Avvio Gazebo con GUI..."
 echo "[RUN] Chiudi la finestra di Gazebo per terminare."
 echo ""

@@ -10,6 +10,10 @@ import concurrent.futures
 import xml.etree.ElementTree as ET
 import argparse
 
+from es_utils import *
+sys.path.append(os.path.join(PROJECT_DIR, "lrauv_gazebo_plugins/scripts"))
+from generate_world import generate_world
+
 DEFAULT_THETA = {
     "gain_steer":       0.5,
     "gain_pitch":       0.5,
@@ -20,28 +24,10 @@ DEFAULT_THETA = {
     "safety_window":    3
 }
 
-SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
-sys.path.insert(0, os.path.join(PROJECT_DIR, "lrauv_gazebo_plugins/scripts"))
-from generate_world import generate_world
-
-# ── PATHS ─────────────────────────────────────────────────────────
-BEST_FILE    = os.path.join(PROJECT_DIR, "es/results/best_theta.json")
-RESULTS_DIR  = os.path.join(PROJECT_DIR, "es/results")
+# PATH
 WORKERS_DIR  = os.path.join(PROJECT_DIR, "es/val_workers")
-TMPL_PATH    = os.path.join(PROJECT_DIR,
-    "lrauv_description/models/tethys_equipped/model.sdf.template")
-WORLD_PATH   = os.path.join(PROJECT_DIR,
-    "lrauv_gazebo_plugins/worlds/navigation_world.sdf")
 
-# ── PARAMETRI FISSI ───────────────────────────────────────────────
-R_MAX          = 100.0
-R_MIN          = 2.5
-MAX_FIN_ANGLE  = 0.15
-RADIUS_ARRIVED = 10.0
-MAX_ITERATIONS = 200000
-
-# ── CONFIGURAZIONE VALIDAZIONE ────────────────────────────────────
+# CONFIGURAZIONE VALIDAZIONE
 N_PARALLEL   = 6
 STARTUP_WAIT = 25.0
 
@@ -54,68 +40,15 @@ SEEDS = [
     1010, 2020, 3030, 4040, 5050
 ]
 
-# ── SCRITTURA SDF WORKER ──────────────────────────────────────────
-def write_worker_sdf(worker_id, theta, goal_x, goal_y, goal_z):
-    worker_dir = os.path.join(WORKERS_DIR, f"worker_{worker_id}", "tethys_equipped")
-    os.makedirs(worker_dir, exist_ok=True)
-
-    src_config = os.path.join(PROJECT_DIR,
-        "lrauv_description/models/tethys_equipped/model.config")
-    shutil.copy(src_config, os.path.join(worker_dir, "model.config"))
-
-    r_active = R_MAX * 0.75
-
-    with open(TMPL_PATH) as f:
-        content = f.read()
-
-    content = content.replace("__DRONE_ID__",         "0")
-    content = content.replace("__GOAL_X__",           f"{goal_x:.2f}")
-    content = content.replace("__GOAL_Y__",           f"{goal_y:.2f}")
-    content = content.replace("__GOAL_Z__",           f"{goal_z:.2f}")
-    content = content.replace("__GAIN_STEER__",       f"{theta['gain_steer']:.4f}")
-    content = content.replace("__GAIN_PITCH__",       f"{theta['gain_pitch']:.4f}")
-    content = content.replace("__VALLEY_THRESHOLD__", f"{theta['valley_threshold']:.4f}")
-    content = content.replace("__GRID_DECAY__",       f"{theta['grid_decay']:.4f}")
-    content = content.replace("__MAGNITUDE_A__",      f"{theta['magnitude_a']:.4f}")
-    content = content.replace("__SMOOTH_L__",         f"{int(round(theta['smooth_l']))}")
-    content = content.replace("__SAFETY_WINDOW__",    f"{int(round(theta['safety_window']))}")
-    content = content.replace("__MAX_FIN_ANGLE__",    f"{MAX_FIN_ANGLE}")
-    content = content.replace("__RADIUS_ARRIVED__",   f"{RADIUS_ARRIVED}")
-    content = content.replace("__MAX_ITERATIONS__",   f"{MAX_ITERATIONS}")
-    content = content.replace("__R_MAX__",            f"{R_MAX}")
-    content = content.replace("__R_MIN__",            f"{R_MIN}")
-    content = content.replace("__R_ACTIVE__",         f"{r_active}")
-
-    with open(os.path.join(worker_dir, "model.sdf"), "w") as f:
-        f.write(content)
-
-# ── PARSE RESULT ──────────────────────────────────────────────────
-def parse_result(output):
-    for line in output.splitlines():
-        low = line.lower()
-        for tag in ("arrived", "collision", "timeout"):
-            if tag in low:
-                result = {"tag": tag, "path": None, "t": None, "dist": None}
-                try:
-                    if "path=" in low:
-                        result["path"] = float(low.split("path=")[1].split(";")[0])
-                    if ";t=" in low:
-                        result["t"] = float(low.split(";t=")[1].split(";")[0].strip('"'))
-                    if "dist=" in low:
-                        result["dist"] = float(low.split("dist=")[1].split(";")[0].strip('"'))
-                except:
-                    pass
-                return result
-    return {"tag": None, "path": None, "t": None, "dist": None}
-
-# ── WORKER ────────────────────────────────────────────────────────
+# WORKER
 def run_worker(args):
     worker_id, theta, seed, goal_x, goal_y, goal_z, dist_init, world_dst = args
 
     cname     = f"val_gazebo_{worker_id}"
     partition = f"val_part_{worker_id}"
 
-    write_worker_sdf(worker_id, theta, goal_x, goal_y, goal_z)
+    model_dir = os.path.join(WORKERS_DIR, f"worker_{worker_id}", "tethys_equipped")
+    write_sdf(model_dir, theta, 0, goal_x, goal_y, goal_z, R_MAX, RADIUS_ARRIVED)
 
     resource_path = (
         f"/lrauv_ws/src/degree_project/es/val_workers/worker_{worker_id}:"
@@ -169,7 +102,7 @@ def run_worker(args):
     print(f"  seed={seed:5d} | {tag:9s} | t={t}", flush=True)
     return result
 
-# ── MAIN ──────────────────────────────────────────────────────────
+# MAIN
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--default", action="store_true",
@@ -245,9 +178,7 @@ def main():
     none_res  = [r for r in results if r["tag"] == "none"]
 
     n = len(results)
-    print(f"\n{'='*60}")
     print(f"  RISULTATI VALIDAZIONE ({n} seed)")
-    print(f"{'='*60}")
     print(f"  Arrived  : {len(arrived):2d}/{n}  ({100*len(arrived)/n:.0f}%)")
     print(f"  Collision: {len(collision):2d}/{n}  ({100*len(collision)/n:.0f}%)")
     print(f"  Timeout  : {len(timeout):2d}/{n}  ({100*len(timeout)/n:.0f}%)")
@@ -279,7 +210,6 @@ def main():
             "results":        results
         }, f, indent=2)
     print(f"\n  Salvato: {out_path}")
-
 
 if __name__ == "__main__":
     try:

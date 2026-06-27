@@ -5,9 +5,9 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SEED="${1:-$RANDOM}"
 
-# ─── Parametri plugin (unica fonte di verità) ────────────────────
+# Parametri plugin
 GAIN_STEER="0.8"
-GAIN_PITCH="0.8"
+GAIN_PITCH="1.5"
 MAX_FIN_ANGLE="0.15"
 RADIUS_ARRIVED="10.0"
 MAX_ITERATIONS="200000"
@@ -20,7 +20,6 @@ SAFETY_WINDOW="2"
 FACE_GOAL="False"
 
 echo " Gazebo GUI run  |  seed=$SEED"
-echo "============================================================"
 echo "   r_max          = $R_MAX m"
 echo "   valley_thr     = $VALLEY_THRESHOLD"
 echo "   smooth_l       = $SMOOTH_L"
@@ -34,7 +33,7 @@ echo "   radius_arrived = $RADIUS_ARRIVED m"
 echo "   max_iterations = $MAX_ITERATIONS"
 echo ""
 
-# ─── 1. Genera il world e scrivi model.sdf ───────────────────────
+# 1. Genera il world e scrivi model.sdf
 echo "[RUN] Generazione world..."
 python3 - <<EOF
 import sys
@@ -87,7 +86,7 @@ with open(dest, 'w') as f:
 print(f'[RUN] Goal: ({gx:.1f}, {gy:.1f}, {gz:.1f})')
 EOF
 
-# ─── 2. Ricompila plugin se sorgenti modificati ──────────────────
+# 2. Ricompila plugin se sorgenti modificati
 PLUGIN_SO="$PROJECT_DIR/docker_build/libNavigationPlugin.so"
 SRC_DIR="$PROJECT_DIR/lrauv_gazebo_plugins/src"
 HDR_DIR="$PROJECT_DIR/lrauv_gazebo_plugins/include"
@@ -127,7 +126,7 @@ else
     echo "[RUN] Plugin aggiornato, nessuna ricompilazione"
 fi
 
-# ─── 3. X11 forwarding ───────────────────────────────────────────
+# 3. X11 forwarding
 xhost +local:docker 2>/dev/null || true
 
 RENDER_GID=$(getent group render | cut -d: -f3 2>/dev/null || echo "")
@@ -136,7 +135,7 @@ EXTRA_GROUPS=()
 [[ -n "$RENDER_GID" ]] && EXTRA_GROUPS+=(--group-add "$RENDER_GID")
 [[ -n "$VIDEO_GID"  ]] && EXTRA_GROUPS+=(--group-add "$VIDEO_GID")
 
-# ─── 4. Lancia Gazebo con GUI ────────────────────────────────────
+# 4. Lancia Gazebo con GUI
 echo "[RUN] Avvio Gazebo con GUI..."
 echo "[RUN] Chiudi la finestra di Gazebo per terminare."
 echo ""
