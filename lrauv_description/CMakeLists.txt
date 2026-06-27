@@ -9,7 +9,6 @@ project(lrauv_description)
 
 include(CTest)
 
-#============================================================================
 # Model Generation
 add_custom_command(
   OUTPUT modelsdf
