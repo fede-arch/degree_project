@@ -16,18 +16,14 @@ __pycache__/
 *.pyd
 
 # Results & logs
-es/results/
-multi/gazebo.log
-multi/results/
+optimization/results/*.log
 *.log
 *.log.*
-
-# Generated model files
-lrauv_description/models/tethys/model.sdf
 
 # Editor stuff
 .vscode/
 .idea/
 
-# Modelli droni generati a runtime
+# Modelli generati a runtime
+lrauv_description/models/tethys_equipped/model.sdf
 lrauv_description/models/tethys_equipped_*/

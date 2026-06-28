@@ -10,7 +10,7 @@ import numpy as np
 # PATHS
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
-RESULTS_DIR = os.path.join(PROJECT_DIR, "es/results")
+RESULTS_DIR = os.path.join(PROJECT_DIR, "optimization/results")
 RESULTS_FILE = os.path.join(RESULTS_DIR, "es_results.csv")
 BEST_FILE = os.path.join(RESULTS_DIR, "best_theta.json")
 TMPL_PATH = os.path.join(PROJECT_DIR, "lrauv_description/models/tethys_equipped/model.sdf.template")
@@ -18,7 +18,7 @@ WORLD_PATH = os.path.join(PROJECT_DIR, "lrauv_gazebo_plugins/worlds/navigation_w
 
 # PARAMETRI COSTANTI
 R_MIN          = 2.5
-R_MAX          = 60.0
+R_MAX          = 40.0
 MAX_FIN_ANGLE  = 0.15
 MAX_ITERATIONS = 200000
 RADIUS_ARRIVED = 4.0
@@ -31,7 +31,7 @@ PARAM_NAMES = [
 ]
 THETA_MIN  = np.array([0.3,  0.3,  20.0, 0.90,  5.0, 2, 1])
 THETA_MAX  = np.array([2.5,  2.0, 100.0, 0.99, 25.0, 8, 5])
-THETA_INIT = np.array([1.1,  0.85, 50.6, 0.988, 12.5, 5, 3])
+THETA_INIT = np.array([0.5, 0.5, 50.0, 0.970, 15.0, 5, 3])
 SCALE      = THETA_MAX - THETA_MIN
 
 # FUNZIONI NORMALIZZAZIONE

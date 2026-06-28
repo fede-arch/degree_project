@@ -39,11 +39,11 @@ public:
     double prevX=0, prevY=0, prevZ=0;
     bool pathStarted = false;
 
-    double gainSteer=0.8, gainPitch=0.8, maxFinAngle=0.15, radiusArrived=6.0;
-    float r_min=2.5f, r_max=60.0f;
-    int n_r=60; float delta_r=1.0f;
-    float A=10.88f, B=0.0f, C_MAX=14.625f;
-    float r_active=50.0f; int n_r_active=50;
+    double gainSteer=0.8, gainPitch=0.8, maxFinAngle=0.15, radiusArrived=4.0;
+    float r_min=2.5f, r_max=40.0f;
+    int n_r=40; float delta_r=1.0f;
+    float A=15.0f, B=0.375f, C_MAX=15.0f;
+    float r_active=30.0f; int n_r_active=30;
     std::vector<float> grid_c, c_star;
     float gridDecay=0.982f;
     int n_phi=36, n_theta=36;
@@ -260,7 +260,7 @@ int main(int argc, char** argv){
     }
     VFHController ctrl;
     ctrl.setup(argv[1],std::stod(argv[2]),std::stod(argv[3]),std::stod(argv[4]),
-               0.8,0.8,34.4,0.982,10.88,5,2);
+           0.8,0.8,34.4,0.982,15.0,5,2);
     std::cout<<"[VFH] In attesa di dati sonar..."<<std::endl;
     ctrl.run();
     return 0;
