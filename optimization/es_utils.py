@@ -10,9 +10,18 @@ import numpy as np
 # PATHS
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
-RESULTS_DIR = os.path.join(PROJECT_DIR, "optimization/results")
-RESULTS_FILE = os.path.join(RESULTS_DIR, "es_results.csv")
-BEST_FILE = os.path.join(RESULTS_DIR, "best_theta.json")
+
+RESULTS_DIR         = os.path.join(PROJECT_DIR, "optimization/results")
+TRAINING_DIR        = os.path.join(RESULTS_DIR, "training")
+TRAINING_LOGS_DIR   = os.path.join(TRAINING_DIR, "logs")
+VAL_SINGLE_DIR      = os.path.join(RESULTS_DIR, "validation_single")
+VAL_SINGLE_LOGS_DIR = os.path.join(VAL_SINGLE_DIR, "logs")
+VAL_MULTI_DIR       = os.path.join(RESULTS_DIR, "validation_multi")
+VAL_MULTI_LOGS_DIR  = os.path.join(VAL_MULTI_DIR, "logs")
+
+RESULTS_FILE = os.path.join(TRAINING_DIR, "es_results.csv")
+BEST_FILE    = os.path.join(TRAINING_DIR, "best_theta.json")
+
 TMPL_PATH = os.path.join(PROJECT_DIR, "lrauv_description/models/tethys_equipped/model.sdf.template")
 WORLD_PATH = os.path.join(PROJECT_DIR, "lrauv_gazebo_plugins/worlds/navigation_world.sdf")
 
@@ -20,7 +29,7 @@ WORLD_PATH = os.path.join(PROJECT_DIR, "lrauv_gazebo_plugins/worlds/navigation_w
 R_MIN          = 2.5
 R_MAX          = 40.0
 MAX_FIN_ANGLE  = 0.15
-MAX_ITERATIONS = 200000
+MAX_ITERATIONS = 300000 # 300s
 RADIUS_ARRIVED = 4.0
 
 # PARAMETRI VFH
@@ -29,10 +38,11 @@ PARAM_NAMES = [
     "valley_threshold", "grid_decay",
     "magnitude_a", "smooth_l", "safety_window"
 ]
-THETA_MIN  = np.array([0.3,  0.3,  20.0, 0.90,  5.0, 2, 1])
-THETA_MAX  = np.array([2.5,  2.0, 100.0, 0.99, 25.0, 8, 5])
-THETA_INIT = np.array([0.5, 0.5, 50.0, 0.970, 15.0, 5, 3])
+THETA_MIN  = np.array([0.3,  0.3,  10.0, 0.90, 10.0, 2, 1])
+THETA_MAX  = np.array([2.5,  2.0,  60.0, 0.99, 20.0, 8, 5])
+THETA_INIT = np.array([0.8, 0.8, 30.0, 0.980, 15.0, 5, 2])
 SCALE      = THETA_MAX - THETA_MIN
+WEIGHT_DECAY = 0.01
 
 # FUNZIONI NORMALIZZAZIONE
 def norm(theta):

@@ -36,8 +36,9 @@ def run_simulation(args):
     world_container = world_path.replace(PROJECT_DIR, "/lrauv_ws/src/degree_project")
 
     subprocess.run(["docker", "rm", "-f", cname], capture_output=True)
-    os.makedirs(RESULTS_DIR, exist_ok=True)
-    log = open(os.path.join(RESULTS_DIR, f"val_multi_{run_id}.log"), "w")
+    os.makedirs(VAL_MULTI_DIR, exist_ok=True)
+    os.makedirs(VAL_MULTI_LOGS_DIR, exist_ok=True)
+    log = open(os.path.join(VAL_MULTI_LOGS_DIR, f"val_multi_{run_id}.log"), "w")
 
     proc = subprocess.Popen([
         "docker", "run", "--rm", "--name", cname,
@@ -92,9 +93,10 @@ def run_simulation(args):
 
 # MAIN 
 def main():
-    with open(BEST_FILE) as f:
+    with open(os.path.join(TRAINING_DIR, "final_theta.json")) as f:
         best = json.load(f)
     theta = best["theta"]
+    print(f"  Theta da: final_theta.json")
 
     print("  VFH Multi-Drone Validation")
     print(f"  Best reward ES : {best['reward']:.4f}")
@@ -154,7 +156,7 @@ def main():
         }
 
     # Salva
-    out_path = os.path.join(RESULTS_DIR, "validation_multi.json")
+    out_path = os.path.join(VAL_MULTI_DIR, "validation_multi.json")
     with open(out_path, "w") as f:
         json.dump({
             "theta":   theta,

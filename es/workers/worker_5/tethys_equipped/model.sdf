@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+<sdf version="1.9" xmlns:experimental="http://sdformat.org/schemas/experimental">
+  <model name="tethys_0">
+    <enable_wind>true</enable_wind>
+    <include merge="true">
+      
+      <pose degrees="true">0 0 0 0 0 0</pose>
+      <uri>tethys</uri>
+
+      <plugin filename="gz-sim-joint-position-controller-system"
+        name="gz::sim::systems::JointPositionController">
+        <joint_name>horizontal_fins_joint</joint_name>
+        <p_gain>0.1</p_gain>
+      </plugin>
+
+      <plugin filename="gz-sim-joint-position-controller-system"
+        name="gz::sim::systems::JointPositionController">
+        <joint_name>vertical_fins_joint</joint_name>
+        <p_gain>0.1</p_gain>
+      </plugin>
+
+      <plugin filename="gz-sim-thruster-system"
+        name="gz::sim::systems::Thruster">
+        <namespace>tethys_0</namespace>
+        <joint_name>propeller_joint</joint_name>
+        <thrust_coefficient>0.004422</thrust_coefficient>
+        <fluid_density>1025</fluid_density>
+        <propeller_diameter>0.2</propeller_diameter>
+      </plugin>
+
+      <plugin filename="gz-sim-lift-drag-system"
+        name="gz::sim::systems::LiftDrag">
+        <air_density>1025</air_density>
+        <cla>4.13</cla>
+        <cla_stall>-1.1</cla_stall>
+        <cda>0.2</cda>
+        <cda_stall>0.03</cda_stall>
+        <alpha_stall>0.17</alpha_stall>
+        <a0>0</a0>
+        <area>0.0244</area>
+        <upward>0 1 0</upward>
+        <forward>-1 0 0</forward>
+        <link_name>vertical_fins</link_name>
+        <cp>0 0 0</cp>
+      </plugin>
+
+      <plugin filename="gz-sim-lift-drag-system"
+        name="gz::sim::systems::LiftDrag">
+        <air_density>1025</air_density>
+        <cla>4.13</cla>
+        <cla_stall>-1.1</cla_stall>
+        <cda>0.2</cda>
+        <cda_stall>0.03</cda_stall>
+        <alpha_stall>0.17</alpha_stall>
+        <a0>0</a0>
+        <area>0.0244</area>
+        <upward>0 0 1</upward>
+        <forward>-1 0 0</forward>
+        <link_name>horizontal_fins</link_name>
+        <cp>0 0 0</cp>
+      </plugin>
+
+      <plugin filename="HydrodynamicsPlugin"
+        name="tethys::HydrodynamicsPlugin">
+        <link_name>base_link</link_name>
+        <enable_coriolis>false</enable_coriolis>
+        <xDotU>-4.876161</xDotU>
+        <yDotV>-126.324739</yDotV>
+        <zDotW>-126.324739</zDotW>
+        <kDotP>0</kDotP>
+        <mDotQ>-33.46</mDotQ>
+        <nDotR>-33.46</nDotR>
+        <xUU>-6.2282</xUU>
+        <xU>0</xU>
+        <yVV>-601.27</yVV>
+        <yV>0</yV>
+        <zWW>-601.27</zWW>
+        <zW>0</zW>
+        <kPP>-0.1916</kPP>
+        <kP>0</kP>
+        <mQQ>-632.698957</mQQ>
+        <mQ>0</mQ>
+        <nRR>-632.698957</nRR>
+        <nR>0</nR>
+      </plugin>
+
+      <plugin filename="NavigationPlugin"
+        name="tethys::NavigationPlugin">
+        <world_name>empty_environment</world_name>
+        <namespace>tethys_0</namespace>
+
+        <!-- GOAL -->
+        <goal_x>-6.10</goal_x>
+        <goal_y>45.51</goal_y>
+        <goal_z>-67.25</goal_z>
+
+        <!-- CONTROLLO -->
+        <gain_steer>1.3766</gain_steer>
+        <gain_pitch>0.3000</gain_pitch>
+        <max_fin_angle>0.15</max_fin_angle>
+        <radius_arrived>4.0</radius_arrived>
+        <max_iterations>300000</max_iterations>
+
+        <!-- LIDAR -->
+        <r_max>40.0</r_max>
+        <r_min>2.5</r_min>
+        <r_active>30.00</r_active>
+
+        <!-- VFH -->
+        <valley_threshold>26.5343</valley_threshold>
+        <smooth_l>6</smooth_l>
+        <safety_window>2</safety_window>
+        <grid_decay>0.9677</grid_decay>
+        <magnitude_a>15.1263</magnitude_a>
+      </plugin>
+
+      <experimental:params>
+        <sensor element_id="base_link::contact_sensor" action="modify">
+          <topic>/tethys_0/contact</topic>
+        </sensor>
+        <sensor element_id="lidar_link::gpu_lidar" action="modify">
+          <topic>/tethys_0/lidar</topic>
+        </sensor>
+      </experimental:params>
+
+      
+    </include>
+  </model>
+</sdf>

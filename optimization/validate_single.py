@@ -58,8 +58,9 @@ def run_worker(args):
     world_container = world_dst.replace(PROJECT_DIR, "/lrauv_ws/src/degree_project")
 
     subprocess.run(["docker", "rm", "-f", cname], capture_output=True)
-    os.makedirs(RESULTS_DIR, exist_ok=True)
-    log = open(os.path.join(RESULTS_DIR, f"val_{worker_id}.log"), "w")
+    os.makedirs(VAL_SINGLE_DIR, exist_ok=True)
+    os.makedirs(VAL_SINGLE_LOGS_DIR, exist_ok=True)
+    log = open(os.path.join(VAL_SINGLE_LOGS_DIR, f"val_{worker_id}.log"), "w")
 
     proc = subprocess.Popen([
         "docker", "run", "--rm", "--name", cname,
@@ -114,10 +115,10 @@ def main():
         best_reward = 0.0
         mode = "DEFAULT"
     else:
-        with open(BEST_FILE) as f:
+        with open(os.path.join(TRAINING_DIR, "final_theta.json")) as f:
             best = json.load(f)
         theta = best["theta"]
-        best_reward = best["reward"]
+        best_reward = 0.0
         mode = "ES"
 
     print(f"  VFH Validation — modalità: {mode}")
@@ -200,7 +201,7 @@ def main():
                 print(f"    seed={r['seed']:5d} | {r['tag']}")
 
     filename = "validation_default.json" if cli.default else "validation_es.json"
-    out_path = os.path.join(RESULTS_DIR, filename)
+    out_path = os.path.join(VAL_SINGLE_DIR, filename)
     with open(out_path, "w") as f:
         json.dump({
             "best_reward_es": best_reward,

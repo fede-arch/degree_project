@@ -1,0 +1,3 @@
+gen,seed,mean_reward,gain_steer,gain_pitch,valley_threshold,grid_decay,magnitude_a,smooth_l,safety_window
+1,88179,1.4431,0.904257,0.687223,29.115133,0.978800,14.899898,4.552675,1.873997
+2,67100,1.1457,1.271458,0.631701,31.909242,0.974207,15.086390,4.679925,1.959790

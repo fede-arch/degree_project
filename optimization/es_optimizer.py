@@ -24,7 +24,7 @@ N_WORKERS    = 6       # deve essere pari (campionamento antitetico)
 N_GEN        = 20
 SIGMA        = 0.15    # ampiezza perturbazione (spazio normalizzato [0,1])
 ALPHA        = 0.05    # learning rate
-STARTUP_WAIT = 25.0    # secondi attesa boot Gazebo headless
+STARTUP_WAIT = 20.0    # secondi attesa boot Gazebo headless
 
 # PATH
 WORKERS_DIR  = os.path.join(PROJECT_DIR, "es/workers")
@@ -96,8 +96,8 @@ def run_worker(args):
 
     subprocess.run(["docker", "rm", "-f", cname], capture_output=True)
 
-    os.makedirs(RESULTS_DIR, exist_ok=True)
-    log = open(os.path.join(RESULTS_DIR, f"gazebo_{worker_id}.log"), "w")
+    os.makedirs(TRAINING_LOGS_DIR, exist_ok=True)
+    log = open(os.path.join(TRAINING_LOGS_DIR, f"gazebo_{worker_id}.log"), "w")
 
     proc = subprocess.Popen([
         "docker", "run", "--rm", "--name", cname,
@@ -120,11 +120,12 @@ def run_worker(args):
         listener = subprocess.Popen([
             "docker", "exec", cname, "bash", "-c",
             f"source /setup.sh && export GZ_PARTITION={partition} && "
-            f"gz topic -e -n 1 -t /es/episode_result"
+            f"gz topic -e -n 1 -t /tethys_0/es/episode_result"
         ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
         try:
-            out, _ = listener.communicate(timeout=360)
+            timeout_ep = max(180, int(dist_init / 1.0 * 2.5))
+            out, _ = listener.communicate(timeout=timeout_ep)
         except subprocess.TimeoutExpired:
             listener.kill()
             out = ""
@@ -140,9 +141,8 @@ def run_worker(args):
 # MAIN
 def main():
     print("  Evolution Strategies — VFH Parameter Optimization")
-    print(f"  Workers/gen : {N_WORKERS}  |  Generazioni: {N_GEN}")
+    print(f"  Workers x gen : {N_WORKERS}  |  Generazioni: {N_GEN}")
     print(f"  Sigma: {SIGMA}  |  Alpha: {ALPHA}")
-    print(f"  Parametri  : {PARAM_NAMES}")
     print(f"  θ iniziale : {dict(zip(PARAM_NAMES, THETA_INIT))}")
     print()
 
@@ -152,8 +152,16 @@ def main():
     best_theta  = theta.copy()
     best_reward = -np.inf
 
+    SCENARIO_SEEDS = [random.randint(0, 99999) for _ in range(N_GEN)]
+    seeds_path = os.path.join(TRAINING_DIR, "training_seeds.json")
+    os.makedirs(TRAINING_DIR, exist_ok=True)
+    os.makedirs(TRAINING_LOGS_DIR, exist_ok=True)
+    with open(seeds_path, "w") as f:
+        json.dump({"seeds": SCENARIO_SEEDS}, f)
+    print(f"[ES] Scenari generati: {SCENARIO_SEEDS}")
+
     for gen in range(N_GEN):
-        seed = random.randint(0, 99999)
+        seed = SCENARIO_SEEDS[gen]
 
         # Genera world (uguale per tutti i worker di questa generazione)
         goal_x, goal_y, goal_z = generate_world(
@@ -165,7 +173,7 @@ def main():
         sx, sy, sz = float(pose_parts[0]), float(pose_parts[1]), float(pose_parts[2])
         dist_init  = np.sqrt((goal_x-sx)**2 + (goal_y-sy)**2 + (goal_z-sz)**2)
 
-        print(f"── Gen {gen+1}/{N_GEN} | seed={seed} | dist={dist_init:.1f}m")
+        print(f"Gen {gen+1}/{N_GEN} | seed={seed} | dist={dist_init:.1f}m")
 
         # Perturbazioni antitetiche
         epsilons = []
@@ -199,7 +207,7 @@ def main():
             shaped = ranked / (len(ranked) - 1) - 0.5
             grad   = sum(s * eps for s, eps in zip(shaped, epsilons))
             grad  /= len(epsilons) * SIGMA
-            theta  = np.clip(theta + ALPHA * grad, 0.0, 1.0)
+            theta = np.clip(theta + ALPHA * grad - WEIGHT_DECAY * theta, 0.0, 1.0)
         else:
             print("  [WARN] tutti reward identici, skip update")
 
@@ -220,10 +228,9 @@ def main():
     for name, val in zip(PARAM_NAMES, best):
         print(f"  {name}: {val:.4f}")
 
-    final_path = os.path.join(RESULTS_DIR, "final_theta.json")
+    final_path = os.path.join(TRAINING_DIR, "final_theta.json")
     with open(final_path, "w") as fh:
-        json.dump({"theta": dict(zip(PARAM_NAMES, [float(v) for v in best]))},
-                  fh, indent=2)
+        json.dump({"theta": dict(zip(PARAM_NAMES, [float(v) for v in denorm(theta)]))}, fh, indent=2)
     print(f"\nSalvato in: {final_path}")
     print(f"Risultati : {RESULTS_FILE}")
     print(f"Migliore  : {BEST_FILE}")
