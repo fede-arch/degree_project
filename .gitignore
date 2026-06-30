@@ -27,3 +27,7 @@ optimization/results/*.log
 # Modelli generati a runtime
 lrauv_description/models/tethys_equipped/model.sdf
 lrauv_description/models/tethys_equipped_*/
+
+# World generati a runtime
+lrauv_gazebo_plugins/worlds/navigation_world.sdf
+lrauv_gazebo_plugins/worlds/navigation_world_multi.sdf

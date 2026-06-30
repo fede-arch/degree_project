@@ -45,7 +45,7 @@ def run_remote(project_dir, seed):
     from generate_world import generate_world
 
     gx, gy, gz = generate_world(project_dir, seed=seed, face_goal=False)
-    tmpl = os.path.join(project_dir, 'lrauv_description/models/tethys_equipped/model_remote.sdf.template')
+    tmpl = os.path.join(project_dir, 'lrauv_description/models/tethys_equipped/model_remote.sdf.in')
     dest = os.path.join(project_dir, 'lrauv_description/models/tethys_equipped/model.sdf')
 
     with open(tmpl) as f:

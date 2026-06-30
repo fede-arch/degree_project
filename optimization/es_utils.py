@@ -22,7 +22,7 @@ VAL_MULTI_LOGS_DIR  = os.path.join(VAL_MULTI_DIR, "logs")
 RESULTS_FILE = os.path.join(TRAINING_DIR, "es_results.csv")
 BEST_FILE    = os.path.join(TRAINING_DIR, "best_theta.json")
 
-TMPL_PATH = os.path.join(PROJECT_DIR, "lrauv_description/models/tethys_equipped/model.sdf.template")
+TMPL_PATH = os.path.join(PROJECT_DIR, "lrauv_description/models/tethys_equipped/model.sdf.in")
 WORLD_PATH = os.path.join(PROJECT_DIR, "lrauv_gazebo_plugins/worlds/navigation_world.sdf")
 
 # PARAMETRI COSTANTI
