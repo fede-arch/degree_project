@@ -51,14 +51,14 @@
 
     <!-- Tethys -->
     <include>
-      <pose>178.27 -11.65 -70.00 0 0 -0.31</pose>
+      <pose>-84.80 -23.03 -75.00 0 0 -3.08</pose>
       <uri>tethys_equipped</uri>
     </include>
 
     <!-- Target -->
     <model name="target_marker">
       <static>true</static>
-      <pose>-6.10 45.51 -67.25 0 0 0</pose>
+      <pose>284.40 30.36 -70.35 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -76,70 +76,210 @@
   <include>
     <name>rock_0</name>
     <uri>falling rock 1</uri>
-    <pose>131.01 31.09 -77.32 0 0 0.37</pose>
+    <pose>56.45 56.15 -90.88 0 0 2.50</pose>
     <static>true</static>
   </include>
 
   <include>
     <name>rock_1</name>
     <uri>falling rock 1</uri>
-    <pose>89.60 -7.64 -65.23 0 0 0.58</pose>
+    <pose>351.70 110.29 -80.49 0 0 1.03</pose>
     <static>true</static>
   </include>
 
   <include>
     <name>rock_2</name>
     <uri>falling rock 1</uri>
-    <pose>223.63 93.46 -72.77 0 0 1.47</pose>
+    <pose>61.24 166.11 -80.99 0 0 2.33</pose>
     <static>true</static>
   </include>
 
   <include>
     <name>rock_3</name>
     <uri>falling rock 1</uri>
-    <pose>186.78 69.69 -65.05 0 0 2.16</pose>
+    <pose>136.30 -112.78 -80.85 0 0 0.90</pose>
     <static>true</static>
   </include>
 
   <include>
     <name>rock_4</name>
     <uri>falling rock 1</uri>
-    <pose>153.73 118.72 -64.26 0 0 0.54</pose>
+    <pose>14.50 7.46 -90.59 0 0 0.98</pose>
     <static>true</static>
   </include>
 
   <include>
     <name>rock_5</name>
     <uri>falling rock 1</uri>
-    <pose>73.29 -67.55 -64.75 0 0 1.08</pose>
+    <pose>-78.44 121.48 -82.33 0 0 1.64</pose>
     <static>true</static>
   </include>
 
   <include>
     <name>rock_6</name>
     <uri>falling rock 1</uri>
-    <pose>81.29 -28.22 -76.16 0 0 0.01</pose>
+    <pose>-7.66 -54.18 -89.24 0 0 0.93</pose>
     <static>true</static>
   </include>
 
   <include>
     <name>rock_7</name>
     <uri>falling rock 1</uri>
-    <pose>11.04 -129.62 -69.87 0 0 2.76</pose>
+    <pose>193.22 -144.03 -79.63 0 0 1.68</pose>
     <static>true</static>
   </include>
 
   <include>
     <name>rock_8</name>
     <uri>falling rock 1</uri>
-    <pose>226.54 -107.12 -87.24 0 0 3.06</pose>
+    <pose>364.46 -90.99 -78.77 0 0 0.47</pose>
     <static>true</static>
   </include>
 
   <include>
     <name>rock_9</name>
     <uri>falling rock 1</uri>
-    <pose>-23.22 -122.14 -66.20 0 0 2.75</pose>
+    <pose>209.06 156.22 -95.81 0 0 1.86</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_10</name>
+    <uri>falling rock 1</uri>
+    <pose>118.25 128.66 -97.07 0 0 3.03</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_11</name>
+    <uri>falling rock 1</uri>
+    <pose>32.09 -152.11 -75.61 0 0 2.43</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_12</name>
+    <uri>falling rock 1</uri>
+    <pose>321.81 -47.11 -91.05 0 0 1.35</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_13</name>
+    <uri>falling rock 1</uri>
+    <pose>108.94 -158.88 -89.20 0 0 1.03</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_14</name>
+    <uri>falling rock 1</uri>
+    <pose>248.68 -139.96 -81.61 0 0 0.79</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_15</name>
+    <uri>falling rock 1</uri>
+    <pose>137.18 -68.65 -92.64 0 0 0.13</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_16</name>
+    <uri>falling rock 1</uri>
+    <pose>-101.57 -118.95 -77.24 0 0 0.25</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_17</name>
+    <uri>falling rock 1</uri>
+    <pose>81.10 -120.69 -87.99 0 0 1.18</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_18</name>
+    <uri>falling rock 1</uri>
+    <pose>180.85 -32.57 -79.71 0 0 1.22</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_19</name>
+    <uri>falling rock 1</uri>
+    <pose>77.19 -15.92 -88.23 0 0 2.83</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_20</name>
+    <uri>falling rock 1</uri>
+    <pose>151.60 97.99 -89.90 0 0 1.51</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_21</name>
+    <uri>falling rock 1</uri>
+    <pose>240.19 124.72 -96.93 0 0 0.27</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_22</name>
+    <uri>falling rock 1</uri>
+    <pose>6.04 132.71 -88.37 0 0 1.77</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_23</name>
+    <uri>falling rock 1</uri>
+    <pose>223.29 -93.22 -95.79 0 0 1.90</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_24</name>
+    <uri>falling rock 1</uri>
+    <pose>-106.64 42.68 -77.97 0 0 0.73</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_25</name>
+    <uri>falling rock 1</uri>
+    <pose>212.62 -7.54 -97.32 0 0 1.56</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_26</name>
+    <uri>falling rock 1</uri>
+    <pose>41.83 -103.17 -79.99 0 0 1.05</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_27</name>
+    <uri>falling rock 1</uri>
+    <pose>313.74 124.67 -87.55 0 0 0.11</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_28</name>
+    <uri>falling rock 1</uri>
+    <pose>272.12 -88.79 -79.48 0 0 2.63</pose>
+    <static>true</static>
+  </include>
+
+  <include>
+    <name>rock_29</name>
+    <uri>falling rock 1</uri>
+    <pose>-51.14 157.24 -73.75 0 0 0.97</pose>
     <static>true</static>
   </include>
 
@@ -148,14 +288,14 @@
     <include>
       <name>portuguese_ledge</name>
       <uri>portuguese ledge</uri>
-      <pose>500 0 -70 0 0 0</pose>
+      <pose>500 0 -65 0 0 0</pose>
       <static>true</static>
     </include>
-
+    
     <!-- Piano fondale per collisioni -->
     <model name="sea_floor_collision">
       <static>true</static>
-      <pose>0 0 -95 0 0 0</pose>
+      <pose>0 0 -98 0 0 0</pose>
       <link name="link">
         <collision name="collision">
           <geometry>
@@ -164,7 +304,6 @@
         </collision>
       </link>
     </model>
-
 
   </world>
 </sdf>

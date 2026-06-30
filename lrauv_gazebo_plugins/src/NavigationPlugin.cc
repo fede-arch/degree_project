@@ -10,7 +10,7 @@ using namespace std;
 
 namespace tethys {
 
-  // --- NavigationPrivateData ---
+  // NavigationPrivateData
   class NavigationPrivateData {
     public: static constexpr double THRUST_FORCE  = -31.0;
     public: static constexpr int    THRUST_PERIOD = 100;
@@ -282,7 +282,6 @@ namespace tethys {
 
         for (int p = 0; p < n_phi; p++) {
             for (int t = 0; t < n_theta; t++) {
-
                 bool all_free = true;
                 for (int dp = -W; dp <= W && all_free; dp++) {
                     for (int dt = -W; dt <= W && all_free; dt++) {
@@ -324,6 +323,7 @@ namespace tethys {
         this->horizFinPub.Publish(msg_v);
     }
 
+    
     // PUBBLICA RISULTATO E FERMA MOTORI
     public: void publish_result_and_stop() {
         if (resultPublished) return;

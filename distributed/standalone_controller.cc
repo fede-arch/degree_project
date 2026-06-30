@@ -160,13 +160,17 @@ public:
         best_phi=k_targ; best_theta=k_targ_theta;
         float best_cost=std::numeric_limits<float>::max();
         int W=safetyWindow;
+        float max_h = *std::max_element(&h_smooth[0][0], &h_smooth[0][0] + n_phi*n_theta);
+        float threshold = (max_h > 0) ? VALLEY_THRESHOLD * max_h : 1.0f;
+
         for(int p=0;p<n_phi;p++) for(int t=0;t<n_theta;t++){
             bool free=true;
             for(int dp=-W;dp<=W&&free;dp++) for(int dt=-W;dt<=W&&free;dt++){
                 int pp=p+dp, tt=t+dt;
                 if(pp<0||pp>=n_phi)continue; if(tt<0||tt>=n_theta)continue;
-                if(h_smooth[pp][tt]>=VALLEY_THRESHOLD)free=false;
+                if (h_smooth[pp][tt] >= threshold) free = false;
             }
+
             if(free){
                 float c=std::sqrt((float)((p-k_targ)*(p-k_targ)+(t-k_targ_theta)*(t-k_targ_theta)*4));
                 if(c<best_cost){best_cost=c; best_phi=p; best_theta=t;}
@@ -260,7 +264,7 @@ int main(int argc, char** argv){
     }
     VFHController ctrl;
     ctrl.setup(argv[1],std::stod(argv[2]),std::stod(argv[3]),std::stod(argv[4]),
-           0.8,0.8,34.4,0.982,15.0,5,2);
+           0.8,0.8,0.4,0.982,15.0,5,2);
     std::cout<<"[VFH] In attesa di dati sonar..."<<std::endl;
     ctrl.run();
     return 0;

@@ -17,7 +17,7 @@
             <collision name="collision">
                 <geometry>
                     <mesh>
-                        <scale>40 40 40</scale>
+                        <scale>35 35 35</scale>
             <uri>meshes/FallingRock01_Collider.dae</uri>
                     </mesh>
                 </geometry>
@@ -25,7 +25,7 @@
             <visual name="visual">
                 <geometry>
                     <mesh>
-                        <scale>40 40 40</scale>
+                        <scale>35 35 35</scale>
             <uri>meshes/FallingRock01.dae</uri>
                     </mesh>
                 </geometry>
