@@ -15,13 +15,13 @@ sys.path.append(os.path.join(PROJECT_DIR, "scripts"))
 from generate_world import generate_world
 
 DEFAULT_THETA = {
-    "gain_steer":       0.5,
-    "gain_pitch":       0.5,
-    "valley_threshold": 50.0,
-    "grid_decay":       0.97,
+    "gain_steer":       0.8,
+    "gain_pitch":       0.8,
+    "valley_threshold": 40.0,
+    "grid_decay":       0.982,
     "magnitude_a":      15.0,
     "smooth_l":         5,
-    "safety_window":    3
+    "safety_window":    2
 }
 
 # PATH
@@ -86,7 +86,8 @@ def run_worker(args):
         ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
         try:
-            out, _ = listener.communicate(timeout=360)
+            timeout_ep = max(300, int(dist_init / 1.0 * 2.5))
+            out, _ = listener.communicate(timeout=timeout_ep)
         except subprocess.TimeoutExpired:
             listener.kill()
             out = ""
@@ -122,7 +123,6 @@ def main():
         mode = "ES"
 
     print(f"  VFH Validation — modalità: {mode}")
-    print("=" * 60)
     if not cli.default:
         print(f"  Best reward ES : {best_reward:.4f}")
     for k, v in theta.items():
@@ -135,7 +135,7 @@ def main():
     # Pre-genera tutti i world e li salva con nome univoco
     worker_args = []
     for i, seed in enumerate(SEEDS):
-        goal_x, goal_y, goal_z = generate_world(PROJECT_DIR, seed=seed, face_goal=False)
+        goal_x, goal_y, goal_z = generate_world(PROJECT_DIR, seed=seed, face_goal=True)
 
         world_dst = os.path.join(PROJECT_DIR,
             f"lrauv_gazebo_plugins/worlds/val_{i}.sdf")

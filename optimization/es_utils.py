@@ -29,7 +29,7 @@ WORLD_PATH = os.path.join(PROJECT_DIR, "lrauv_gazebo_plugins/worlds/navigation_w
 R_MIN          = 2.5
 R_MAX          = 40.0
 MAX_FIN_ANGLE  = 0.15
-MAX_ITERATIONS = 300000 # 300s
+MAX_ITERATIONS = 500000 # 500s
 RADIUS_ARRIVED = 4.0
 
 # PARAMETRI VFH
@@ -38,9 +38,9 @@ PARAM_NAMES = [
     "valley_threshold", "grid_decay",
     "magnitude_a", "smooth_l", "safety_window"
 ]
-THETA_MIN  = np.array([0.3,  0.3,  10.0, 0.90, 10.0, 2, 1])
-THETA_MAX  = np.array([2.5,  2.0,  60.0, 0.99, 20.0, 8, 5])
-THETA_INIT = np.array([0.8, 0.8, 30.0, 0.980, 15.0, 5, 2])
+THETA_MIN  = np.array([0.7,  0.7,  25.0, 0.90, 12.0, 3, 2])
+THETA_MAX  = np.array([1.5,  1.5,  80.0, 0.99, 18.0, 6, 4])
+THETA_INIT = np.array([1.2,  1.2, 28.0, 0.967, 14.2, 4, 2])
 SCALE      = THETA_MAX - THETA_MIN
 WEIGHT_DECAY = 0.01
 

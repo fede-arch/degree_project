@@ -20,11 +20,11 @@ sys.path.append(os.path.join(PROJECT_DIR, "scripts"))
 from generate_world import generate_world
 
 # ES IPER-PARAMETRI 
-N_WORKERS    = 6       # deve essere pari (campionamento antitetico)
+N_WORKERS    = 10       # pari (campionamento antitetico)
 N_GEN        = 20
-SIGMA        = 0.15    # ampiezza perturbazione (spazio normalizzato [0,1])
-ALPHA        = 0.05    # learning rate
-STARTUP_WAIT = 20.0    # secondi attesa boot Gazebo headless
+SIGMA        = 0.10    # ampiezza perturbazione (spazio normalizzato [0,1])
+ALPHA        = 0.03    # learning rate
+STARTUP_WAIT = 20.0    # secondi attesa boot Gazebo
 
 # PATH
 WORKERS_DIR  = os.path.join(PROJECT_DIR, "es/workers")
@@ -124,7 +124,7 @@ def run_worker(args):
         ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
         try:
-            timeout_ep = max(180, int(dist_init / 1.0 * 2.5))
+            timeout_ep = max(300, int(dist_init / 1.0 * 2.5))
             out, _ = listener.communicate(timeout=timeout_ep)
         except subprocess.TimeoutExpired:
             listener.kill()
@@ -143,14 +143,16 @@ def main():
     print("  Evolution Strategies — VFH Parameter Optimization")
     print(f"  Workers x gen : {N_WORKERS}  |  Generazioni: {N_GEN}")
     print(f"  Sigma: {SIGMA}  |  Alpha: {ALPHA}")
-    print(f"  θ iniziale : {dict(zip(PARAM_NAMES, THETA_INIT))}")
     print()
 
     build_plugins()
 
-    theta       = norm(THETA_INIT.copy())
+    theta = norm(THETA_INIT.copy()) + np.random.uniform(-0.05, 0.05, size=len(THETA_MIN))
+    theta = np.clip(theta, 0.0, 1.0)
     best_theta  = theta.copy()
     best_reward = -np.inf
+    print(f"  θ casuale : {dict(zip(PARAM_NAMES, [round(v, 3) for v in denorm(theta)]))}")
+
 
     SCENARIO_SEEDS = [random.randint(0, 99999) for _ in range(N_GEN)]
     seeds_path = os.path.join(TRAINING_DIR, "training_seeds.json")
@@ -166,6 +168,12 @@ def main():
         # Genera world (uguale per tutti i worker di questa generazione)
         goal_x, goal_y, goal_z = generate_world(
             PROJECT_DIR, seed=seed, face_goal=False)
+        
+        tree_check = ET.parse(WORLD_PATH)
+        n_includes = len(tree_check.getroot().findall(".//include"))
+        if n_includes < 9:
+            print(f"  [SKIP] solo {n_includes-2} rocce, seed skippato")
+            continue
 
         # Leggi spawn dal world generato
         tree = ET.parse(WORLD_PATH)
@@ -194,8 +202,14 @@ def main():
             results = list(ex.map(run_worker, args))
 
         rewards = np.array([r for r, _ in results])
-        tags    = [t for _, t in results]
+        tags = [t for _, t in results]
 
+        if np.std(rewards) < 0.05:
+            print("  [WARN] varianza rewards troppo bassa, scenario skippato")
+            save_results(gen+1, denorm(theta), float(np.mean(rewards)), seed)
+            print()
+            continue
+        
         for i, (r, t) in enumerate(zip(rewards, tags)):
             print(f"  worker {i}: {str(t):10s}  reward={r:+.2f}")
 
