@@ -1,126 +1,133 @@
-# LRAUV Simulation
+# Simulazione LRAUV — Tesi di Laurea Triennale
 
-This repository contains the libraries, plugins and other files for the simulation of the Tethys-class Long-Range AUV (LRAUV) from the Monterey Bay Aquarium Research Institute (MBARI).
+Questo repository estende la simulazione originale MBARI con un sistema di navigazione autonoma basato su **Vector Field Histogram 3D (VFH)** per l'elusione degli ostacoli in ambienti sottomarini.
 
-For documentation regarding this repository please refer to the [wiki](https://github.com/osrf/lrauv/wiki).
+**Autore:** Federico D'Angelo  
+**Tesi:** *Navigazione autonoma di AUV con VFH 3D in ambiente simulato*  
+**Relatore:** Prof. Enrico Tronci  
+**Università:** Sapienza Università di Roma, 2025/2026
 
 <p align="center">
   <img width="40%" src="https://raw.githubusercontent.com/wiki/osrf/lrauv/media/LRUAV_3D.gif" alt="LRAUV 3D">
 </p>
 
-Source files, models, and plugins relevant to a general audience are upstreamed on an irregular basis to [Gazebo libraries](https://gazebosim.org), the top-level library being [gz-sim](https://github.com/gazebosim/gz-sim). Upstreamed files may eventually be removed from the repository.
+---
 
-Standalone, the repository contains the environment and plugins necessary to simulate an underwater vehicle in Gazebo. Integrated with the real-world LRAUV controller code, the binaries of which are provided to the public on MBARI's DockerHub, the simulated robot can be controlled using the same code executed on the real robot. This enables the validation of scientific missions for oceanography research.
+## Struttura del Repository
 
-## Citations
+```
+lrauv_gazebo_plugins/
+├── src/
+│   ├── NavigationPlugin.cc        # plugin VFH 3D (Gazebo)
+│   └── HydrodynamicsPlugin.cc
+└── worlds/
+    ├── navigation_world.sdf       # scenario singolo AUV
+    └── navigation_world_multi.sdf # scenario multi-AUV
 
-> Timothy R. Player, Arjo Chakravarty, Mabel M. Zhang, Ben Yair Raanan, Brian Kieft, Yanwu Zhang, and Brett Hobson, "From Concept to Field Tests: Accelerated Development of Multi-AUV Missions Using a High-Fidelity Faster-than-Real-Time Simulator," in *IEEE International Conference on Robotics and Automation (ICRA)*, May 2023.
+optimization/
+├── es_optimizer.py                # loop principale Evolution Strategies
+├── es_utils.py                    # parametri VFH e utilities condivise
+├── validate_single.py             # validazione singolo AUV
+├── validate_multi.py              # validazione multi-AUV
+└── results/
+    ├── training/                  # risultati training ES
+    ├── validation_single/         # risultati validazione singolo
+    └── validation_multi/          # risultati validazione multi
+
+scripts/
+├── generate_world.py              # generazione procedurale scenario
+├── generate_world_multi.py        # generazione scenario multi-AUV
+├── run.sh                         # avvio simulazione singolo AUV
+├── run_multi.sh                   # avvio simulazione multi-AUV
+└── run_remote.sh                  # avvio server Gazebo (modalità distribuita)
+
+distributed/
+└── standalone_controller.cc       # controller VFH standalone (macchina remota)
+
+tools/setup/
+├── setup_run.py                   # preparazione world e parametri
+├── build_plugin.sh                # compilazione plugin
+└── Dockerfile                     # immagine Docker lrauv:harmonic
+```
 
 ---
 
-## VFH 3D Navigation — Degree Project
+## Requisiti
 
-This fork extends the original MBARI simulation with a 3D Vector Field Histogram (VFH) navigation system for autonomous underwater obstacle avoidance, developed as a Bachelor's thesis at Sapienza Università di Roma.
+- Docker con immagine `lrauv:harmonic` (Gazebo Harmonic)
+- Python 3.10+ con `numpy`
+- Per modalità distribuita: `gz-harmonic`, `libgz-transport13-dev`, `libgz-msgs10-dev`
 
-**Author:** Federico D'Angelo  
-**Thesis:** *Implementazione del metodo VFH in ambienti sottomarini* (2025/2026)  
-**Supervisor:** Prof. Enrico Tronci
-
-### Repository Structure
-
-```
-lrauv_gazebo_plugins/       # Gazebo plugins (C++)
-│   ├── src/
-│   │   ├── NavigationPlugin.cc   # VFH 3D navigation plugin
-│   │   └── HydrodynamicsPlugin.cc
-│   └── worlds/
-│       ├── navigation_world.sdf         # single AUV world
-│       └── navigation_world_multi.sdf   # multi-AUV world
-
-optimization/               # Evolution Strategies parameter tuning
-│   ├── es_optimizer.py     # ES main loop
-│   ├── es_utils.py         # shared utilities and VFH parameters
-│   ├── validate_single.py  # single AUV validation
-│   └── validate_multi.py   # multi-AUV validation
-
-scripts/                    # launch scripts
-│   ├── generate_world.py   # procedural world generation
-│   ├── generate_world_multi.py
-│   ├── run.sh              # single AUV simulation
-│   ├── run_multi.sh        # multi-AUV simulation
-│   └── run_remote.sh       # distributed: Gazebo server side
-
-distributed/                # distributed architecture (Chapter 9)
-│   └── standalone_controller.cc  # VFH controller (remote machine)
-
-tools/setup/                # Docker and build utilities
-es/results/                 # ES optimization results (JSON)
-tesi/                       # thesis plots and figures
-```
-
-### Requirements
-
-- Docker with image `lrauv:harmonic` (Gazebo Harmonic)
-- Python 3.10+ with `numpy`
-- For distributed mode: `gz-harmonic`, `libgz-transport13-dev`, `libgz-msgs10-dev`
-
-Build the Docker image:
+Costruisci l'immagine Docker:
 ```bash
 docker build -t lrauv:harmonic tools/setup/
 ```
 
-### Single AUV Simulation
+---
 
-Run a single navigation episode with a random scenario:
+## Simulazione Singolo AUV
+
+Avvia un episodio di navigazione con scenario casuale:
 ```bash
 ./scripts/run.sh [seed]
 ```
 
-### Parameter Optimization (Evolution Strategies)
+---
 
-Optimize VFH parameters over 20 generations with 6 parallel workers:
+## Ottimizzazione Parametri (Evolution Strategies)
+
+Ottimizza i parametri VFH su 20 generazioni con 10 worker paralleli:
 ```bash
 cd optimization
 python3 es_optimizer.py
 ```
 
-Results are saved in `es/results/`. To validate optimized parameters on 30 unseen scenarios:
+Valida i parametri ottimizzati su 30 scenari mai visti:
 ```bash
 python3 validate_single.py
 ```
 
-### Multi-AUV Simulation
+---
 
-Run scenarios with multiple simultaneous vehicles (10, 20, 30, 40 drones):
+## Simulazione Multi-AUV
+
+Avvia scenari con più veicoli simultanei:
 ```bash
 ./scripts/run_multi.sh [n_drones] [seed]
 ```
 
-Validate scalability:
+Valida la scalabilità:
 ```bash
-cd optimization
 python3 validate_multi.py
 ```
 
-### Distributed Mode
+---
 
-Run Gazebo on a dedicated machine and the VFH controller on a remote computer over LAN.
+## Modalità Distribuita
 
-**On the server machine:**
+Esegui Gazebo su una macchina dedicata e il controller VFH su un computer remoto via LAN.
+
+**Sul server:**
 ```bash
 ./scripts/run_remote.sh [seed]
 ```
 
-**Compile the standalone controller on the remote machine:**
+**Compila il controller standalone sulla macchina remota:**
 ```bash
 g++ -std=c++17 distributed/standalone_controller.cc -o standalone_controller \
   $(pkg-config --cflags --libs gz-transport13 gz-msgs10)
 ```
 
-**Run the controller (use goal coordinates printed by run_remote.sh):**
+**Avvia il controller (usa le coordinate goal stampate da run_remote.sh):**
 ```bash
 export GZ_PARTITION=tesi_live
-export GZ_IP=<local_ip>
-export GZ_RELAY=<server_ip>
+export GZ_IP=<ip_locale>
+export GZ_RELAY=<ip_server>
 ./standalone_controller tethys_0 <goal_x> <goal_y> <goal_z>
 ```
+
+---
+
+## Citazione Repository Originale
+
+> Timothy R. Player et al., "From Concept to Field Tests: Accelerated Development of Multi-AUV Missions Using a High-Fidelity Faster-than-Real-Time Simulator," *ICRA 2023*.
