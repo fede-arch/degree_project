@@ -44,7 +44,7 @@ def run_multi(project_dir, n_drones, seed, face_goal, r_max, radius_arrived):
 def run_remote(project_dir, seed):
     from generate_world import generate_world
 
-    gx, gy, gz = generate_world(project_dir, seed=seed, face_goal=False)
+    gx, gy, gz = generate_world(project_dir, seed=seed, face_goal=True)
     tmpl = os.path.join(project_dir, 'lrauv_description/models/tethys_equipped/model_remote.sdf.in')
     dest = os.path.join(project_dir, 'lrauv_description/models/tethys_equipped/model.sdf')
 

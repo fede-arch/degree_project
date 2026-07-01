@@ -10,7 +10,7 @@ AREA_HALF       = 50.0
 TEMPLATE_PATH = "lrauv_gazebo_plugins/worlds/navigation_world_multi.sdf.in"
 WORLD_PATH    = "lrauv_gazebo_plugins/worlds/navigation_world_multi.sdf"
 
-def generate_world_multi(project_dir, seed=None, face_goal=False, n_drones=1, output_path=None):
+def generate_world_multi(project_dir, seed=None, face_goal=True, n_drones=1, output_path=None):
     if seed is not None:
         random.seed(seed)
         np.random.seed(seed)
@@ -43,9 +43,9 @@ def generate_world_multi(project_dir, seed=None, face_goal=False, n_drones=1, ou
     for i, ((sx, sy, sz), (gx, gy, gz)) in enumerate(zip(spawns, goals)):
         direction = math.atan2(gy - sy, gx - sx)
         if face_goal:
-            yaw = direction + random.uniform(-0.3, 0.3)
-        else:
             yaw = direction - math.pi + random.uniform(-0.3, 0.3)
+        else:
+            yaw = direction + random.uniform(-0.3, 0.3)
 
         drones_sdf += f"""    <include>
       <pose>{sx:.2f} {sy:.2f} {sz:.2f} 0 0 {yaw:.2f}</pose>

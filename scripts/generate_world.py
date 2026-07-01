@@ -12,7 +12,7 @@ MIN_ROCK_DIST    = 40.0
 TEMPLATE_PATH = "lrauv_gazebo_plugins/worlds/navigation_world.sdf.in"
 WORLD_PATH    = "lrauv_gazebo_plugins/worlds/navigation_world.sdf"
 
-def generate_world(project_dir, seed=None, face_goal=False):
+def generate_world(project_dir, seed=None, face_goal=True):
     if seed is not None:
         random.seed(seed)
         np.random.seed(seed)

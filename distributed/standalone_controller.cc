@@ -39,18 +39,18 @@ public:
     double prevX=0, prevY=0, prevZ=0;
     bool pathStarted = false;
 
-    double gainSteer=0.8, gainPitch=0.8, maxFinAngle=0.15, radiusArrived=4.0;
+    double gainSteer=1.213, gainPitch=1.136, maxFinAngle=0.15, radiusArrived=4.0;
     float r_min=2.5f, r_max=40.0f;
     int n_r=40; float delta_r=1.0f;
-    float A=15.0f, B=0.375f, C_MAX=15.0f;
-    float r_active=30.0f; int n_r_active=30;
+    float A=14.827f, B=0.0f, C_MAX=14.827f;
+    float r_active=40.0f; int n_r_active=40;
     std::vector<float> grid_c, c_star;
-    float gridDecay=0.982f;
+    float gridDecay=0.966f;
     int n_phi=36, n_theta=36;
     float delta_phi=M_PI/36, delta_theta=M_PI/36;
     float phi_min=-M_PI/2, phi_max=M_PI/2;
     float theta_min=-M_PI/2, theta_max=M_PI/2;
-    int L=5; float VALLEY_THRESHOLD=34.4f;
+    int L=4; float VALLEY_THRESHOLD=20.0f;
     double measurements[36][36]={};
     float h[36][36]={}, h_smooth[36][36]={};
     int k_targ=18, k_targ_theta=18, best_phi=18, best_theta=18;
@@ -63,7 +63,7 @@ public:
                double gs, double gp, double vt, double gd, double ma, int sl, int sw) {
         droneNs=ns; goalX=gx; goalY=gy; goalZ=gz_;
         gainSteer=gs; gainPitch=gp; VALLEY_THRESHOLD=vt;
-        gridDecay=gd; A=ma; B=ma/r_max; L=sl; safetyWindow=sw;
+        gridDecay=gd; A=ma; B=ma/r_max; C_MAX=ma; L=sl; safetyWindow=sw;
         n_r=(int)(r_max/delta_r); n_r_active=(int)(r_active/delta_r);
         grid_c.assign(n_r*n_phi*n_theta,0.0f);
         c_star.assign(n_r_active*n_phi*n_theta,0.0f);
@@ -143,7 +143,6 @@ public:
     }
 
     void findBest(){
-        // Goal sectors
         double dx=goalX-posX, dy=goalY-posY;
         double phi_goal=std::atan2(dy,dx)-yaw-M_PI;
         while(phi_goal>M_PI)phi_goal-=2*M_PI;
@@ -156,28 +155,23 @@ public:
         tg=std::clamp(tg,(double)theta_min,(double)theta_max);
         k_targ_theta=std::clamp((int)((tg-theta_min)/delta_theta),0,n_theta-1);
 
-        // Best direction
         best_phi=k_targ; best_theta=k_targ_theta;
         float best_cost=std::numeric_limits<float>::max();
         int W=safetyWindow;
-        float max_h = *std::max_element(&h_smooth[0][0], &h_smooth[0][0] + n_phi*n_theta);
-        float threshold = (max_h > 0) ? VALLEY_THRESHOLD * max_h : 1.0f;
-
         for(int p=0;p<n_phi;p++) for(int t=0;t<n_theta;t++){
             bool free=true;
             for(int dp=-W;dp<=W&&free;dp++) for(int dt=-W;dt<=W&&free;dt++){
                 int pp=p+dp, tt=t+dt;
                 if(pp<0||pp>=n_phi)continue; if(tt<0||tt>=n_theta)continue;
-                if (h_smooth[pp][tt] >= threshold) free = false;
+                if(h_smooth[pp][tt]>=VALLEY_THRESHOLD)free=false;
             }
-
             if(free){
                 float c=std::sqrt((float)((p-k_targ)*(p-k_targ)+(t-k_targ_theta)*(t-k_targ_theta)*4));
                 if(c<best_cost){best_cost=c; best_phi=p; best_theta=t;}
             }
         }
 
-        double dist=std::sqrt(dx*dx+dy*dy+dz*dz);
+        double dist=std::sqrt(dx*dx+dy*dy+(goalZ-posZ)*(goalZ-posZ));
         if(dist<radiusArrived&&episodeState==EpisodeState::RUNNING){
             episodeState=EpisodeState::ARRIVED;
             std::cout<<"[VFH] ARRIVED! dist="<<dist<<std::endl;
@@ -263,8 +257,8 @@ int main(int argc, char** argv){
         return 1;
     }
     VFHController ctrl;
-    ctrl.setup(argv[1],std::stod(argv[2]),std::stod(argv[3]),std::stod(argv[4]),
-           0.8,0.8,0.4,0.982,15.0,5,2);
+    ctrl.setup(argv[1], std::stod(argv[2]), std::stod(argv[3]), std::stod(argv[4]),
+               1.213, 1.136, 20.0, 0.966, 14.827, 4, 2);
     std::cout<<"[VFH] In attesa di dati sonar..."<<std::endl;
     ctrl.run();
     return 0;

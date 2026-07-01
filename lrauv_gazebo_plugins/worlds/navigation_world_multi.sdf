@@ -49,14 +49,174 @@
     <plugin filename="gz-sim-contact-system"
       name="gz::sim::systems::Contact"/>
 
-    
-    <include>
-      <pose>-28.73 49.50 -75.00 0 0 -4.02</pose>
+    <gui fullscreen="0">
+      <plugin filename="MinimalScene" name="3D View">
+        <gz-gui>
+          <title>3D View</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="string" key="state">docked</property>
+        </gz-gui>
+        <engine>ogre2</engine>
+        <scene>scene</scene>
+        <ambient_light>0.4 0.4 0.4</ambient_light>
+        <background_color>0.8 0.8 0.8</background_color>
+        <camera_pose>0 -100 80 0 0.5 1.57</camera_pose>
+        <camera_clip>
+          <near>0.1</near>
+          <far>10000</far>
+        </camera_clip>
+      </plugin>
+      <plugin filename="EntityContextMenuPlugin" name="Entity context menu">
+        <gz-gui>
+          <property key="state" type="string">floating</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="GzSceneManager" name="Scene Manager">
+        <gz-gui>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="EntityTree" name="Entity tree">
+        <gz-gui>
+          <title>Entità</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="InteractiveViewControl" name="Interactive view control">
+        <gz-gui>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="CameraTracking" name="Camera Tracking">
+        <gz-gui>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="MarkerManager" name="Marker manager">
+        <gz-gui>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+        <warn_on_action_failure>false</warn_on_action_failure>
+      </plugin>
+      <plugin filename="SelectEntities" name="Select Entities">
+        <gz-gui>
+          <anchors target="Select entities">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="VisualizationCapabilities" name="Visualization Capabilities">
+        <gz-gui>
+          <anchors target="Select entities">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="WorldControl" name="World control">
+        <gz-gui>
+          <title>World control</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">false</property>
+          <property type="double" key="height">72</property>
+          <property type="double" key="width">121</property>
+          <property type="double" key="z">1</property>
+          <property type="string" key="state">floating</property>
+          <anchors target="3D View">
+            <line own="left" target="left"/>
+            <line own="bottom" target="bottom"/>
+          </anchors>
+        </gz-gui>
+        <play_pause>true</play_pause>
+        <step>true</step>
+        <start_paused>true</start_paused>
+      </plugin>
+      <plugin filename="WorldStats" name="World stats">
+        <gz-gui>
+          <title>World stats</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">false</property>
+          <property type="double" key="height">110</property>
+          <property type="double" key="width">290</property>
+          <property type="double" key="z">1</property>
+          <property type="string" key="state">floating</property>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="bottom" target="bottom"/>
+          </anchors>
+        </gz-gui>
+        <sim_time>true</sim_time>
+        <real_time>true</real_time>
+        <real_time_factor>true</real_time_factor>
+        <iterations>true</iterations>
+      </plugin>
+      <plugin filename="ComponentInspector" name="Component Inspector">
+        <gz-gui>
+          <title>Inspector</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="ViewAngle" name="Camera controls">
+        <gz-gui>
+          <title>Camera controls</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </gz-gui>
+      </plugin>
+    </gui>
+
+        <include>
+      <pose>-45.15 13.50 -75.00 0 0 -3.84</pose>
       <uri>tethys_equipped_0</uri>
     </include>
     <model name="target_marker_0">
       <static>true</static>
-      <pose>36.33 -6.76 -70.15 0 0 0</pose>
+      <pose>9.24 -18.82 -77.34 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -68,14 +228,13 @@
         </visual>
       </link>
     </model>
-
     <include>
-      <pose>28.76 -42.33 -75.00 0 0 -1.03</pose>
+      <pose>-33.71 48.24 -75.00 0 0 -3.85</pose>
       <uri>tethys_equipped_1</uri>
     </include>
     <model name="target_marker_1">
       <static>true</static>
-      <pose>9.69 28.55 -71.42 0 0 0</pose>
+      <pose>48.74 -5.41 -76.04 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -87,14 +246,13 @@
         </visual>
       </link>
     </model>
-
     <include>
-      <pose>-33.09 -10.30 -75.00 0 0 -2.41</pose>
+      <pose>28.60 49.76 -75.00 0 0 -4.39</pose>
       <uri>tethys_equipped_2</uri>
     </include>
     <model name="target_marker_2">
       <static>true</static>
-      <pose>-10.62 13.89 -69.49 0 0 0</pose>
+      <pose>44.49 -30.17 -81.20 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -106,14 +264,13 @@
         </visual>
       </link>
     </model>
-
     <include>
-      <pose>-32.83 -27.46 -75.00 0 0 -2.27</pose>
+      <pose>-31.77 32.47 -75.00 0 0 -3.03</pose>
       <uri>tethys_equipped_3</uri>
     </include>
     <model name="target_marker_3">
       <static>true</static>
-      <pose>24.94 36.80 -75.06 0 0 0</pose>
+      <pose>1.78 45.56 -84.16 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -125,14 +282,13 @@
         </visual>
       </link>
     </model>
-
     <include>
-      <pose>-15.36 -6.13 -75.00 0 0 -0.47</pose>
+      <pose>-37.50 -10.11 -75.00 0 0 -4.71</pose>
       <uri>tethys_equipped_4</uri>
     </include>
     <model name="target_marker_4">
       <static>true</static>
-      <pose>-42.50 9.35 -80.64 0 0 0</pose>
+      <pose>-45.75 -49.68 -78.82 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -144,14 +300,13 @@
         </visual>
       </link>
     </model>
-
     <include>
-      <pose>-21.20 12.02 -75.00 0 0 -3.71</pose>
+      <pose>11.57 33.24 -75.00 0 0 -5.07</pose>
       <uri>tethys_equipped_5</uri>
     </include>
     <model name="target_marker_5">
       <static>true</static>
-      <pose>7.51 -13.98 -72.81 0 0 0</pose>
+      <pose>-39.76 -34.55 -78.42 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -163,14 +318,13 @@
         </visual>
       </link>
     </model>
-
     <include>
-      <pose>8.48 -15.64 -75.00 0 0 -0.61</pose>
+      <pose>17.22 24.94 -75.00 0 0 -6.09</pose>
       <uri>tethys_equipped_6</uri>
     </include>
     <model name="target_marker_6">
       <static>true</static>
-      <pose>-32.35 2.34 -72.18 0 0 0</pose>
+      <pose>-21.98 18.35 -70.88 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -182,14 +336,13 @@
         </visual>
       </link>
     </model>
-
     <include>
-      <pose>-27.31 -44.38 -75.00 0 0 -2.27</pose>
+      <pose>29.31 8.51 -75.00 0 0 -6.31</pose>
       <uri>tethys_equipped_7</uri>
     </include>
     <model name="target_marker_7">
       <static>true</static>
-      <pose>49.75 15.49 -80.29 0 0 0</pose>
+      <pose>-12.97 1.89 -84.77 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -201,14 +354,13 @@
         </visual>
       </link>
     </model>
-
     <include>
-      <pose>12.74 -25.21 -75.00 0 0 -0.81</pose>
+      <pose>44.49 -4.43 -75.00 0 0 -5.81</pose>
       <uri>tethys_equipped_8</uri>
     </include>
     <model name="target_marker_8">
       <static>true</static>
-      <pose>-18.28 1.98 -68.55 0 0 0</pose>
+      <pose>-0.06 -38.65 -76.38 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -220,14 +372,193 @@
         </visual>
       </link>
     </model>
-
     <include>
-      <pose>-42.58 -40.81 -75.00 0 0 -2.37</pose>
+      <pose>9.80 -5.94 -75.00 0 0 -3.46</pose>
       <uri>tethys_equipped_9</uri>
     </include>
     <model name="target_marker_9">
       <static>true</static>
-      <pose>37.01 7.90 -83.53 0 0 0</pose>
+      <pose>46.36 -15.48 -69.80 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <include>
+      <pose>43.38 18.79 -75.00 0 0 -0.45</pose>
+      <uri>tethys_equipped_10</uri>
+    </include>
+    <model name="target_marker_10">
+      <static>true</static>
+      <pose>-38.56 43.97 -68.11 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <include>
+      <pose>24.75 -32.47 -75.00 0 0 -0.53</pose>
+      <uri>tethys_equipped_11</uri>
+    </include>
+    <model name="target_marker_11">
+      <static>true</static>
+      <pose>-37.48 -14.23 -83.15 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <include>
+      <pose>-5.21 3.72 -75.00 0 0 -4.30</pose>
+      <uri>tethys_equipped_12</uri>
+    </include>
+    <model name="target_marker_12">
+      <static>true</static>
+      <pose>32.53 -48.65 -74.36 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <include>
+      <pose>-22.65 -3.83 -75.00 0 0 -1.83</pose>
+      <uri>tethys_equipped_13</uri>
+    </include>
+    <model name="target_marker_13">
+      <static>true</static>
+      <pose>-12.04 38.49 -71.43 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <include>
+      <pose>17.56 7.11 -75.00 0 0 -1.87</pose>
+      <uri>tethys_equipped_14</uri>
+    </include>
+    <model name="target_marker_14">
+      <static>true</static>
+      <pose>42.38 49.76 -72.25 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <include>
+      <pose>-18.37 32.34 -75.00 0 0 -4.72</pose>
+      <uri>tethys_equipped_15</uri>
+    </include>
+    <model name="target_marker_15">
+      <static>true</static>
+      <pose>-8.41 -17.83 -75.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <include>
+      <pose>-3.82 28.17 -75.00 0 0 -3.46</pose>
+      <uri>tethys_equipped_16</uri>
+    </include>
+    <model name="target_marker_16">
+      <static>true</static>
+      <pose>34.49 20.93 -69.10 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <include>
+      <pose>30.26 -48.25 -75.00 0 0 -1.23</pose>
+      <uri>tethys_equipped_17</uri>
+    </include>
+    <model name="target_marker_17">
+      <static>true</static>
+      <pose>23.11 -9.81 -71.09 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <include>
+      <pose>22.61 -21.08 -75.00 0 0 -1.50</pose>
+      <uri>tethys_equipped_18</uri>
+    </include>
+    <model name="target_marker_18">
+      <static>true</static>
+      <pose>12.37 45.48 -82.81 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><sphere><radius>1.0</radius></sphere></geometry>
+          <material>
+            <ambient>1.0 0.0 0.0 1.0</ambient>
+            <diffuse>1.0 0.0 0.0 1.0</diffuse>
+            <emissive>0.8 0.0 0.0 1.0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <include>
+      <pose>-37.63 -42.62 -75.00 0 0 -2.70</pose>
+      <uri>tethys_equipped_19</uri>
+    </include>
+    <model name="target_marker_19">
+      <static>true</static>
+      <pose>19.18 -32.43 -77.85 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>

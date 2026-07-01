@@ -87,6 +87,12 @@
           <property key="showTitleBar" type="bool">false</property>
         </gz-gui>
       </plugin>
+      <plugin filename="EntityTree" name="Entity tree">
+        <gz-gui>
+          <title>Entità</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </gz-gui>
+      </plugin>
       <plugin filename="InteractiveViewControl" name="Interactive view control">
         <gz-gui>
           <anchors target="3D View">

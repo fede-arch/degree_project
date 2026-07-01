@@ -24,6 +24,7 @@ target_link_libraries(HydrodynamicsPlugin
 )
 install(TARGETS HydrodynamicsPlugin DESTINATION lib)
 
+
 add_library(NavigationPlugin SHARED src/NavigationPlugin.cc)
 set_property(TARGET NavigationPlugin PROPERTY CXX_STANDARD 17)
 target_link_libraries(NavigationPlugin

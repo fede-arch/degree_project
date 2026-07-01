@@ -97,11 +97,8 @@ def main():
         best = json.load(f)
     theta = best["theta"]
     print(f"  Theta da: final_theta.json")
-
     print("  VFH Multi-Drone Validation")
-    print(f"  Best reward ES : {best['reward']:.4f}")
     print(f"  N droni testati: {N_DRONES_LIST}")
-    print(f"  Seed per config: {len(SEEDS)}")
     print()
 
     all_results = {}
@@ -116,7 +113,7 @@ def main():
             world_path = os.path.join(PROJECT_DIR, f"lrauv_gazebo_plugins/worlds/val_multi_{run_id}.sdf")
             
             spawns, goals = generate_world_multi(
-                PROJECT_DIR, seed=seed, face_goal=False, 
+                PROJECT_DIR, seed=seed, face_goal=True, 
                 n_drones=n_drones, output_path=world_path)
 
             sim_args.append((run_id, theta, seed, n_drones, world_path, goals))

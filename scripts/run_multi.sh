@@ -8,7 +8,7 @@ SEED="${2:-$RANDOM}"
 
 R_MAX="40.0"
 RADIUS_ARRIVED="4.0"
-FACE_GOAL="false"
+FACE_GOAL="true"
 
 echo " Gazebo GUI — multi drone  |  seed=$SEED  |  droni=$N_DRONES"
 echo " r_max          = $R_MAX m"

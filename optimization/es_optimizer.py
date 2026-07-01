@@ -167,7 +167,7 @@ def main():
 
         # Genera world (uguale per tutti i worker di questa generazione)
         goal_x, goal_y, goal_z = generate_world(
-            PROJECT_DIR, seed=seed, face_goal=False)
+            PROJECT_DIR, seed=seed, face_goal=True)
         
         tree_check = ET.parse(WORLD_PATH)
         n_includes = len(tree_check.getroot().findall(".//include"))

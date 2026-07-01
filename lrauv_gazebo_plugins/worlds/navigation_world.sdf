@@ -49,16 +49,185 @@
     <plugin filename="gz-sim-contact-system"
       name="gz::sim::systems::Contact"/>
 
-    <!-- Tethys -->
+    <gui fullscreen="0">
+      <plugin filename="MinimalScene" name="3D View">
+        <gz-gui>
+          <title>3D View</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="string" key="state">docked</property>
+        </gz-gui>
+        <engine>ogre2</engine>
+        <scene>scene</scene>
+        <ambient_light>0.4 0.4 0.4</ambient_light>
+        <background_color>0.8 0.8 0.8</background_color>
+        <camera_pose>125 -200 150 0 0.5 1.57</camera_pose>
+        <camera_clip>
+          <near>0.1</near>
+          <far>10000</far>
+        </camera_clip>
+      </plugin>
+      <plugin filename="EntityContextMenuPlugin" name="Entity context menu">
+        <gz-gui>
+          <property key="state" type="string">floating</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="GzSceneManager" name="Scene Manager">
+        <gz-gui>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="EntityTree" name="Entity tree">
+        <gz-gui>
+          <title>Entità</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="InteractiveViewControl" name="Interactive view control">
+        <gz-gui>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="CameraTracking" name="Camera Tracking">
+        <gz-gui>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="MarkerManager" name="Marker manager">
+        <gz-gui>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+        <warn_on_action_failure>false</warn_on_action_failure>
+      </plugin>
+      <plugin filename="SelectEntities" name="Select Entities">
+        <gz-gui>
+          <anchors target="Select entities">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="VisualizationCapabilities" name="Visualization Capabilities">
+        <gz-gui>
+          <anchors target="Select entities">
+            <line own="right" target="right"/>
+            <line own="top" target="top"/>
+          </anchors>
+          <property key="resizable" type="bool">false</property>
+          <property key="width" type="double">5</property>
+          <property key="height" type="double">5</property>
+          <property key="state" type="string">floating</property>
+          <property key="showTitleBar" type="bool">false</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="WorldControl" name="World control">
+        <gz-gui>
+          <title>World control</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">false</property>
+          <property type="double" key="height">72</property>
+          <property type="double" key="width">121</property>
+          <property type="double" key="z">1</property>
+          <property type="string" key="state">floating</property>
+          <anchors target="3D View">
+            <line own="left" target="left"/>
+            <line own="bottom" target="bottom"/>
+          </anchors>
+        </gz-gui>
+        <play_pause>true</play_pause>
+        <step>true</step>
+        <start_paused>true</start_paused>
+      </plugin>
+      <plugin filename="WorldStats" name="World stats">
+        <gz-gui>
+          <title>World stats</title>
+          <property type="bool" key="showTitleBar">false</property>
+          <property type="bool" key="resizable">false</property>
+          <property type="double" key="height">110</property>
+          <property type="double" key="width">290</property>
+          <property type="double" key="z">1</property>
+          <property type="string" key="state">floating</property>
+          <anchors target="3D View">
+            <line own="right" target="right"/>
+            <line own="bottom" target="bottom"/>
+          </anchors>
+        </gz-gui>
+        <sim_time>true</sim_time>
+        <real_time>true</real_time>
+        <real_time_factor>true</real_time_factor>
+        <iterations>true</iterations>
+      </plugin>
+      <plugin filename="Plot3D" name="Plot 3D">
+        <gz-gui>
+          <title>Plot percorso 3D</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </gz-gui>
+        <entity_name>tethys_0</entity_name>
+        <color>0 0 1</color>
+        <maximum_points>10000</maximum_points>
+        <minimum_distance>0.5</minimum_distance>
+      </plugin>
+      <plugin filename="ComponentInspector" name="Component Inspector">
+        <gz-gui>
+          <title>Inspector</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </gz-gui>
+      </plugin>
+      <plugin filename="ViewAngle" name="Camera controls">
+        <gz-gui>
+          <title>Camera controls</title>
+          <property type="string" key="state">docked_collapsed</property>
+        </gz-gui>
+      </plugin>
+    </gui>
+
     <include>
-      <pose>-30.91 -78.56 -75.00 0 0 -2.99</pose>
+      <pose>-96.25 -108.75 -75.00 0 0 -2.32</pose>
       <uri>tethys_equipped</uri>
     </include>
 
-    <!-- Target -->
     <model name="target_marker">
       <static>true</static>
-      <pose>280.73 56.20 -76.60 0 0 0</pose>
+      <pose>233.48 110.47 -73.23 0 0 0</pose>
       <link name="link">
         <visual name="visual">
           <geometry><sphere><radius>1.0</radius></sphere></geometry>
@@ -71,228 +240,195 @@
       </link>
     </model>
 
-    <!-- Scogli -->
-    
-  <include>
+      <include>
     <name>rock_0</name>
     <uri>falling rock 1</uri>
-    <pose>206.64 -142.01 -79.41 0 0 3.01</pose>
+    <pose>-77.40 -26.55 -92.53 0 0 0.09</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_1</name>
     <uri>falling rock 1</uri>
-    <pose>39.30 148.02 -84.95 0 0 3.07</pose>
+    <pose>127.62 -160.98 -81.75 0 0 0.62</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_2</name>
     <uri>falling rock 1</uri>
-    <pose>86.63 -113.47 -95.08 0 0 2.04</pose>
+    <pose>147.02 -95.05 -77.76 0 0 1.85</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_3</name>
     <uri>falling rock 1</uri>
-    <pose>158.26 115.28 -92.74 0 0 0.92</pose>
+    <pose>-116.82 103.98 -89.49 0 0 2.19</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_4</name>
     <uri>falling rock 1</uri>
-    <pose>163.31 -110.45 -92.83 0 0 0.76</pose>
+    <pose>-43.82 155.45 -95.68 0 0 1.06</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_5</name>
     <uri>falling rock 1</uri>
-    <pose>349.02 -139.87 -89.25 0 0 0.76</pose>
+    <pose>-72.61 118.15 -77.82 0 0 1.90</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_6</name>
     <uri>falling rock 1</uri>
-    <pose>-22.87 166.69 -94.74 0 0 1.39</pose>
+    <pose>237.57 12.32 -88.54 0 0 3.06</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_7</name>
     <uri>falling rock 1</uri>
-    <pose>288.70 -58.68 -76.93 0 0 2.16</pose>
+    <pose>150.50 112.00 -76.46 0 0 1.94</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_8</name>
     <uri>falling rock 1</uri>
-    <pose>340.72 -66.50 -89.69 0 0 2.20</pose>
+    <pose>162.90 69.55 -92.30 0 0 0.14</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_9</name>
     <uri>falling rock 1</uri>
-    <pose>7.63 38.45 -74.48 0 0 2.34</pose>
+    <pose>21.80 -142.87 -95.47 0 0 0.73</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_10</name>
     <uri>falling rock 1</uri>
-    <pose>157.41 -59.87 -92.44 0 0 1.60</pose>
+    <pose>16.21 46.13 -88.75 0 0 1.15</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_11</name>
     <uri>falling rock 1</uri>
-    <pose>-80.08 62.67 -80.76 0 0 3.03</pose>
+    <pose>-17.34 -79.23 -81.80 0 0 2.94</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_12</name>
     <uri>falling rock 1</uri>
-    <pose>63.08 4.70 -86.56 0 0 3.08</pose>
+    <pose>237.27 -114.44 -73.26 0 0 1.19</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_13</name>
     <uri>falling rock 1</uri>
-    <pose>-116.71 -133.76 -93.03 0 0 0.52</pose>
+    <pose>193.60 19.36 -76.93 0 0 2.15</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_14</name>
     <uri>falling rock 1</uri>
-    <pose>101.17 -71.02 -80.90 0 0 1.65</pose>
+    <pose>342.03 127.96 -81.61 0 0 0.99</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_15</name>
     <uri>falling rock 1</uri>
-    <pose>131.94 168.45 -79.49 0 0 2.30</pose>
+    <pose>73.86 140.95 -91.38 0 0 1.44</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_16</name>
     <uri>falling rock 1</uri>
-    <pose>160.86 26.13 -87.57 0 0 1.64</pose>
+    <pose>319.93 -34.20 -73.06 0 0 0.69</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_17</name>
     <uri>falling rock 1</uri>
-    <pose>-117.51 -77.50 -90.00 0 0 2.43</pose>
+    <pose>86.86 -148.40 -73.10 0 0 1.20</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_18</name>
     <uri>falling rock 1</uri>
-    <pose>39.70 -100.48 -91.19 0 0 1.05</pose>
+    <pose>139.27 160.17 -97.71 0 0 2.70</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_19</name>
     <uri>falling rock 1</uri>
-    <pose>326.29 -16.57 -88.72 0 0 0.04</pose>
+    <pose>194.07 -132.07 -86.66 0 0 1.37</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_20</name>
     <uri>falling rock 1</uri>
-    <pose>-13.78 -137.76 -95.52 0 0 1.37</pose>
+    <pose>9.06 0.20 -75.18 0 0 0.56</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_21</name>
     <uri>falling rock 1</uri>
-    <pose>218.00 163.52 -75.19 0 0 2.38</pose>
+    <pose>287.52 -65.45 -76.05 0 0 0.18</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_22</name>
     <uri>falling rock 1</uri>
-    <pose>232.86 94.80 -94.29 0 0 1.35</pose>
+    <pose>344.01 -140.88 -96.27 0 0 1.53</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_23</name>
     <uri>falling rock 1</uri>
-    <pose>48.95 86.21 -89.70 0 0 0.44</pose>
+    <pose>32.74 168.35 -87.05 0 0 2.04</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_24</name>
     <uri>falling rock 1</uri>
-    <pose>-85.38 -28.63 -96.48 0 0 2.09</pose>
+    <pose>189.24 -92.16 -76.51 0 0 2.84</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_25</name>
     <uri>falling rock 1</uri>
-    <pose>91.44 137.33 -91.45 0 0 0.45</pose>
+    <pose>159.81 -9.29 -77.81 0 0 2.46</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_26</name>
     <uri>falling rock 1</uri>
-    <pose>247.84 -82.11 -90.99 0 0 2.94</pose>
+    <pose>-26.70 -137.04 -87.41 0 0 1.35</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_27</name>
     <uri>falling rock 1</uri>
-    <pose>348.80 113.35 -91.05 0 0 1.97</pose>
+    <pose>108.84 77.89 -73.40 0 0 2.11</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_28</name>
     <uri>falling rock 1</uri>
-    <pose>-99.58 104.60 -82.99 0 0 3.04</pose>
+    <pose>99.82 -26.56 -91.75 0 0 0.87</pose>
     <static>true</static>
   </include>
-
   <include>
     <name>rock_29</name>
     <uri>falling rock 1</uri>
-    <pose>-112.16 9.40 -79.19 0 0 0.81</pose>
+    <pose>302.06 17.11 -73.02 0 0 0.16</pose>
     <static>true</static>
   </include>
 
 
-    <!-- Fondale -->
     <include>
       <name>portuguese_ledge</name>
       <uri>portuguese ledge</uri>
       <pose>500 0 -65 0 0 0</pose>
       <static>true</static>
     </include>
-    
-    <!-- Piano fondale per collisioni -->
+
     <model name="sea_floor_collision">
       <static>true</static>
       <pose>0 0 -98 0 0 0</pose>
